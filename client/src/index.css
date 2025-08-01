@@ -1,0 +1,429 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(0, 65%, 45%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(0, 0%, 12%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(0, 0%, 15%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+
+  /* Horror theme colors */
+  --horror-black: #0A0A0A;
+  --blood-red: hsl(0, 65%, 45%);
+  --dark-gray: hsl(0, 0%, 12%);
+  --crimson: hsl(0, 65%, 40%);
+  --bright-red: hsl(0, 65%, 50%);
+  --horror-orange: hsl(24, 95%, 53%);
+  
+  /* Maroon theme variations */
+  --maroon-primary: hsl(0, 65%, 45%);
+  --maroon-dark: hsl(0, 65%, 40%);
+  --maroon-light: hsl(0, 65%, 50%);
+  --maroon-accent: hsl(0, 65%, 55%);
+  
+  /* 80s Neon Style - Alternative Colors */
+  --neon-purple: hsl(270, 100%, 6%);
+  --electric-pink: hsl(320, 100%, 50%);
+  --cyber-cyan: hsl(180, 100%, 50%);
+  --neon-green: hsl(110, 100%, 54%);
+  --dark-purple: hsl(270, 50%, 8%);
+}
+
+.dark {
+  --background: hsl(0, 0%, 4%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(0, 0%, 12%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(0, 0%, 4%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(0, 0%, 12%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(0, 65%, 45%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(0, 0%, 12%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(0, 0%, 15%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased text-foreground;
+    background-color: var(--horror-black);
+  }
+}
+
+@layer utilities {
+  .horror-bg {
+    background-color: var(--horror-black);
+  }
+  
+  .blood-red {
+    color: var(--blood-red);
+  }
+  
+  .blood-red-bg {
+    background-color: var(--blood-red);
+  }
+  
+  .dark-gray-bg {
+    background-color: var(--dark-gray);
+  }
+  
+  .crimson {
+    color: var(--crimson);
+  }
+  
+  .crimson-bg {
+    background-color: var(--crimson);
+  }
+  
+  .horror-orange {
+    color: var(--horror-orange);
+  }
+  
+  /* Button styling overrides for horror theme */
+  .horror-button-primary {
+    background-color: var(--maroon-primary);
+    color: white;
+    border: 1px solid var(--maroon-primary);
+  }
+  
+  .horror-button-primary:hover {
+    background-color: var(--maroon-dark);
+    border-color: var(--maroon-dark);
+  }
+  
+  .horror-button-secondary {
+    background-color: var(--dark-gray);
+    color: white;
+    border: 1px solid hsl(0, 0%, 30%);
+  }
+  
+  .horror-button-secondary:hover {
+    background-color: hsl(0, 0%, 18%);
+    border-color: hsl(0, 0%, 40%);
+  }
+  
+  .horror-button-outline {
+    background-color: transparent;
+    color: white;
+    border: 1px solid hsl(0, 0%, 30%);
+  }
+  
+  .horror-button-outline:hover {
+    background-color: var(--maroon-primary);
+    border-color: var(--maroon-primary);
+    color: white;
+  }
+  
+  .horror-button-ghost {
+    background-color: transparent;
+    color: hsl(0, 0%, 70%);
+    border: none;
+  }
+  
+  .horror-button-ghost:hover {
+    background-color: hsl(0, 0%, 15%);
+    color: white;
+  }
+  
+  /* 80s Neon Utility Classes */
+  .neon-purple-bg {
+    background-color: var(--neon-purple);
+  }
+  
+  .electric-pink {
+    color: var(--electric-pink);
+  }
+  
+  .electric-pink-bg {
+    background-color: var(--electric-pink);
+  }
+  
+  .cyber-cyan {
+    color: var(--cyber-cyan);
+  }
+  
+  .neon-green {
+    color: var(--neon-green);
+  }
+  
+  .dark-purple-bg {
+    background-color: var(--dark-purple);
+  }
+}
+
+@keyframes glow {
+  from { 
+    box-shadow: 0 0 5px var(--maroon-primary), 0 0 10px var(--maroon-primary), 0 0 15px var(--maroon-primary); 
+  }
+  to { 
+    box-shadow: 0 0 10px var(--maroon-primary), 0 0 20px var(--maroon-primary), 0 0 30px var(--maroon-primary); 
+  }
+}
+
+@keyframes neon-glow {
+  from { 
+    box-shadow: 0 0 5px var(--electric-pink), 0 0 10px var(--electric-pink), 0 0 15px var(--electric-pink); 
+    text-shadow: 0 0 5px var(--electric-pink), 0 0 10px var(--electric-pink);
+  }
+  to { 
+    box-shadow: 0 0 10px var(--electric-pink), 0 0 20px var(--electric-pink), 0 0 30px var(--electric-pink); 
+    text-shadow: 0 0 10px var(--electric-pink), 0 0 20px var(--electric-pink);
+  }
+}
+
+@keyframes cyan-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 5px var(--cyber-cyan); 
+    border-color: var(--cyber-cyan);
+  }
+  50% { 
+    box-shadow: 0 0 20px var(--cyber-cyan), 0 0 30px var(--cyber-cyan); 
+    border-color: var(--electric-pink);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes float-small {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes fadeSlide {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+  opacity: 0;
+  animation: slideUp 0.8s ease-out forwards;
+}
+
+.animate-fade-slide {
+  opacity: 0;
+  animation: fadeSlide 1s ease-out forwards;
+}
+
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.animate-float {
+  animation: float-small 3s ease-in-out infinite;
+}
+
+@media (min-width: 640px) {
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+/* Dropdown styling to ensure white text */
+[data-radix-select-trigger],
+.horror-select-trigger {
+  color: white !important;
+}
+
+[data-radix-select-value],
+.horror-select-trigger [data-radix-select-value] {
+  color: white !important;
+}
+
+[data-radix-select-content],
+.horror-select-content {
+  background-color: hsl(0, 0%, 15%) !important;
+  border: 1px solid hsl(0, 0%, 30%) !important;
+  color: white !important;
+}
+
+[data-radix-select-item],
+.horror-select-content [data-radix-select-item] {
+  color: white !important;
+  background-color: transparent !important;
+  border-radius: 4px !important;
+  margin: 2px 4px !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-radix-select-item] [data-radix-select-item-indicator],
+.horror-select-content [data-radix-select-item] [data-radix-select-item-indicator] {
+  display: none !important;
+}
+
+[data-radix-select-item]:hover,
+.horror-select-content [data-radix-select-item]:hover {
+  background-color: hsl(0, 0%, 25%) !important;
+  color: white !important;
+}
+
+[data-radix-select-item][data-highlighted],
+.horror-select-content [data-radix-select-item][data-highlighted] {
+  background-color: hsl(0, 0%, 30%) !important;
+  color: white !important;
+}
+
+[data-radix-select-item][data-state="checked"],
+.horror-select-content [data-radix-select-item][data-state="checked"] {
+  background-color: hsl(0, 65%, 45%) !important;
+  color: white !important;
+}
+
+/* Hide checkmarks/indicators in select items */
+[data-radix-select-item] [data-radix-select-item-indicator],
+.horror-select-content [data-radix-select-item] [data-radix-select-item-indicator],
+[data-radix-select-item-indicator] {
+  display: none !important;
+}
+
+/* Additional styling for consistent white text in all dropdown states */
+.horror-select-trigger,
+.horror-select-value {
+  color: white !important;
+}
+
+.horror-select-content {
+  background-color: hsl(0, 0%, 15%) !important;
+  border-color: hsl(0, 0%, 30%) !important;
+}
+
+.horror-select-item {
+  color: white !important;
+  background-color: transparent !important;
+  border-radius: 4px !important;
+  margin: 2px 4px !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.horror-select-item [data-radix-select-item-indicator] {
+  display: none !important;
+}
+
+.horror-select-item:hover {
+  background-color: hsl(0, 0%, 25%) !important;
+  color: white !important;
+}
+
+.horror-select-item[data-highlighted] {
+  background-color: hsl(0, 0%, 30%) !important;
+  color: white !important;
+}
+
+.horror-select-item[data-state="checked"] {
+  background-color: hsl(0, 65%, 45%) !important;
+  color: white !important;
+}
+
+/* Hide checkmarks in select items using class selector */
+.horror-select-item [data-radix-select-item-indicator],
+.horror-select-item svg {
+  display: none !important;
+}
+
+.animate-neon-glow {
+  animation: neon-glow 2s ease-in-out infinite alternate;
+}
+
+.animate-cyan-pulse {
+  animation: cyan-pulse 3s ease-in-out infinite;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+  transition: all 0.3s ease;
+}
+
+.platform-logo {
+  transition: all 0.3s ease;
+}
+
+.platform-logo:hover {
+  transform: scale(1.1);
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

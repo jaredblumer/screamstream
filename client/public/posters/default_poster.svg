@@ -1,0 +1,24 @@
+<svg width="342" height="513" viewBox="0 0 342 513" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark horror-themed background -->
+  <rect width="342" height="513" fill="#0a0a0a"/>
+  
+  <!-- Subtle dark gradient -->
+  <defs>
+    <radialGradient id="bgGradient" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a1a1a" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="1"/>
+    </radialGradient>
+  </defs>
+  <rect width="342" height="513" fill="url(#bgGradient)"/>
+  
+  <!-- Exact Lucide React Skull icon perfectly centered -->
+  <g transform="translate(171, 256.5) scale(5) translate(-12, -12)" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main skull shape -->
+    <path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/>
+    <!-- Nasal cavity -->
+    <path d="m12.5 17-.5-1-.5 1h1z"/>
+    <!-- Eye sockets -->
+    <circle cx="15" cy="12" r="1"/>
+    <circle cx="9" cy="12" r="1"/>
+  </g>
+</svg>
