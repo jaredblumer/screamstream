@@ -14,8 +14,8 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-gray-400 mb-4">
-              Your ultimate destination for discovering and rating the best horror movies currently
-              streaming across all platforms.
+              Discover the highest-rated horror movies and series currently streaming. Rated by
+              critics and audiences across all major platforms.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-red-400 transition-colors">
@@ -91,7 +91,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 mb-2">
-            © 2025 Scream Stream. All rights reserved. | Discover the best horror content streaming
+            © 2025 Scream Stream. All rights reserved. | Discover the best horror titles streaming
             online.
           </p>
           <p className="text-gray-500 text-sm">
