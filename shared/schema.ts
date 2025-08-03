@@ -188,7 +188,6 @@ export const apiUsage = pgTable(
     id: serial('id').primaryKey(),
     month: varchar('month', { length: 7 }).notNull().unique(), // Format: "YYYY-MM" (e.g., "2025-01")
     watchmodeRequests: integer('watchmode_requests').notNull().default(0),
-    tvdbRequests: integer('tvdb_requests').notNull().default(0),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },

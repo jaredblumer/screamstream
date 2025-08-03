@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
 
 interface HeroSectionProps {
   onViewTopRanked: () => void;
@@ -25,7 +24,7 @@ export default function HeroSection({
           </h2>
           <p className="text-xl text-gray-300 mb-8 leading-relaxed">
             Discover the highest-rated horror movies and series currently streaming. Rated by
-            critics, fans, and audiences across all platforms.
+            critics and audiences across all major platforms.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
@@ -41,14 +40,13 @@ export default function HeroSection({
             >
               New to Streaming
             </Button>
-            <Link href="/subgenres">
-              <Button
-                variant="outline"
-                className="horror-button-outline px-8 py-3 font-semibold relative z-10 w-full sm:w-auto"
-              >
-                Browse Subgenres
-              </Button>
-            </Link>
+            <Button
+              onClick={onBrowseGenres}
+              variant="outline"
+              className="horror-button-outline px-8 py-3 font-semibold relative z-10 w-full sm:w-auto"
+            >
+              Browse Subgenres
+            </Button>
           </div>
         </div>
       </div>

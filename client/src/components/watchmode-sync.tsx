@@ -15,7 +15,6 @@ import {
   AlertCircle,
   RefreshCw,
   Database,
-  Image,
   Settings,
   Edit,
 } from 'lucide-react';
@@ -55,7 +54,6 @@ export default function WatchmodeSync() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultPlatforms);
   const [maxRequests, setMaxRequests] = useState(50);
   const [minRating, setMinRating] = useState(0.0);
-  const [validationOnly, setValidationOnly] = useState(false);
   const [manualCount, setManualCount] = useState<string>('');
 
   // Get Watchmode API status
@@ -81,30 +79,6 @@ export default function WatchmodeSync() {
     onError: (error: Error) => {
       toast({
         title: 'Streaming sync failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Bulk poster sync mutation
-  const posterSyncMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest('POST', '/api/admin/sync-posters');
-      return await res.json();
-    },
-    onSuccess: (result: any) => {
-      toast({
-        title: 'Poster sync completed!',
-        description: `Updated ${result.updatedCount} posters, ${result.failedCount} failed`,
-      });
-      // Refresh content queries to show updated posters
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/content'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/content'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Poster sync failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -145,7 +119,6 @@ export default function WatchmodeSync() {
         maxRequests,
         selectedPlatforms,
         minRating,
-        validationOnly,
       });
       console.log('syncMutation response:', res);
       return await res.json();
@@ -236,93 +209,6 @@ export default function WatchmodeSync() {
             )}
             {newToStreamingMutation.isPending ? 'Syncing...' : 'Sync New Streaming Releases'}
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Bulk Poster Sync Card */}
-      <Card className="horror-bg border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Image className="h-5 w-5" />
-            Sync Missing Posters
-          </CardTitle>
-          <CardDescription className="text-gray-400">
-            Bulk update missing poster images using TVDB
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-sm text-gray-300">
-            This will scan all content for missing, empty, or broken poster URLs (like relative
-            paths) and attempt to find high-quality poster images from TVDB using the same matching
-            logic as the individual "Fix TVDB" button.
-          </div>
-          <Button
-            onClick={() => posterSyncMutation.mutate()}
-            disabled={posterSyncMutation.isPending}
-            className="horror-button-primary w-full"
-          >
-            {posterSyncMutation.isPending ? (
-              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Image className="w-4 h-4 mr-2" />
-            )}
-            {posterSyncMutation.isPending ? 'Syncing Posters...' : 'Sync Missing Posters'}
-          </Button>
-
-          {/* Poster Sync Result */}
-          {posterSyncMutation.data && (
-            <Card className="border-green-700 bg-green-900/20">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-400 mt-0.5" />
-                  <div className="space-y-2">
-                    <h4 className="text-green-400 font-medium">Poster Sync Completed</h4>
-                    <div className="text-sm text-gray-300 space-y-1">
-                      <div>
-                        • {posterSyncMutation.data.updatedCount} posters updated successfully
-                      </div>
-                      <div>
-                        • {posterSyncMutation.data.failedCount} items failed to find posters
-                      </div>
-                      <div>• {posterSyncMutation.data.processedItems} items processed</div>
-                      {posterSyncMutation.data.totalItems >
-                        posterSyncMutation.data.processedItems && (
-                        <div className="text-yellow-400">
-                          •{' '}
-                          {posterSyncMutation.data.totalItems -
-                            posterSyncMutation.data.processedItems}{' '}
-                          items remaining (run again to process more)
-                        </div>
-                      )}
-                    </div>
-                    {posterSyncMutation.data.results &&
-                      posterSyncMutation.data.results.filter((r: any) => r.status === 'failed')
-                        .length > 0 && (
-                        <div className="text-red-400 text-sm">
-                          <div className="font-medium">Failed items:</div>
-                          {posterSyncMutation.data.results
-                            .filter((r: any) => r.status === 'failed')
-                            .slice(0, 3)
-                            .map((result: any, index: number) => (
-                              <div key={index}>• {result.title}</div>
-                            ))}
-                          {posterSyncMutation.data.results.filter((r: any) => r.status === 'failed')
-                            .length > 3 && (
-                            <div>
-                              • And{' '}
-                              {posterSyncMutation.data.results.filter(
-                                (r: any) => r.status === 'failed'
-                              ).length - 3}{' '}
-                              more...
-                            </div>
-                          )}
-                        </div>
-                      )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </CardContent>
       </Card>
 
@@ -445,25 +331,10 @@ export default function WatchmodeSync() {
             Sync
           </CardTitle>
           <CardDescription className="text-gray-400">
-            Configure your horror movie sync preferences
+            Configure title sync preferences
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Sync Mode */}
-          <div className="space-y-2">
-            <Label className="text-gray-300">Sync Mode</Label>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="validation-only"
-                checked={validationOnly}
-                onCheckedChange={(checked) => setValidationOnly(checked as boolean)}
-              />
-              <Label htmlFor="validation-only" className="text-gray-300 text-sm">
-                Validation only (don't add new content, just update existing)
-              </Label>
-            </div>
-          </div>
-
           {/* Request Limit */}
           <div className="space-y-2">
             <Label htmlFor="max-requests" className="text-gray-300">
@@ -478,9 +349,6 @@ export default function WatchmodeSync() {
               onChange={(e) => setMaxRequests(parseInt(e.target.value))}
               className="horror-bg border-gray-700"
             />
-            <div className="text-xs text-gray-400">
-              Recommended: 50-100 requests for new content, 20-50 for validation
-            </div>
           </div>
 
           {/* Minimum Rating */}
@@ -534,12 +402,12 @@ export default function WatchmodeSync() {
               {syncMutation.isPending ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  {validationOnly ? 'Validating Content...' : 'Syncing Content...'}
+                  Syncing Titles...
                 </>
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  {validationOnly ? 'Validate Content' : 'Sync Horror Movies'}
+                  Sync Titles
                 </>
               )}
             </Button>
@@ -557,13 +425,13 @@ export default function WatchmodeSync() {
                     {/* Summary Stats */}
                     <div className="text-sm text-gray-300 space-y-1">
                       {syncMutation.data.newMoviesAdded > 0 && (
-                        <div>• {syncMutation.data.newMoviesAdded} new content items added</div>
+                        <div>• {syncMutation.data.newMoviesAdded} new titles added</div>
                       )}
                       {syncMutation.data.moviesValidated > 0 && (
-                        <div>• {syncMutation.data.moviesValidated} items validated</div>
+                        <div>• {syncMutation.data.moviesValidated} titles validated</div>
                       )}
                       {syncMutation.data.moviesRemoved > 0 && (
-                        <div>• {syncMutation.data.moviesRemoved} items removed</div>
+                        <div>• {syncMutation.data.moviesRemoved} titles removed</div>
                       )}
                       <div>• {syncMutation.data.requestsUsed} API requests used</div>
                       {syncMutation.data.searchStats && (
