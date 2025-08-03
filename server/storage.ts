@@ -1,6 +1,30 @@
-import { content, users, feedback, watchlist, platformImages, apiUsage, subgenres, type Content, type InsertContent, type Movie, type InsertMovie, type User, type InsertUser, type Feedback, type InsertFeedback, type Watchlist, type InsertWatchlist, type PlatformImage, type InsertPlatformImage, type ApiUsage, type InsertApiUsage, type Subgenre, type InsertSubgenre } from "@shared/schema";
-import { db } from "./db";
-import { eq, and, or, ilike, desc, asc, sql } from "drizzle-orm";
+import {
+  content,
+  users,
+  feedback,
+  watchlist,
+  platformImages,
+  apiUsage,
+  subgenres,
+  type Content,
+  type InsertContent,
+  type Movie,
+  type InsertMovie,
+  type User,
+  type InsertUser,
+  type Feedback,
+  type InsertFeedback,
+  type Watchlist,
+  type InsertWatchlist,
+  type PlatformImage,
+  type InsertPlatformImage,
+  type ApiUsage,
+  type InsertApiUsage,
+  type Subgenre,
+  type InsertSubgenre,
+} from '@shared/schema';
+import { db } from './db';
+import { eq, and, or, ilike, desc, asc, sql } from 'drizzle-orm';
 
 export interface IStorage {
   getContent(filters?: {
@@ -19,35 +43,35 @@ export interface IStorage {
   createContent(content: InsertContent): Promise<Content>;
   updateContent(id: number, content: Partial<InsertContent>): Promise<Content | undefined>;
   deleteContent(id: number): Promise<boolean>;
-  
+
   // Content visibility management (admin only)
   hideContent(id: number): Promise<boolean>;
   showContent(id: number): Promise<boolean>;
   getHiddenContent(): Promise<Content[]>;
-  
+
   // User operations for local authentication
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
-  
+
   // Password reset operations
   setPasswordResetToken(userId: number, token: string, expiry: Date): Promise<void>;
   getUserByResetToken(token: string): Promise<User | undefined>;
   clearPasswordResetToken(userId: number): Promise<void>;
-  
+
   // Feedback operations
   createFeedback(feedback: InsertFeedback): Promise<Feedback>;
   getFeedback(filters?: { status?: string; type?: string }): Promise<Feedback[]>;
   updateFeedback(id: number, updates: Partial<Feedback>): Promise<Feedback | undefined>;
-  
+
   // Watchlist operations
   getUserWatchlist(userId: number): Promise<Content[]>;
   addToWatchlist(userId: number, contentId: number): Promise<boolean>;
   removeFromWatchlist(userId: number, contentId: number): Promise<boolean>;
   isInWatchlist(userId: number, contentId: number): Promise<boolean>;
-  
+
   // Legacy movie methods for backward compatibility
   getMovies(filters?: {
     platform?: string;
@@ -60,20 +84,23 @@ export interface IStorage {
   createMovie(movie: InsertMovie): Promise<Movie>;
   updateMovie(id: number, movie: Partial<InsertMovie>): Promise<Movie | undefined>;
   deleteMovie(id: number): Promise<boolean>;
-  
+
   // Platform image management
   getPlatformImages(): Promise<PlatformImage[]>;
   getPlatformImage(platformKey: string): Promise<PlatformImage | undefined>;
   createPlatformImage(platformImage: InsertPlatformImage): Promise<PlatformImage>;
-  updatePlatformImage(id: number, updates: Partial<InsertPlatformImage>): Promise<PlatformImage | undefined>;
+  updatePlatformImage(
+    id: number,
+    updates: Partial<InsertPlatformImage>
+  ): Promise<PlatformImage | undefined>;
   deletePlatformImage(id: number): Promise<boolean>;
-  
+
   // API Usage tracking
   getCurrentMonthUsage(): Promise<ApiUsage | undefined>;
   incrementWatchmodeRequests(count?: number): Promise<void>;
   incrementTvdbRequests(count?: number): Promise<void>;
   resetMonthlyUsage(): Promise<void>;
-  
+
   // Subgenres management
   getSubgenres(activeOnly?: boolean): Promise<Subgenre[]>;
   getSubgenre(id: number): Promise<Subgenre | undefined>;
@@ -85,18 +112,25 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  
   // Helper function to convert decade string to year range
   private getDecadeYearRange(decade: string): { min: number; max: number } | null {
     switch (decade) {
-      case "2020s": return { min: 2020, max: 2029 };
-      case "2010s": return { min: 2010, max: 2019 };
-      case "2000s": return { min: 2000, max: 2009 };
-      case "1990s": return { min: 1990, max: 1999 };
-      case "1980s": return { min: 1980, max: 1989 };
-      case "1970s": return { min: 1970, max: 1979 };
-      case "1960s": return { min: 1960, max: 1969 };
-      default: return null;
+      case '2020s':
+        return { min: 2020, max: 2029 };
+      case '2010s':
+        return { min: 2010, max: 2019 };
+      case '2000s':
+        return { min: 2000, max: 2009 };
+      case '1990s':
+        return { min: 1990, max: 1999 };
+      case '1980s':
+        return { min: 1980, max: 1989 };
+      case '1970s':
+        return { min: 1970, max: 1979 };
+      case '1960s':
+        return { min: 1960, max: 1969 };
+      default:
+        return null;
     }
   }
 
@@ -220,14 +254,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContent(insertContent: InsertContent): Promise<Content> {
-    const [newContent] = await db
-      .insert(content)
-      .values(insertContent)
-      .returning();
+    const [newContent] = await db.insert(content).values(insertContent).returning();
     return newContent;
   }
 
-  async updateContent(id: number, updateData: Partial<InsertContent>): Promise<Content | undefined> {
+  async updateContent(
+    id: number,
+    updateData: Partial<InsertContent>
+  ): Promise<Content | undefined> {
     const [updated] = await db
       .update(content)
       .set(updateData)
@@ -280,19 +314,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(userData: InsertUser): Promise<User> {
-    const [newUser] = await db
-      .insert(users)
-      .values(userData)
-      .returning();
+    const [newUser] = await db.insert(users).values(userData).returning();
     return newUser;
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
-    const [updated] = await db
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, id))
-      .returning();
+    const [updated] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     return updated || undefined;
   }
 
@@ -301,7 +328,7 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({
         resetToken: token,
-        resetTokenExpiry: expiry
+        resetTokenExpiry: expiry,
       })
       .where(eq(users.id, userId));
   }
@@ -310,12 +337,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .select()
       .from(users)
-      .where(
-        and(
-          eq(users.resetToken, token),
-          sql`${users.resetTokenExpiry} > NOW()`
-        )
-      );
+      .where(and(eq(users.resetToken, token), sql`${users.resetTokenExpiry} > NOW()`));
     return user || undefined;
   }
 
@@ -324,7 +346,7 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({
         resetToken: null,
-        resetTokenExpiry: null
+        resetTokenExpiry: null,
       })
       .where(eq(users.id, userId));
   }
@@ -339,23 +361,23 @@ export class DatabaseStorage implements IStorage {
   }): Promise<Movie[]> {
     const allContent = await this.getContent({
       ...filters,
-      type: 'movie'
+      type: 'movie',
     });
     return allContent as Movie[];
   }
 
   async getMovie(id: number): Promise<Movie | undefined> {
     const contentItem = await this.getContentItem(id);
-    return contentItem && contentItem.type === 'movie' ? contentItem as Movie : undefined;
+    return contentItem && contentItem.type === 'movie' ? (contentItem as Movie) : undefined;
   }
 
   async createMovie(insertMovie: InsertMovie): Promise<Movie> {
-    return await this.createContent(insertMovie) as Movie;
+    return (await this.createContent(insertMovie)) as Movie;
   }
 
   async updateMovie(id: number, updateData: Partial<InsertMovie>): Promise<Movie | undefined> {
     const updated = await this.updateContent(id, updateData);
-    return updated && updated.type === 'movie' ? updated as Movie : undefined;
+    return updated && updated.type === 'movie' ? (updated as Movie) : undefined;
   }
 
   async deleteMovie(id: number): Promise<boolean> {
@@ -364,10 +386,7 @@ export class DatabaseStorage implements IStorage {
 
   // Feedback operations
   async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
-    const [newFeedback] = await db
-      .insert(feedback)
-      .values(feedbackData)
-      .returning();
+    const [newFeedback] = await db.insert(feedback).values(feedbackData).returning();
     return newFeedback;
   }
 
@@ -386,11 +405,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateFeedback(id: number, updates: Partial<Feedback>): Promise<Feedback | undefined> {
-    const [updated] = await db
-      .update(feedback)
-      .set(updates)
-      .where(eq(feedback.id, id))
-      .returning();
+    const [updated] = await db.update(feedback).set(updates).where(eq(feedback.id, id)).returning();
     return updated || undefined;
   }
 
@@ -398,23 +413,21 @@ export class DatabaseStorage implements IStorage {
   async getUserWatchlist(userId: number): Promise<Content[]> {
     const watchlistItems = await db
       .select({
-        content: content
+        content: content,
       })
       .from(watchlist)
       .innerJoin(content, eq(watchlist.contentId, content.id))
       .where(eq(watchlist.userId, userId));
 
-    return watchlistItems.map(item => item.content);
+    return watchlistItems.map((item) => item.content);
   }
 
   async addToWatchlist(userId: number, contentId: number): Promise<boolean> {
     try {
-      await db
-        .insert(watchlist)
-        .values({
-          userId,
-          contentId
-        });
+      await db.insert(watchlist).values({
+        userId,
+        contentId,
+      });
       return true;
     } catch (error) {
       // Handle duplicate entries or other errors
@@ -426,12 +439,7 @@ export class DatabaseStorage implements IStorage {
   async removeFromWatchlist(userId: number, contentId: number): Promise<boolean> {
     const result = await db
       .delete(watchlist)
-      .where(
-        and(
-          eq(watchlist.userId, userId),
-          eq(watchlist.contentId, contentId)
-        )
-      );
+      .where(and(eq(watchlist.userId, userId), eq(watchlist.contentId, contentId)));
     return result.rowCount !== null && result.rowCount > 0;
   }
 
@@ -439,12 +447,7 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .select()
       .from(watchlist)
-      .where(
-        and(
-          eq(watchlist.userId, userId),
-          eq(watchlist.contentId, contentId)
-        )
-      );
+      .where(and(eq(watchlist.userId, userId), eq(watchlist.contentId, contentId)));
     return !!result;
   }
 
@@ -462,14 +465,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPlatformImage(platformImage: InsertPlatformImage): Promise<PlatformImage> {
-    const [newImage] = await db
-      .insert(platformImages)
-      .values(platformImage)
-      .returning();
+    const [newImage] = await db.insert(platformImages).values(platformImage).returning();
     return newImage;
   }
 
-  async updatePlatformImage(id: number, updates: Partial<InsertPlatformImage>): Promise<PlatformImage | undefined> {
+  async updatePlatformImage(
+    id: number,
+    updates: Partial<InsertPlatformImage>
+  ): Promise<PlatformImage | undefined> {
     const [updated] = await db
       .update(platformImages)
       .set(updates)
@@ -492,12 +495,7 @@ export class DatabaseStorage implements IStorage {
     const [usage] = await db
       .select()
       .from(apiUsage)
-      .where(
-        and(
-          eq(apiUsage.month, currentMonth),
-          eq(apiUsage.year, currentYear)
-        )
-      );
+      .where(and(eq(apiUsage.month, currentMonth), eq(apiUsage.year, currentYear)));
 
     if (!usage) {
       // Create new usage record for current month
@@ -508,7 +506,7 @@ export class DatabaseStorage implements IStorage {
           year: currentYear,
           watchmodeRequests: 0,
           tvdbRequests: 0,
-          lastReset: now
+          lastReset: now,
         })
         .returning();
       return newUsage;
@@ -524,7 +522,7 @@ export class DatabaseStorage implements IStorage {
         .update(apiUsage)
         .set({
           watchmodeRequests: usage.watchmodeRequests + count,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(apiUsage.id, usage.id));
     }
@@ -537,7 +535,7 @@ export class DatabaseStorage implements IStorage {
         .update(apiUsage)
         .set({
           tvdbRequests: usage.tvdbRequests + count,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(apiUsage.id, usage.id));
     }
@@ -555,7 +553,7 @@ export class DatabaseStorage implements IStorage {
         year: currentYear,
         watchmodeRequests: 0,
         tvdbRequests: 0,
-        lastReset: now
+        lastReset: now,
       })
       .onConflictDoUpdate({
         target: [apiUsage.month, apiUsage.year],
@@ -563,19 +561,19 @@ export class DatabaseStorage implements IStorage {
           watchmodeRequests: 0,
           tvdbRequests: 0,
           lastReset: now,
-          updatedAt: now
-        }
+          updatedAt: now,
+        },
       });
   }
 
   // Subgenres management
   async getSubgenres(activeOnly: boolean = false): Promise<Subgenre[]> {
     let query = db.select().from(subgenres);
-    
+
     if (activeOnly) {
       query = query.where(eq(subgenres.isActive, true));
     }
-    
+
     return await query.orderBy(subgenres.sortOrder, subgenres.name);
   }
 
@@ -590,14 +588,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSubgenre(subgenreData: InsertSubgenre): Promise<Subgenre> {
-    const [newSubgenre] = await db
-      .insert(subgenres)
-      .values(subgenreData)
-      .returning();
+    const [newSubgenre] = await db.insert(subgenres).values(subgenreData).returning();
     return newSubgenre;
   }
 
-  async updateSubgenre(id: number, updates: Partial<InsertSubgenre>): Promise<Subgenre | undefined> {
+  async updateSubgenre(
+    id: number,
+    updates: Partial<InsertSubgenre>
+  ): Promise<Subgenre | undefined> {
     const [updated] = await db
       .update(subgenres)
       .set(updates)
@@ -621,7 +619,7 @@ export class DatabaseStorage implements IStorage {
       }
       return true;
     } catch (error) {
-      console.error("Error reordering subgenres:", error);
+      console.error('Error reordering subgenres:', error);
       return false;
     }
   }

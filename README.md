@@ -1,10 +1,11 @@
 # Scream Stream - Top Rated Streaming Horror
 
-Discover the highest-rated horror movies and series currently streaming. Rated by critics, fans, and audiences across all platforms.
+Discover the highest-rated horror movies and series currently streaming. Rated by critics and audiences across all major platforms.
 
 ## Quick Start
 
 ### 1. Prerequisites
+
 ```bash
 # Install Node.js 20+ (required for ARM64 support)
 brew install node@20
@@ -18,6 +19,7 @@ createdb scream_stream_dev
 ```
 
 ### 2. Setup Project
+
 ```bash
 # Clone and install
 git clone <repository-url>
@@ -30,6 +32,7 @@ cp .env.example .env
 ```
 
 ### 3. Initialize Database
+
 ```bash
 # Push schema to database
 npm run db:push
@@ -39,6 +42,7 @@ npx tsx server/seed.ts
 ```
 
 ### 4. Start Development
+
 ```bash
 npm run dev
 ```

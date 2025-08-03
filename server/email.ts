@@ -1,7 +1,7 @@
-import { MailtrapClient } from "mailtrap";
+import { MailtrapClient } from 'mailtrap';
 
 if (!process.env.MAILTRAP_TOKEN) {
-  throw new Error("MAILTRAP_TOKEN environment variable must be set");
+  throw new Error('MAILTRAP_TOKEN environment variable must be set');
 }
 
 const client = new MailtrapClient({
@@ -18,8 +18,8 @@ interface EmailParams {
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     const sender = {
-      email: "noreply@screamstream.app",
-      name: "Scream Stream",
+      email: 'noreply@screamstream.app',
+      name: 'Scream Stream',
     };
 
     await client.send({

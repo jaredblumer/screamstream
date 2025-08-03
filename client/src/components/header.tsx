@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { Search, Menu, Skull, User, Heart, LogOut, Settings } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useAuth } from "@/hooks/use-auth";
-import { useWatchlistCount } from "@/contexts/WatchlistCountContext";
+import { useState } from 'react';
+import { Link, useLocation } from 'wouter';
+import { Search, Menu, Skull, User, Heart, LogOut, Settings } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/use-auth';
+import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
 
 interface HeaderProps {
   searchQuery: string;
@@ -21,14 +21,18 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
   const { watchlistCount } = useWatchlistCount();
 
   const navigation = [
-    { name: "Top Rated", href: "/", active: location === "/" },
-    { name: "New to Streaming", href: "/new-to-streaming", active: location === "/new-to-streaming" },
-    { name: "Subgenres", href: "/subgenres", active: location === "/subgenres" },
-    { 
-      name: "Watchlist", 
-      href: "/watchlist", 
-      active: location === "/watchlist",
-      badge: watchlistCount > 0 ? watchlistCount : undefined
+    { name: 'Top Rated', href: '/', active: location === '/' },
+    {
+      name: 'New to Streaming',
+      href: '/new-to-streaming',
+      active: location === '/new-to-streaming',
+    },
+    { name: 'Subgenres', href: '/subgenres', active: location === '/subgenres' },
+    {
+      name: 'Watchlist',
+      href: '/watchlist',
+      active: location === '/watchlist',
+      badge: watchlistCount > 0 ? watchlistCount : undefined,
     },
   ];
 
@@ -37,20 +41,24 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
           {/* Logo */}
-          <Link 
-            href="/" 
-            className="flex items-center" 
+          <Link
+            href="/"
+            className="flex items-center"
             onClick={() => {
-              onSearchChange("");
+              onSearchChange('');
               setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
             }}
           >
             <div className="flex-shrink-0">
               <h1 className="text-xl sm:text-2xl font-bold blood-red flex items-center">
                 <Skull className="mr-1 sm:mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                <span className={`transition-all duration-300 overflow-hidden ${
-                  isSearchFocused ? 'w-0 opacity-0 sm:w-auto sm:opacity-100' : 'w-auto opacity-100'
-                }`}>
+                <span
+                  className={`transition-all duration-300 overflow-hidden ${
+                    isSearchFocused
+                      ? 'w-0 opacity-0 sm:w-auto sm:opacity-100'
+                      : 'w-auto opacity-100'
+                  }`}
+                >
                   <span className="whitespace-nowrap">Scream Stream</span>
                 </span>
               </h1>
@@ -58,11 +66,11 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
           </Link>
 
           {/* Search Bar */}
-          <div className={`transition-all duration-300 max-w-lg ${
-            isSearchFocused 
-              ? 'flex-1 mx-1 sm:mx-4 md:mx-8' 
-              : 'flex-1 mx-2 sm:mx-4 md:mx-8'
-          }`}>
+          <div
+            className={`transition-all duration-300 max-w-lg ${
+              isSearchFocused ? 'flex-1 mx-1 sm:mx-4 md:mx-8' : 'flex-1 mx-2 sm:mx-4 md:mx-8'
+            }`}
+          >
             <div className="relative">
               <Input
                 type="text"
@@ -84,14 +92,21 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => (item.name === "Top Rankings" || item.name === "New Releases") ? onSearchChange("") : undefined}
+                  onClick={() =>
+                    item.name === 'Top Rankings' || item.name === 'New Releases'
+                      ? onSearchChange('')
+                      : undefined
+                  }
                   className={`transition-colors flex items-center gap-2 ${
-                    item.active ? "blood-red" : "text-gray-300 hover:text-red-400"
+                    item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'
                   }`}
                 >
                   {item.name}
                   {item.badge && (
-                    <Badge variant="destructive" className="bg-red-600 text-white text-xs min-w-5 h-5 flex items-center justify-center px-1">
+                    <Badge
+                      variant="destructive"
+                      className="bg-red-600 text-white text-xs min-w-5 h-5 flex items-center justify-center px-1"
+                    >
                       {item.badge}
                     </Badge>
                   )}
@@ -110,8 +125,8 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                       <Settings className="h-4 w-4" />
                     </Button>
                   </Link>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="outline"
                     className="horror-button-outline"
                     onClick={() => logoutMutation.mutate()}
@@ -121,10 +136,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                 </>
               ) : (
                 <Link href="/auth">
-                  <Button 
-                    size="sm" 
-                    className="horror-button-primary"
-                  >
+                  <Button size="sm" className="horror-button-primary">
                     <User className="h-4 w-4 mr-2" />
                     Sign In
                   </Button>
@@ -148,11 +160,12 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                       key={item.name}
                       href={item.href}
                       className={`text-lg transition-colors ${
-                        item.active ? "blood-red" : "text-gray-300 hover:text-red-400"
+                        item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'
                       }`}
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        if (item.name === "Top Rankings" || item.name === "New Releases") onSearchChange("");
+                        if (item.name === 'Top Rankings' || item.name === 'New Releases')
+                          onSearchChange('');
                       }}
                     >
                       {item.name}
@@ -172,7 +185,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                           Admin
                         </Button>
                       </Link>
-                      <Button 
+                      <Button
                         variant="outline"
                         className="horror-button-outline mt-2"
                         onClick={() => {
@@ -186,7 +199,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                     </>
                   ) : (
                     <Link href="/auth">
-                      <Button 
+                      <Button
                         className="horror-button-primary mt-4"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >

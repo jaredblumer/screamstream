@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
 interface AppConfig {
   recaptchaSiteKey: string;
@@ -6,12 +6,12 @@ interface AppConfig {
 
 export function useConfig() {
   const { data: config, isLoading } = useQuery<AppConfig>({
-    queryKey: ["/api/config"],
+    queryKey: ['/api/config'],
     staleTime: Infinity, // Config doesn't change often
   });
 
   return {
-    config: config || { recaptchaSiteKey: "" },
+    config: config || { recaptchaSiteKey: '' },
     isLoading,
   };
 }

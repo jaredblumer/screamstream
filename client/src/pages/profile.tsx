@@ -1,59 +1,59 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { 
-  User, 
-  Settings, 
-  Heart, 
-  Eye, 
-  TrendingUp, 
-  Calendar, 
-  Star, 
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import {
+  User,
+  Settings,
+  Heart,
+  Eye,
+  TrendingUp,
+  Calendar,
+  Star,
   Film,
   Bell,
   Shield,
   Palette,
   Save,
-  Camera
-} from "lucide-react";
-import Header from "@/components/header";
-import { useWatchlist } from "@/hooks/use-watchlist";
-import { useToast } from "@/hooks/use-toast";
-import { Movie } from "@shared/schema";
+  Camera,
+} from 'lucide-react';
+import Header from '@/components/header';
+import { useWatchlist } from '@/hooks/use-watchlist';
+import { useToast } from '@/hooks/use-toast';
+import { Movie } from '@shared/schema';
 
 export default function Profile() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const { watchlistCount, isAuthenticated } = useWatchlist();
   const { toast } = useToast();
-  
+
   // Profile state
   const [profile, setProfile] = useState({
-    name: "Horror Fan",
-    email: "fan@screamstream.com",
-    bio: "Love discovering top-ranked streaming horror - from classic Universal monsters to modern psychological thrillers.",
-    avatar: "",
-    joinDate: "October 2023",
-    favoriteGenre: "Supernatural",
+    name: 'Horror Fan',
+    email: 'fan@screamstream.com',
+    bio: 'Love discovering top-ranked streaming horror - from classic Universal monsters to modern psychological thrillers.',
+    avatar: '',
+    joinDate: 'October 2023',
+    favoriteGenre: 'Supernatural',
     preferences: {
       emailNotifications: true,
       pushNotifications: false,
       spoilerWarnings: true,
       autoplay: false,
       darkMode: true,
-    }
+    },
   });
 
   // Fetch movies for statistics
   const { data: allMovies = [] } = useQuery<Movie[]>({
-    queryKey: ["/api/content"],
+    queryKey: ['/api/content'],
   });
 
   // Calculate user statistics
@@ -64,27 +64,27 @@ export default function Profile() {
 
   const handleProfileUpdate = () => {
     toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
+      title: 'Profile Updated',
+      description: 'Your profile has been successfully updated.',
     });
   };
 
   const handlePreferenceChange = (key: string, value: boolean) => {
-    setProfile(prev => ({
+    setProfile((prev) => ({
       ...prev,
       preferences: {
         ...prev.preferences,
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   };
 
   const topGenres = [
-    { name: "Supernatural", count: 12, percentage: 35 },
-    { name: "Psychological", count: 8, percentage: 24 },
-    { name: "Slasher", count: 6, percentage: 18 },
-    { name: "Monster", count: 5, percentage: 15 },
-    { name: "Zombie", count: 3, percentage: 8 }
+    { name: 'Supernatural', count: 12, percentage: 35 },
+    { name: 'Psychological', count: 8, percentage: 24 },
+    { name: 'Slasher', count: 6, percentage: 18 },
+    { name: 'Monster', count: 5, percentage: 15 },
+    { name: 'Zombie', count: 3, percentage: 8 },
   ];
 
   if (!isAuthenticated) {
@@ -96,11 +96,12 @@ export default function Profile() {
             <User className="h-16 w-16 text-gray-600 mx-auto mb-6" />
             <h1 className="text-4xl font-bold text-white mb-6">Sign In to Access Your Profile</h1>
             <p className="text-xl text-gray-300 mb-8">
-              Create an account to access your profile, view your watchlist statistics, and manage your preferences.
+              Create an account to access your profile, view your watchlist statistics, and manage
+              your preferences.
             </p>
-            <Button 
+            <Button
               className="horror-button-primary px-8 py-3"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => (window.location.href = '/api/login')}
             >
               Sign In to Get Started
             </Button>
@@ -113,7 +114,7 @@ export default function Profile() {
   return (
     <>
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      
+
       <div className="min-h-screen horror-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Profile Header */}
@@ -124,13 +125,17 @@ export default function Profile() {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-red-900 border-4 border-red-600 flex items-center justify-center">
                     {profile.avatar ? (
-                      <img src={profile.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                      <img
+                        src={profile.avatar}
+                        alt="Profile"
+                        className="w-full h-full rounded-full object-cover"
+                      />
                     ) : (
                       <User className="h-16 w-16 text-white" />
                     )}
                   </div>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="absolute bottom-0 right-0 rounded-full horror-button-primary h-8 w-8 p-0"
                   >
                     <Camera className="h-4 w-4" />
@@ -146,7 +151,7 @@ export default function Profile() {
                 <h1 className="text-4xl font-bold text-white mb-2">{profile.name}</h1>
                 <p className="text-gray-300 mb-4">{profile.email}</p>
                 <p className="text-gray-400 mb-6 max-w-2xl">{profile.bio}</p>
-                
+
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
@@ -173,10 +178,18 @@ export default function Profile() {
           {/* Profile Tabs */}
           <Tabs defaultValue="overview" className="animate-slide-up">
             <TabsList className="grid w-full grid-cols-4 dark-gray-bg border-gray-700">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-red-600">Overview</TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-red-600">Settings</TabsTrigger>
-              <TabsTrigger value="statistics" className="data-[state=active]:bg-red-600">Statistics</TabsTrigger>
-              <TabsTrigger value="preferences" className="data-[state=active]:bg-red-600">Preferences</TabsTrigger>
+              <TabsTrigger value="overview" className="data-[state=active]:bg-red-600">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-red-600">
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="statistics" className="data-[state=active]:bg-red-600">
+                Statistics
+              </TabsTrigger>
+              <TabsTrigger value="preferences" className="data-[state=active]:bg-red-600">
+                Preferences
+              </TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -230,13 +243,11 @@ export default function Profile() {
                           <Badge variant="outline" className="border-gray-600 text-gray-300">
                             {genre.name}
                           </Badge>
-                          <span className="text-gray-400 text-sm ml-2">
-                            {genre.count} movies
-                          </span>
+                          <span className="text-gray-400 text-sm ml-2">{genre.count} movies</span>
                         </div>
                         <div className="flex items-center">
                           <div className="w-20 h-2 bg-gray-700 rounded-full mr-2">
-                            <div 
+                            <div
                               className="h-full bg-red-600 rounded-full"
                               style={{ width: `${genre.percentage}%` }}
                             />
@@ -262,31 +273,37 @@ export default function Profile() {
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="name" className="text-white">Display Name</Label>
+                      <Label htmlFor="name" className="text-white">
+                        Display Name
+                      </Label>
                       <Input
                         id="name"
                         value={profile.name}
-                        onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))}
                         className="horror-bg border-gray-700 text-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-white">Email</Label>
+                      <Label htmlFor="email" className="text-white">
+                        Email
+                      </Label>
                       <Input
                         id="email"
                         type="email"
                         value={profile.email}
-                        onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
                         className="horror-bg border-gray-700 text-white"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-white">Bio</Label>
+                    <Label htmlFor="bio" className="text-white">
+                      Bio
+                    </Label>
                     <Input
                       id="bio"
                       value={profile.bio}
-                      onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                      onChange={(e) => setProfile((prev) => ({ ...prev, bio: e.target.value }))}
                       className="horror-bg border-gray-700 text-white"
                     />
                   </div>
@@ -334,7 +351,9 @@ export default function Profile() {
               <Card className="dark-gray-bg border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-white">Viewing History</CardTitle>
-                  <CardDescription className="text-gray-400">Your horror movie journey</CardDescription>
+                  <CardDescription className="text-gray-400">
+                    Your horror movie journey
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">
@@ -358,11 +377,15 @@ export default function Profile() {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-white">Email Notifications</Label>
-                      <p className="text-gray-400 text-sm">Receive updates about new horror releases</p>
+                      <p className="text-gray-400 text-sm">
+                        Receive updates about new horror releases
+                      </p>
                     </div>
                     <Switch
                       checked={profile.preferences.emailNotifications}
-                      onCheckedChange={(checked) => handlePreferenceChange('emailNotifications', checked)}
+                      onCheckedChange={(checked) =>
+                        handlePreferenceChange('emailNotifications', checked)
+                      }
                     />
                   </div>
                   <Separator className="bg-gray-700" />
@@ -373,7 +396,9 @@ export default function Profile() {
                     </div>
                     <Switch
                       checked={profile.preferences.pushNotifications}
-                      onCheckedChange={(checked) => handlePreferenceChange('pushNotifications', checked)}
+                      onCheckedChange={(checked) =>
+                        handlePreferenceChange('pushNotifications', checked)
+                      }
                     />
                   </div>
                   <Separator className="bg-gray-700" />
@@ -384,7 +409,9 @@ export default function Profile() {
                     </div>
                     <Switch
                       checked={profile.preferences.spoilerWarnings}
-                      onCheckedChange={(checked) => handlePreferenceChange('spoilerWarnings', checked)}
+                      onCheckedChange={(checked) =>
+                        handlePreferenceChange('spoilerWarnings', checked)
+                      }
                     />
                   </div>
                 </CardContent>
@@ -401,7 +428,9 @@ export default function Profile() {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label className="text-white">Dark Mode</Label>
-                      <p className="text-gray-400 text-sm">Perfect for late-night horror sessions</p>
+                      <p className="text-gray-400 text-sm">
+                        Perfect for late-night horror sessions
+                      </p>
                     </div>
                     <Switch
                       checked={profile.preferences.darkMode}
@@ -435,9 +464,7 @@ export default function Profile() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/">
-                  <Button className="horror-button-primary">
-                    Browse Movies
-                  </Button>
+                  <Button className="horror-button-primary">Browse Movies</Button>
                 </Link>
                 <Link href="/watchlist">
                   <Button variant="outline" className="horror-button-outline">

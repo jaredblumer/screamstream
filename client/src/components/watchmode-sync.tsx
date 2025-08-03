@@ -1,15 +1,24 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { Download, CheckCircle, AlertCircle, RefreshCw, Database, Image, Settings, Edit } from "lucide-react";
+import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Download,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Database,
+  Image,
+  Settings,
+  Edit,
+} from 'lucide-react';
 
 interface SyncResult {
   newMoviesAdded: number;
@@ -47,22 +56,22 @@ export default function WatchmodeSync() {
   const [maxRequests, setMaxRequests] = useState(50);
   const [minRating, setMinRating] = useState(0.0);
   const [validationOnly, setValidationOnly] = useState(false);
-  const [manualCount, setManualCount] = useState<string>("");
+  const [manualCount, setManualCount] = useState<string>('');
 
   // Get Watchmode API status
   const { data: status } = useQuery<WatchmodeStatus>({
     queryKey: ['/api/watchmode/status'],
   });
 
-  // Streaming releases sync mutation
-  const streamingSyncMutation = useMutation({
+  // Get New to Streaming releases
+  const newToStreamingMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/sync-streaming-releases");
+      const res = await apiRequest('POST', '/api/admin/sync-new-to-streaming');
       return await res.json();
     },
     onSuccess: (result: any) => {
       toast({
-        title: "Streaming sync completed!",
+        title: 'Streaming sync completed!',
         description: `Added ${result.newTitlesAdded} new titles, skipped ${result.duplicatesSkipped} duplicates`,
       });
       // Refresh content queries
@@ -71,9 +80,9 @@ export default function WatchmodeSync() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Streaming sync failed",
+        title: 'Streaming sync failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
@@ -81,12 +90,12 @@ export default function WatchmodeSync() {
   // Bulk poster sync mutation
   const posterSyncMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/sync-posters");
+      const res = await apiRequest('POST', '/api/admin/sync-posters');
       return await res.json();
     },
     onSuccess: (result: any) => {
       toast({
-        title: "Poster sync completed!",
+        title: 'Poster sync completed!',
         description: `Updated ${result.updatedCount} posters, ${result.failedCount} failed`,
       });
       // Refresh content queries to show updated posters
@@ -95,9 +104,9 @@ export default function WatchmodeSync() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Poster sync failed",
+        title: 'Poster sync failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
@@ -105,25 +114,25 @@ export default function WatchmodeSync() {
   // Manual API count update mutation
   const updateCountMutation = useMutation({
     mutationFn: async (count: number) => {
-      const res = await apiRequest("PUT", "/api/admin/watchmode/usage", {
-        requestsUsed: count
+      const res = await apiRequest('PUT', '/api/admin/watchmode/usage', {
+        requestsUsed: count,
       });
       return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "API count updated successfully",
+        title: 'API count updated successfully',
         description: `Set Watchmode requests used to ${manualCount}`,
       });
-      setManualCount("");
+      setManualCount('');
       // Refresh the status query
       queryClient.invalidateQueries({ queryKey: ['/api/watchmode/status'] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Update failed",
+        title: 'Update failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
@@ -132,18 +141,18 @@ export default function WatchmodeSync() {
   const syncMutation = useMutation({
     mutationFn: async () => {
       console.log('syncMutation');
-      const res = await apiRequest("POST", "/api/content/sync", {
+      const res = await apiRequest('POST', '/api/content/sync', {
         maxRequests,
         selectedPlatforms,
         minRating,
-        validationOnly
+        validationOnly,
       });
       console.log('syncMutation response:', res);
       return await res.json();
     },
     onSuccess: (result: SyncResult) => {
       toast({
-        title: "Sync completed!",
+        title: 'Sync completed!',
         description: result.summary,
       });
       // Refresh admin content after sync
@@ -151,23 +160,31 @@ export default function WatchmodeSync() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Sync failed",
+        title: 'Sync failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
 
   const availablePlatforms = [
-    'Netflix', 'Amazon Prime', 'Hulu', 'HBO Max', 'Disney+', 
-    'Apple TV+', 'Paramount+', 'Peacock', 'Shudder', 'Tubi'
+    'Netflix',
+    'Amazon Prime',
+    'Hulu',
+    'HBO Max',
+    'Disney+',
+    'Apple TV+',
+    'Paramount+',
+    'Peacock',
+    'Shudder',
+    'Tubi',
   ];
 
   const handlePlatformChange = (platform: string, checked: boolean) => {
     if (checked) {
       setSelectedPlatforms([...selectedPlatforms, platform]);
     } else {
-      setSelectedPlatforms(selectedPlatforms.filter(p => p !== platform));
+      setSelectedPlatforms(selectedPlatforms.filter((p) => p !== platform));
     }
   };
 
@@ -175,18 +192,16 @@ export default function WatchmodeSync() {
     const count = parseInt(manualCount, 10);
     if (isNaN(count) || count < 0 || count > 1000) {
       toast({
-        title: "Invalid count",
-        description: "Please enter a valid number between 0 and 1000",
-        variant: "destructive",
+        title: 'Invalid count',
+        description: 'Please enter a valid number between 0 and 1000',
+        variant: 'destructive',
       });
       return;
     }
     updateCountMutation.mutate(count);
   };
 
-
-
-  const progressPercentage = status 
+  const progressPercentage = status
     ? Math.round((status.requestsUsed / status.monthlyLimit) * 100)
     : 0;
 
@@ -205,20 +220,21 @@ export default function WatchmodeSync() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-gray-300">
-            This will search for new horror releases from Netflix, Amazon Prime, Hulu, HBO Max, and Shudder from the last 30 days.
-            Content will be validated for horror genres and stored in the database.
+            This will search for new horror releases from Netflix, Amazon Prime, Hulu, HBO Max, and
+            Shudder from the last 30 days. Content will be validated for horror genres and stored in
+            the database.
           </div>
           <Button
-            onClick={() => streamingSyncMutation.mutate()}
-            disabled={streamingSyncMutation.isPending}
+            onClick={() => newToStreamingMutation.mutate()}
+            disabled={newToStreamingMutation.isPending}
             className="horror-button-primary w-full"
           >
-            {streamingSyncMutation.isPending ? (
+            {newToStreamingMutation.isPending ? (
               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <Download className="w-4 h-4 mr-2" />
             )}
-            {streamingSyncMutation.isPending ? "Syncing..." : "Sync New Streaming Releases"}
+            {newToStreamingMutation.isPending ? 'Syncing...' : 'Sync New Streaming Releases'}
           </Button>
         </CardContent>
       </Card>
@@ -236,8 +252,9 @@ export default function WatchmodeSync() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-gray-300">
-            This will scan all content for missing, empty, or broken poster URLs (like relative paths) and attempt to find high-quality 
-            poster images from TVDB using the same matching logic as the individual "Fix TVDB" button.
+            This will scan all content for missing, empty, or broken poster URLs (like relative
+            paths) and attempt to find high-quality poster images from TVDB using the same matching
+            logic as the individual "Fix TVDB" button.
           </div>
           <Button
             onClick={() => posterSyncMutation.mutate()}
@@ -249,9 +266,9 @@ export default function WatchmodeSync() {
             ) : (
               <Image className="w-4 h-4 mr-2" />
             )}
-            {posterSyncMutation.isPending ? "Syncing Posters..." : "Sync Missing Posters"}
+            {posterSyncMutation.isPending ? 'Syncing Posters...' : 'Sync Missing Posters'}
           </Button>
-          
+
           {/* Poster Sync Result */}
           {posterSyncMutation.data && (
             <Card className="border-green-700 bg-green-900/20">
@@ -261,29 +278,46 @@ export default function WatchmodeSync() {
                   <div className="space-y-2">
                     <h4 className="text-green-400 font-medium">Poster Sync Completed</h4>
                     <div className="text-sm text-gray-300 space-y-1">
-                      <div>• {posterSyncMutation.data.updatedCount} posters updated successfully</div>
-                      <div>• {posterSyncMutation.data.failedCount} items failed to find posters</div>
+                      <div>
+                        • {posterSyncMutation.data.updatedCount} posters updated successfully
+                      </div>
+                      <div>
+                        • {posterSyncMutation.data.failedCount} items failed to find posters
+                      </div>
                       <div>• {posterSyncMutation.data.processedItems} items processed</div>
-                      {posterSyncMutation.data.totalItems > posterSyncMutation.data.processedItems && (
+                      {posterSyncMutation.data.totalItems >
+                        posterSyncMutation.data.processedItems && (
                         <div className="text-yellow-400">
-                          • {posterSyncMutation.data.totalItems - posterSyncMutation.data.processedItems} items remaining (run again to process more)
+                          •{' '}
+                          {posterSyncMutation.data.totalItems -
+                            posterSyncMutation.data.processedItems}{' '}
+                          items remaining (run again to process more)
                         </div>
                       )}
                     </div>
-                    {posterSyncMutation.data.results && posterSyncMutation.data.results.filter((r: any) => r.status === 'failed').length > 0 && (
-                      <div className="text-red-400 text-sm">
-                        <div className="font-medium">Failed items:</div>
-                        {posterSyncMutation.data.results
-                          .filter((r: any) => r.status === 'failed')
-                          .slice(0, 3)
-                          .map((result: any, index: number) => (
-                            <div key={index}>• {result.title}</div>
-                          ))}
-                        {posterSyncMutation.data.results.filter((r: any) => r.status === 'failed').length > 3 && (
-                          <div>• And {posterSyncMutation.data.results.filter((r: any) => r.status === 'failed').length - 3} more...</div>
-                        )}
-                      </div>
-                    )}
+                    {posterSyncMutation.data.results &&
+                      posterSyncMutation.data.results.filter((r: any) => r.status === 'failed')
+                        .length > 0 && (
+                        <div className="text-red-400 text-sm">
+                          <div className="font-medium">Failed items:</div>
+                          {posterSyncMutation.data.results
+                            .filter((r: any) => r.status === 'failed')
+                            .slice(0, 3)
+                            .map((result: any, index: number) => (
+                              <div key={index}>• {result.title}</div>
+                            ))}
+                          {posterSyncMutation.data.results.filter((r: any) => r.status === 'failed')
+                            .length > 3 && (
+                            <div>
+                              • And{' '}
+                              {posterSyncMutation.data.results.filter(
+                                (r: any) => r.status === 'failed'
+                              ).length - 3}{' '}
+                              more...
+                            </div>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </div>
               </CardContent>
@@ -312,17 +346,12 @@ export default function WatchmodeSync() {
                   {status.requestsUsed} / {status.monthlyLimit}
                 </span>
               </div>
-              <Progress 
-                value={progressPercentage} 
-                className="h-2" 
-              />
+              <Progress value={progressPercentage} className="h-2" />
               <div className="flex items-center justify-between">
-                <Badge variant={status.requestsRemaining > 100 ? "default" : "destructive"}>
+                <Badge variant={status.requestsRemaining > 100 ? 'default' : 'destructive'}>
                   {status.requestsRemaining} remaining
                 </Badge>
-                <span className="text-xs text-gray-400">
-                  {progressPercentage}% used
-                </span>
+                <span className="text-xs text-gray-400">{progressPercentage}% used</span>
               </div>
               {status.error && (
                 <div className="flex items-center gap-2 text-red-400 text-sm">
@@ -330,21 +359,23 @@ export default function WatchmodeSync() {
                   {status.error}
                 </div>
               )}
-              
+
               {/* Manual API Count Update Section */}
               <div className="pt-4 border-t border-gray-600">
                 <div className="flex items-center gap-2 mb-3">
                   <Settings className="h-4 w-4 text-gray-400" />
                   <h4 className="text-gray-300 font-medium">Manual Count Update</h4>
                 </div>
-                
+
                 <p className="text-gray-400 text-sm mb-3">
                   Manually adjust the API request count for correcting tracking discrepancies.
                 </p>
-                
+
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="manual-count" className="text-gray-300 text-sm">New Count</Label>
+                    <Label htmlFor="manual-count" className="text-gray-300 text-sm">
+                      New Count
+                    </Label>
                     <Input
                       id="manual-count"
                       type="number"
@@ -356,10 +387,15 @@ export default function WatchmodeSync() {
                       placeholder="Enter new count..."
                     />
                   </div>
-                  
+
                   <Button
                     onClick={handleUpdateCount}
-                    disabled={updateCountMutation.isPending || !manualCount || parseInt(manualCount) < 0 || parseInt(manualCount) > 1000}
+                    disabled={
+                      updateCountMutation.isPending ||
+                      !manualCount ||
+                      parseInt(manualCount) < 0 ||
+                      parseInt(manualCount) > 1000
+                    }
                     className="w-full horror-button-outline"
                   >
                     {updateCountMutation.isPending ? (
@@ -374,7 +410,7 @@ export default function WatchmodeSync() {
                       </>
                     )}
                   </Button>
-                  
+
                   {updateCountMutation.data && (
                     <div className="bg-green-900/20 border border-green-700 p-2 rounded text-sm">
                       <div className="flex items-center gap-2 text-green-400">
@@ -383,7 +419,7 @@ export default function WatchmodeSync() {
                       </div>
                     </div>
                   )}
-                  
+
                   {updateCountMutation.error && (
                     <div className="bg-red-900/20 border border-red-700 p-2 rounded text-sm">
                       <div className="flex items-center gap-2 text-red-400">
@@ -476,7 +512,9 @@ export default function WatchmodeSync() {
                   <Checkbox
                     id={`platform-${platform}`}
                     checked={selectedPlatforms.includes(platform)}
-                    onCheckedChange={(checked) => handlePlatformChange(platform, checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      handlePlatformChange(platform, checked as boolean)
+                    }
                   />
                   <Label htmlFor={`platform-${platform}`} className="text-gray-300 text-sm">
                     {platform}
@@ -485,8 +523,6 @@ export default function WatchmodeSync() {
               ))}
             </div>
           </div>
-
-
 
           {/* Sync Button */}
           <div className="pt-4">
@@ -517,7 +553,7 @@ export default function WatchmodeSync() {
                   <CheckCircle className="h-5 w-5 text-green-400 mt-0.5" />
                   <div className="space-y-3 w-full">
                     <h4 className="text-green-400 font-medium">Sync Completed</h4>
-                    
+
                     {/* Summary Stats */}
                     <div className="text-sm text-gray-300 space-y-1">
                       {syncMutation.data.newMoviesAdded > 0 && (
@@ -532,41 +568,55 @@ export default function WatchmodeSync() {
                       <div>• {syncMutation.data.requestsUsed} API requests used</div>
                       {syncMutation.data.searchStats && (
                         <>
-                          <div>• {syncMutation.data.searchStats.totalTitlesFound} total titles found in {syncMutation.data.searchStats.pagesSearched} pages</div>
-                          <div>• {syncMutation.data.searchStats.duplicatesSkipped} duplicates skipped</div>
-                          <div>• {syncMutation.data.searchStats.filteredOut} filtered out by criteria</div>
+                          <div>
+                            • {syncMutation.data.searchStats.totalTitlesFound} total titles found in{' '}
+                            {syncMutation.data.searchStats.pagesSearched} pages
+                          </div>
+                          <div>
+                            • {syncMutation.data.searchStats.duplicatesSkipped} duplicates skipped
+                          </div>
+                          <div>
+                            • {syncMutation.data.searchStats.filteredOut} filtered out by criteria
+                          </div>
                         </>
                       )}
                     </div>
 
                     {/* Detailed Title Processing */}
-                    {syncMutation.data.titlesProcessed && syncMutation.data.titlesProcessed.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-gray-200 font-medium text-sm">Titles Processed:</h5>
-                        <div className="max-h-32 overflow-y-auto space-y-1 text-xs">
-                          {syncMutation.data.titlesProcessed.map((title, index) => (
-                            <div key={index} className={`flex justify-between items-start gap-2 ${
-                              title.action === 'added' ? 'text-green-300' :
-                              title.action === 'skipped_existing' ? 'text-yellow-300' :
-                              title.action === 'filtered_out' ? 'text-orange-300' :
-                              'text-red-300'
-                            }`}>
-                              <span className="font-medium">
-                                {title.action === 'added' ? '✓' :
-                                 title.action === 'skipped_existing' ? '⏭️' :
-                                 title.action === 'filtered_out' ? '🚫' : '❌'} 
-                                {title.title} ({title.year})
-                              </span>
-                              {title.reason && (
-                                <span className="text-gray-400 text-xs truncate flex-shrink-0 max-w-48" title={title.reason}>
-                                  {title.reason}
+                    {syncMutation.data.titlesProcessed &&
+                      syncMutation.data.titlesProcessed.length > 0 && (
+                        <div className="space-y-2">
+                          <h5 className="text-gray-200 font-medium text-sm">Titles Processed:</h5>
+                          <div className="max-h-32 overflow-y-auto space-y-1 text-xs">
+                            {syncMutation.data.titlesProcessed.map((title, index) => (
+                              <div
+                                key={index}
+                                className={`flex justify-between items-start gap-2 ${
+                                  title.action === 'added'
+                                    ? 'text-green-300'
+                                    : title.action === 'skipped_existing'
+                                      ? 'text-yellow-300'
+                                      : title.action === 'filtered_out'
+                                        ? 'text-orange-300'
+                                        : 'text-red-300'
+                                }`}
+                              >
+                                <span className="font-medium">
+                                  {title.title} ({title.year})
                                 </span>
-                              )}
-                            </div>
-                          ))}
+                                {title.reason && (
+                                  <span
+                                    className="text-gray-400 text-xs truncate flex-shrink-0 max-w-48"
+                                    title={title.reason}
+                                  >
+                                    {title.reason}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Errors Section */}
                     {syncMutation.data.errors.length > 0 && (
@@ -587,8 +637,6 @@ export default function WatchmodeSync() {
           )}
         </CardContent>
       </Card>
-
-
     </div>
   );
 }

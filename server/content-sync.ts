@@ -1,6 +1,10 @@
-import { storage } from "./storage";
-import { watchmodeAPI, convertWatchmodeTitleToContent, getPopularStreamingPlatforms } from "./watchmode";
-import { Content, InsertContent } from "@shared/schema";
+import { storage } from './storage';
+import {
+  watchmodeAPI,
+  convertWatchmodeTitleToContent,
+  getPopularStreamingPlatforms,
+} from './watchmode';
+import { Content, InsertContent } from '@shared/schema';
 
 export interface SyncOptions {
   maxRequests?: number;
@@ -37,7 +41,7 @@ class ContentSyncService {
       maxRequests = 50,
       selectedPlatforms = ['Netflix', 'Amazon Prime Video', 'Hulu', 'HBO Max', 'Shudder'],
       minRating = 0.0,
-      validationOnly = false
+      validationOnly = false,
     } = options;
 
     const result: SyncResult = {
@@ -52,8 +56,8 @@ class ContentSyncService {
         totalTitlesFound: 0,
         pagesSearched: 0,
         duplicatesSkipped: 0,
-        filteredOut: 0
-      }
+        filteredOut: 0,
+      },
     };
 
     // const initialRequestCount = watchmodeAPI.getRequestCount();
@@ -88,7 +92,6 @@ class ContentSyncService {
 
       // result.requestsUsed = watchmodeAPI.getRequestCount() - initialRequestCount;
       result.summary = this.generateSummary(result);
-
     } catch (error) {
       result.errors.push(`Sync failed: ${error}`);
       // result.requestsUsed = watchmodeAPI.getRequestCount() - initialRequestCount;
@@ -103,13 +106,20 @@ class ContentSyncService {
     maxRequests: number,
     result: SyncResult
   ): Promise<InsertContent[]> {
-    console.log('fetchNewHorrorMovies with platforms:', platforms, 'minRating:', minRating, 'maxRequests:', maxRequests);
+    console.log(
+      'fetchNewHorrorMovies with platforms:',
+      platforms,
+      'minRating:',
+      minRating,
+      'maxRequests:',
+      maxRequests
+    );
     const content: InsertContent[] = [];
     const platformMap = getPopularStreamingPlatforms();
     console.log('Platform map:', platformMap);
     const selectedPlatformIds = platforms
-      .map(platform => platformMap[platform])
-      .filter(id => id !== undefined);
+      .map((platform) => platformMap[platform])
+      .filter((id) => id !== undefined);
     console.log('Selected platform IDs:', selectedPlatformIds);
 
     // if (selectedPlatformIds.length === 0) {
@@ -121,7 +131,7 @@ class ContentSyncService {
       // const sources = await watchmodeAPI.getSources();
       // console.log(`Found ${sources.length} sources`);
       // console.log('Sources:', sources);
-      
+
       // Search for horror content
       let page = 1;
       let requestsUsed = 1; // for getSources
@@ -132,7 +142,7 @@ class ContentSyncService {
           source_ids: selectedPlatformIds,
           sort_by: 'popularity_desc',
           page,
-          limit: 20
+          limit: 20,
         });
         console.log(`Page ${page} search result:`, searchResult);
 
@@ -145,10 +155,10 @@ class ContentSyncService {
         }
 
         // Get details for each title (limited by remaining requests)
-        const titlesToProcess = searchResult.titles.slice(0, Math.min(
-          searchResult.titles.length,
-          maxRequests - requestsUsed
-        ));
+        const titlesToProcess = searchResult.titles.slice(
+          0,
+          Math.min(searchResult.titles.length, maxRequests - requestsUsed)
+        );
 
         for (const titleResult of titlesToProcess) {
           if (requestsUsed >= maxRequests) break;
@@ -156,8 +166,11 @@ class ContentSyncService {
           try {
             // Check if content already exists BEFORE making expensive API call
             const existingByWatchmodeId = await this.findContentByExternalId(titleResult.id);
-            const existingByTitle = await this.findExistingContent(titleResult.title, titleResult.year);
-            
+            const existingByTitle = await this.findExistingContent(
+              titleResult.title,
+              titleResult.year
+            );
+
             if (existingByWatchmodeId || existingByTitle) {
               console.log(`Skipping existing content: ${titleResult.title} (${titleResult.year})`);
               result.searchStats.duplicatesSkipped++;
@@ -165,7 +178,7 @@ class ContentSyncService {
                 title: titleResult.title,
                 year: titleResult.year,
                 action: 'skipped_existing',
-                reason: 'Already in database'
+                reason: 'Already in database',
               });
               continue; // Skip without wasting API credit
             }
@@ -187,7 +200,7 @@ class ContentSyncService {
             // Merge the sources into the title details
             const enrichedTitleDetails = {
               ...titleDetails,
-              sources: titleSources
+              sources: titleSources,
             };
 
             const convertedContent = await convertWatchmodeTitleToContent(enrichedTitleDetails);
@@ -212,23 +225,22 @@ class ContentSyncService {
             //     reason: `Subgenres: ${convertedContent.subgenres.join(', ')} not in [${subgenres.join(', ')}]`
             //   });
             // }
-            
+
             // Small delay to respect API rate limits
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
           } catch (error) {
             console.error(`Failed to get details for title ${titleResult.id}:`, error);
             result.titlesProcessed.push({
               title: titleResult.title,
               year: titleResult.year,
               action: 'error',
-              reason: error instanceof Error ? error.message : 'Unknown error'
+              reason: error instanceof Error ? error.message : 'Unknown error',
             });
           }
         }
 
         page++;
       }
-
     } catch (error) {
       throw new Error(`Failed to fetch horror movies: ${error}`);
     }
@@ -246,7 +258,7 @@ class ContentSyncService {
 
     try {
       const existingContent = await storage.getContent();
-      
+
       for (const content of existingContent) {
         if (requestsUsed >= maxRequests) break;
 
@@ -276,9 +288,10 @@ class ContentSyncService {
             );
             requestsUsed++;
 
-            const match = searchResults.find(result => 
-              result.title.toLowerCase() === content.title.toLowerCase() &&
-              Math.abs(result.year - content.year) <= 1
+            const match = searchResults.find(
+              (result) =>
+                result.title.toLowerCase() === content.title.toLowerCase() &&
+                Math.abs(result.year - content.year) <= 1
             );
 
             if (match) {
@@ -287,7 +300,7 @@ class ContentSyncService {
               if (!content.watchmodeId) updates.watchmodeId = match.id;
               if (match.imdb_id && !content.imdbId) updates.imdbId = match.imdb_id;
               if (match.tmdb_id && !content.tmdbId) updates.tmdbId = match.tmdb_id;
-              
+
               if (Object.keys(updates).length > 0) {
                 await storage.updateContent(content.id, updates);
               }
@@ -307,10 +320,12 @@ class ContentSyncService {
 
   private async findExistingContent(title: string, year: number): Promise<Content | null> {
     const existingContent = await storage.getContent();
-    return existingContent.find(content => 
-      content.title.toLowerCase() === title.toLowerCase() &&
-      Math.abs(content.year - year) <= 1
-    ) || null;
+    return (
+      existingContent.find(
+        (content) =>
+          content.title.toLowerCase() === title.toLowerCase() && Math.abs(content.year - year) <= 1
+      ) || null
+    );
   }
 
   /**
@@ -318,65 +333,69 @@ class ContentSyncService {
    * This method optimizes API credit usage by checking watchmode_id first (1 credit)
    * before falling back to IMDB/TMDB IDs (2 credits each)
    */
-  private async findContentByExternalId(watchmodeId?: number, imdbId?: string, tmdbId?: number): Promise<Content | null> {
+  private async findContentByExternalId(
+    watchmodeId?: number,
+    imdbId?: string,
+    tmdbId?: number
+  ): Promise<Content | null> {
     const existingContent = await storage.getContent();
-    
+
     // First try watchmode_id (most reliable and efficient - 1 credit)
     if (watchmodeId) {
-      const found = existingContent.find(content => content.watchmodeId === watchmodeId);
+      const found = existingContent.find((content) => content.watchmodeId === watchmodeId);
       if (found) return found;
     }
-    
+
     // Then try IMDB ID (2 credits)
     if (imdbId) {
-      const found = existingContent.find(content => content.imdbId === imdbId);
+      const found = existingContent.find((content) => content.imdbId === imdbId);
       if (found) return found;
     }
-    
+
     // Finally try TMDB ID (2 credits)
     if (tmdbId) {
-      const found = existingContent.find(content => content.tmdbId === tmdbId);
+      const found = existingContent.find((content) => content.tmdbId === tmdbId);
       if (found) return found;
     }
-    
+
     return null;
   }
 
   private generateSummary(result: SyncResult): string {
     const parts = [];
-    
+
     if (result.newMoviesAdded > 0) {
       parts.push(`${result.newMoviesAdded} new content items added`);
     }
-    
+
     if (result.moviesValidated > 0) {
       parts.push(`${result.moviesValidated} items validated`);
     }
-    
+
     if (result.moviesRemoved > 0) {
       parts.push(`${result.moviesRemoved} items removed`);
     }
-    
+
     if (result.searchStats.duplicatesSkipped > 0) {
       parts.push(`${result.searchStats.duplicatesSkipped} duplicates skipped`);
     }
-    
+
     if (result.searchStats.filteredOut > 0) {
       parts.push(`${result.searchStats.filteredOut} filtered out`);
     }
-    
+
     if (result.requestsUsed > 0) {
       parts.push(`${result.requestsUsed} API requests used`);
     }
-    
+
     if (result.searchStats.pagesSearched > 0) {
       parts.push(`${result.searchStats.pagesSearched} pages searched`);
     }
-    
+
     if (result.errors.length > 0) {
       parts.push(`${result.errors.length} errors occurred`);
     }
-    
+
     return parts.length > 0 ? parts.join(', ') + '.' : 'No changes made.';
   }
 }
