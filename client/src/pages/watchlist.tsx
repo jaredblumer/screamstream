@@ -1,28 +1,27 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Heart } from "lucide-react";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import MovieCard from "@/components/movie-card";
-import { useWatchlistCount } from "@/contexts/WatchlistCountContext";
-import { useWatchlist } from "@/hooks/use-watchlist";
+import { useState } from 'react';
+import { Link, useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Heart } from 'lucide-react';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
+import MovieCard from '@/components/movie-card';
+import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
+import { useWatchlist } from '@/hooks/use-watchlist';
 
 export default function Watchlist() {
-    const { isAuthenticated } = useWatchlist();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { isAuthenticated } = useWatchlist();
+  const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useLocation();
   const { watchlistContent, refreshWatchlist, isWatchlistLoading } = useWatchlistCount();
 
   const filteredContent = searchQuery.trim()
-    ? watchlistContent.filter(content =>
-        content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        content.subgenre?.toLowerCase().includes(searchQuery.toLowerCase())
+    ? watchlistContent.filter(
+        (content) =>
+          content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          content.subgenre?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : watchlistContent;
-
-
 
   if (isWatchlistLoading) {
     return (
@@ -112,17 +111,20 @@ export default function Watchlist() {
 
           {/* Bottom CTA */}
           {watchlistContent.length > 0 && (
-            <div className="text-center mt-16 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
-              <h3 className="text-2xl font-bold text-white mb-4">Ready for a Horror Marathon?</h3>
+            <div className="text-center mt-8 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
+              <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
               <p className="text-gray-300 mb-6">
-                You've got {watchlistContent.length} terrifying item{watchlistContent.length !== 1 ? "s" : ""} waiting.
+                Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
+                surface.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/">
-                  <Button className="horror-button-primary">Add More Movies</Button>
+                <Link href="/browse">
+                  <Button className="horror-button-primary">Browse More Movies</Button>
                 </Link>
                 <Link href="/subgenres">
-                  <Button variant="outline" className="horror-button-outline">Explore Subgenres</Button>
+                  <Button variant="outline" className="horror-button-outline">
+                    Explore Subgenres
+                  </Button>
                 </Link>
               </div>
             </div>

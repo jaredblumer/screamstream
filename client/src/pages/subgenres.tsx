@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Film, Star, Calendar } from "lucide-react";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import MovieGrid from "@/components/movie-grid";
-import { Movie, Subgenre } from "@shared/schema";
+import React, { useState } from 'react';
+import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowRight, Film, Star, Calendar } from 'lucide-react';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
+import MovieGrid from '@/components/movie-grid';
+import { Movie, Subgenre } from '@shared/schema';
 
 interface SubgenreData {
   name: string;
@@ -20,21 +20,21 @@ interface SubgenreData {
 }
 
 export default function Subgenres() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isSearching = searchQuery.trim().length > 0;
 
   const { data: movies = [], isLoading: moviesLoading } = useQuery<Movie[]>({
-    queryKey: ["/api/content"],
+    queryKey: ['/api/content'],
   });
 
-  console.log("Movies loaded:", movies);
+  console.log('Movies loaded:', movies);
 
   const { data: subgenres = [], isLoading: subgenresLoading } = useQuery<Subgenre[]>({
-    queryKey: ["/api/subgenres"],
+    queryKey: ['/api/subgenres'],
   });
 
-  console.log("Subgenres loaded:", subgenres);
+  console.log('Subgenres loaded:', subgenres);
 
   const isLoading = moviesLoading || subgenresLoading;
 
@@ -49,12 +49,10 @@ export default function Subgenres() {
             movie.subgenre?.toLowerCase() === subgenre.slug ||
             movie.subgenres?.some((s) => s.toLowerCase() === subgenre.slug)
         );
-        
+
         console.log(`Subgenre: ${subgenre.name}, Matching Movies: ${matchingMovies.length}`);
 
-        const topMovies = matchingMovies
-          .sort((a, b) => b.rating - a.rating)
-          .slice(0, 3);
+        const topMovies = matchingMovies.sort((a, b) => b.rating - a.rating).slice(0, 3);
 
         return {
           name: subgenre.name,
@@ -67,14 +65,14 @@ export default function Subgenres() {
       .filter((genre) => genre.count > 0);
   }, [movies, subgenres]);
 
-  console.log("Processed genre data:", genreData);
+  console.log('Processed genre data:', genreData);
 
   if (isLoading) {
     return (
       <>
         <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         <div className="horror-bg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="text-center mb-12">
               <Skeleton className="h-12 w-96 mx-auto mb-4" />
               <Skeleton className="h-6 w-[600px] mx-auto" />
@@ -90,19 +88,23 @@ export default function Subgenres() {
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       <div className="horror-bg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Search Results */}
-          <div className={`transition-all duration-700 ease-in-out overflow-hidden ${
-            isSearching ? 'max-h-none opacity-100 transform translate-y-0' : 'max-h-0 opacity-0 transform -translate-y-4'
-          }`}>
-            <div className={`transition-opacity duration-300 ${isSearching ? 'delay-200' : 'delay-0'}`}>
+          <div
+            className={`transition-all duration-700 ease-in-out overflow-hidden ${
+              isSearching
+                ? 'max-h-none opacity-100 transform translate-y-0'
+                : 'max-h-0 opacity-0 transform -translate-y-4'
+            }`}
+          >
+            <div
+              className={`transition-opacity duration-300 ${isSearching ? 'delay-200' : 'delay-0'}`}
+            >
               <div className="mb-8 animate-slide-up">
                 <h1 className="text-4xl font-bold text-white mb-4">
                   Search Results for "<span className="blood-red">{searchQuery}</span>"
                 </h1>
-                <p className="text-gray-300">
-                  Found streaming horror content matching your search
-                </p>
+                <p className="text-gray-300">Found streaming horror content matching your search</p>
               </div>
               <div className="animate-fade-slide stagger-1">
                 <MovieGrid
@@ -119,30 +121,40 @@ export default function Subgenres() {
           </div>
 
           {/* Genres Content */}
-          <div className={`transition-all duration-700 ease-in-out overflow-hidden ${
-            !isSearching ? 'max-h-none opacity-100 transform translate-y-0' : 'max-h-0 opacity-0 transform -translate-y-4'
-          }`}>
-            <div className={`transition-opacity duration-300 ${!isSearching ? 'delay-200' : 'delay-0'}`}>
+          <div
+            className={`transition-all duration-700 ease-in-out overflow-hidden ${
+              !isSearching
+                ? 'max-h-none opacity-100 transform translate-y-0'
+                : 'max-h-0 opacity-0 transform -translate-y-4'
+            }`}
+          >
+            <div
+              className={`transition-opacity duration-300 ${!isSearching ? 'delay-200' : 'delay-0'}`}
+            >
               {/* Hero Section */}
-              <div className="text-center mb-16 animate-fade-in">
-                <h1 className="text-5xl font-bold text-white mb-6">
+              <div className="text-center mb-8 animate-fade-in">
+                <h1 className="text-5xl font-bold text-white mb-8">
                   <span className="blood-red">Horror Subgenres</span>
                 </h1>
                 <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                  Explore the highest-rated horror across streaming platforms. From supernatural scares to psychological thrillers,
-                  discover what makes each subgenre uniquely terrifying.
+                  Explore the highest-rated horror across streaming platforms. From supernatural
+                  scares to psychological thrillers, discover what makes each subgenre uniquely
+                  terrifying.
                 </p>
               </div>
 
               {/* Genre Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-slide stagger-1">
                 {genreData.map((genre) => (
-                  <Card key={genre.name} className="dark-gray-bg border-gray-700 hover:border-red-500 transition-all duration-300 group">
+                  <Card
+                    key={genre.name}
+                    className="dark-gray-bg border-gray-700 hover:border-red-500 transition-all duration-300 group"
+                  >
                     <CardHeader>
                       <CardTitle className="text-white flex items-center justify-between">
                         {genre.name}
                         <Badge variant="secondary" className="bg-red-900 text-red-100">
-                          {genre.count} films
+                          {genre.count} titles
                         </Badge>
                       </CardTitle>
                       <CardDescription className="text-gray-400">
@@ -194,22 +206,6 @@ export default function Subgenres() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-
-              {/* Bottom CTA */}
-              <div className="text-center mt-16 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  Can't Find Your Favorite Subgenre?
-                </h3>
-                <p className="text-gray-300 mb-6">
-                  Horror is constantly evolving. Discover emerging subgenres and hidden gems in our complete collection.
-                </p>
-                <Link href="/">
-                  <Button size="lg" className="horror-button-primary">
-                    Browse All Titles
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>

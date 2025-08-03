@@ -123,8 +123,8 @@ interface TVDBSearchResult {
 }
 
 class TVDBAPI {
-  private readonly baseUrl = "https://api4.thetvdb.com/v4";
-  private readonly imageBaseUrl = "https://artworks.thetvdb.com/banners/";
+  private readonly baseUrl = 'https://api4.thetvdb.com/v4';
+  private readonly imageBaseUrl = 'https://artworks.thetvdb.com/banners/';
   private readonly apiKey: string;
   private readonly pin?: string;
   private token: string | null = null;
@@ -134,7 +134,7 @@ class TVDBAPI {
   constructor() {
     const apiKey = process.env.TVDB_API_KEY;
     if (!apiKey) {
-      throw new Error("TVDB_API_KEY environment variable is required");
+      throw new Error('TVDB_API_KEY environment variable is required');
     }
     this.apiKey = apiKey;
     // PIN is only for user-supported keys, not needed for commercial keys
@@ -170,7 +170,7 @@ class TVDBAPI {
 
       const result: TVDBAuthResponse = await response.json();
       this.token = result.data.token;
-      
+
       // Token is valid for 1 month, set expiry to 29 days to be safe
       this.tokenExpiry = new Date();
       this.tokenExpiry.setDate(this.tokenExpiry.getDate() + 29);
@@ -184,7 +184,7 @@ class TVDBAPI {
 
   private async makeRequest<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
     await this.ensureAuthenticated();
-    
+
     const url = new URL(`${this.baseUrl}${endpoint}`);
     Object.entries(params).forEach(([key, value]) => {
       if (value) url.searchParams.append(key, value);
@@ -195,7 +195,7 @@ class TVDBAPI {
     try {
       const response = await fetch(url.toString(), {
         headers: {
-          'Authorization': `Bearer ${this.token}`,
+          Authorization: `Bearer ${this.token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -215,7 +215,7 @@ class TVDBAPI {
     const params: Record<string, string> = {
       query,
     };
-    
+
     if (type) {
       params.type = type;
     }
@@ -271,28 +271,41 @@ class TVDBAPI {
 export function convertTVDBMovieToContent(movie: TVDBMovie): InsertContent {
   // Map TVDB genres to our horror subgenres
   const horrorGenreMap: Record<string, string> = {
-    'Horror': 'supernatural',
-    'Thriller': 'psychological', 
-    'Mystery': 'mystery',
+    Horror: 'supernatural',
+    Thriller: 'psychological',
+    Mystery: 'mystery',
     'Science Fiction': 'sci-fi',
-    'Drama': 'psychological',
-    'Action': 'slasher',
-    'Supernatural': 'supernatural',
-    'Slasher': 'slasher',
-    'Zombie': 'zombie',
-    'Vampire': 'vampire',
-    'Ghost': 'ghost',
-    'Monster': 'monster'
+    Drama: 'psychological',
+    Action: 'slasher',
+    Supernatural: 'supernatural',
+    Slasher: 'slasher',
+    Zombie: 'zombie',
+    Vampire: 'vampire',
+    Ghost: 'ghost',
+    Monster: 'monster',
   };
 
   const subgenres = movie.genres
-    .map(genre => horrorGenreMap[genre.name] || genre.name.toLowerCase())
-    .filter(subgenre => ['slasher', 'psychological', 'supernatural', 'zombie', 'vampire', 'ghost', 'monster', 'thriller', 'mystery', 'sci-fi'].includes(subgenre));
+    .map((genre) => horrorGenreMap[genre.name] || genre.name.toLowerCase())
+    .filter((subgenre) =>
+      [
+        'slasher',
+        'psychological',
+        'supernatural',
+        'zombie',
+        'vampire',
+        'ghost',
+        'monster',
+        'thriller',
+        'mystery',
+        'sci-fi',
+      ].includes(subgenre)
+    );
 
   const primarySubgenre = subgenres.length > 0 ? subgenres[0] : 'supernatural';
 
   // Extract IMDB ID if available
-  const imdbRemoteId = movie.remoteIds?.find(id => id.sourceName === 'IMDB')?.id;
+  const imdbRemoteId = movie.remoteIds?.find((id) => id.sourceName === 'IMDB')?.id;
 
   return {
     title: movie.name,
@@ -326,28 +339,41 @@ export function convertTVDBMovieToContent(movie: TVDBMovie): InsertContent {
 export function convertTVDBSeriesToContent(series: TVDBSeries): InsertContent {
   // Map TVDB genres to our horror subgenres
   const horrorGenreMap: Record<string, string> = {
-    'Horror': 'supernatural',
-    'Thriller': 'psychological', 
-    'Mystery': 'mystery',
+    Horror: 'supernatural',
+    Thriller: 'psychological',
+    Mystery: 'mystery',
     'Science Fiction': 'sci-fi',
-    'Drama': 'psychological',
-    'Action': 'slasher',
-    'Supernatural': 'supernatural',
-    'Slasher': 'slasher',
-    'Zombie': 'zombie',
-    'Vampire': 'vampire',
-    'Ghost': 'ghost',
-    'Monster': 'monster'
+    Drama: 'psychological',
+    Action: 'slasher',
+    Supernatural: 'supernatural',
+    Slasher: 'slasher',
+    Zombie: 'zombie',
+    Vampire: 'vampire',
+    Ghost: 'ghost',
+    Monster: 'monster',
   };
 
   const subgenres = series.genres
-    .map(genre => horrorGenreMap[genre.name] || genre.name.toLowerCase())
-    .filter(subgenre => ['slasher', 'psychological', 'supernatural', 'zombie', 'vampire', 'ghost', 'monster', 'thriller', 'mystery', 'sci-fi'].includes(subgenre));
+    .map((genre) => horrorGenreMap[genre.name] || genre.name.toLowerCase())
+    .filter((subgenre) =>
+      [
+        'slasher',
+        'psychological',
+        'supernatural',
+        'zombie',
+        'vampire',
+        'ghost',
+        'monster',
+        'thriller',
+        'mystery',
+        'sci-fi',
+      ].includes(subgenre)
+    );
 
   const primarySubgenre = subgenres.length > 0 ? subgenres[0] : 'supernatural';
 
   // Extract IMDB ID if available
-  const imdbRemoteId = series.remoteIds?.find(id => id.sourceName === 'IMDB')?.id;
+  const imdbRemoteId = series.remoteIds?.find((id) => id.sourceName === 'IMDB')?.id;
 
   // Calculate end year if series has ended
   const endYear = series.lastAired ? new Date(series.lastAired).getFullYear() : null;

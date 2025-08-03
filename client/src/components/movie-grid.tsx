@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import MovieCard from "./movie-card";
-import type { Movie } from "@shared/schema";
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+import MovieCard from './movie-card';
+import type { Movie } from '@shared/schema';
 
 interface MovieGridProps {
   searchQuery: string;
@@ -28,25 +28,33 @@ export default function MovieGrid({
   selectedUsersRating,
   selectedType,
   sortBy,
-  selectedSubgenre = "all",
+  selectedSubgenre = 'all',
   onHeaderUpdate,
 }: MovieGridProps) {
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
-  const moviesPerPage = 12;
+  const moviesPerPage = 15;
 
   // Build query parameters
   const queryParams = new URLSearchParams();
   if (searchQuery) queryParams.append('search', searchQuery);
-  if (selectedPlatform && selectedPlatform !== 'all') queryParams.append('platform', selectedPlatform);
+  if (selectedPlatform && selectedPlatform !== 'all')
+    queryParams.append('platform', selectedPlatform);
   if (selectedYear && selectedYear !== 'all') queryParams.append('year', selectedYear);
-  if (selectedCriticsRating && selectedCriticsRating !== 'all') queryParams.append('minCriticsRating', selectedCriticsRating);
-  if (selectedUsersRating && selectedUsersRating !== 'all') queryParams.append('minUsersRating', selectedUsersRating);
+  if (selectedCriticsRating && selectedCriticsRating !== 'all')
+    queryParams.append('minCriticsRating', selectedCriticsRating);
+  if (selectedUsersRating && selectedUsersRating !== 'all')
+    queryParams.append('minUsersRating', selectedUsersRating);
   if (selectedType && selectedType !== 'all') queryParams.append('type', selectedType);
-  if (selectedSubgenre && selectedSubgenre !== 'all') queryParams.append('subgenre', selectedSubgenre);
+  if (selectedSubgenre && selectedSubgenre !== 'all')
+    queryParams.append('subgenre', selectedSubgenre);
   if (sortBy) queryParams.append('sortBy', sortBy);
 
-  const { data: movies, isLoading, error } = useQuery<Movie[]>({
+  const {
+    data: movies,
+    isLoading,
+    error,
+  } = useQuery<Movie[]>({
     queryKey: ['/api/content', queryParams.toString()],
     queryFn: async () => {
       const response = await fetch(`/api/content?${queryParams.toString()}`);
@@ -62,7 +70,7 @@ export default function MovieGrid({
   };
 
   const handleLoadMore = () => {
-    setPage(prev => prev + 1);
+    setPage((prev) => prev + 1);
   };
 
   if (isLoading) {
@@ -116,8 +124,7 @@ export default function MovieGrid({
   const hasMore = movies.length > displayedMovies.length;
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
+    <main className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {displayedMovies.map((movie) => (
           <MovieCard
@@ -131,7 +138,7 @@ export default function MovieGrid({
 
       {hasMore && (
         <div className="text-center mt-12">
-          <Button 
+          <Button
             onClick={handleLoadMore}
             className="blood-red-bg hover:crimson-bg text-white px-8 py-3 font-semibold"
           >

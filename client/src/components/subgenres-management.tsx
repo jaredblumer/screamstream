@@ -1,20 +1,36 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Loader2 } from "lucide-react";
-import { z } from "zod";
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Loader2 } from 'lucide-react';
+import { z } from 'zod';
 import {
   DndContext,
   closestCenter,
@@ -23,22 +39,24 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable";
-import {
-  CSS,
-} from "@dnd-kit/utilities";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Define the subgenre schema for form validation
 const subgenreFormSchema = z.object({
-  name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters"),
-  slug: z.string().min(1, "Slug is required").max(50, "Slug must be less than 50 characters").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .max(50, 'Slug must be less than 50 characters')
+    .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
   description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
@@ -64,7 +82,7 @@ export function SubgenresManagement() {
 
   // Fetch subgenres
   const { data: subgenres, isLoading } = useQuery({
-    queryKey: ["/api/admin/subgenres"],
+    queryKey: ['/api/admin/subgenres'],
   });
 
   // Drag and drop sensors
@@ -95,9 +113,9 @@ export function SubgenresManagement() {
       const newIndex = items.indexOf(over.id as number);
 
       const newOrder = arrayMove(sortedSubgenres, oldIndex, newIndex);
-      
+
       // Extract ordered IDs for the API call
-      const orderedIds = newOrder.map(subgenre => subgenre.id);
+      const orderedIds = newOrder.map((subgenre) => subgenre.id);
 
       // Call API to update sort orders
       reorderSubgenresMutation.mutate(orderedIds);
@@ -108,129 +126,131 @@ export function SubgenresManagement() {
   const reorderSubgenresMutation = useMutation({
     mutationFn: async (orderedIds: number[]) => {
       try {
-        console.log("Attempting to reorder subgenres:", orderedIds);
-        const response = await apiRequest("PUT", "/api/admin/subgenres/reorder", { orderedIds });
-        console.log("Reorder successful");
+        console.log('Attempting to reorder subgenres:', orderedIds);
+        const response = await apiRequest('PUT', '/api/admin/subgenres/reorder', { orderedIds });
+        console.log('Reorder successful');
         return response;
       } catch (error) {
-        console.error("Reorder failed:", error);
+        console.error('Reorder failed:', error);
         throw error;
       }
     },
     onMutate: async (orderedIds: number[]) => {
       // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ["/api/admin/subgenres"] });
+      await queryClient.cancelQueries({ queryKey: ['/api/admin/subgenres'] });
 
       // Snapshot the previous value
-      const previousSubgenres = queryClient.getQueryData(["/api/admin/subgenres"]);
+      const previousSubgenres = queryClient.getQueryData(['/api/admin/subgenres']);
 
       // Optimistically update the cache with new order
       if (subgenres) {
-        const optimisticSubgenres = orderedIds.map((id, index) => {
-          const subgenre = subgenres.find(s => s.id === id);
-          if (!subgenre) return null;
-          return { ...subgenre, sortOrder: index + 1 };
-        }).filter((item): item is NonNullable<typeof item> => item !== null);
-        
-        queryClient.setQueryData(["/api/admin/subgenres"], optimisticSubgenres);
+        const optimisticSubgenres = orderedIds
+          .map((id, index) => {
+            const subgenre = subgenres.find((s) => s.id === id);
+            if (!subgenre) return null;
+            return { ...subgenre, sortOrder: index + 1 };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
+
+        queryClient.setQueryData(['/api/admin/subgenres'], optimisticSubgenres);
       }
 
       // Return a context object with the snapshotted value
       return { previousSubgenres };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subgenres"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
       toast({
-        title: "Success",
-        description: "Subgenres reordered successfully",
+        title: 'Success',
+        description: 'Subgenres reordered successfully',
       });
     },
     onError: (error: any, newData, context) => {
-      console.error("Failed to reorder subgenres:", error);
-      
+      console.error('Failed to reorder subgenres:', error);
+
       // Revert to previous state on error
       if (context?.previousSubgenres) {
-        queryClient.setQueryData(["/api/admin/subgenres"], context.previousSubgenres);
+        queryClient.setQueryData(['/api/admin/subgenres'], context.previousSubgenres);
       }
-      
+
       // Check if it's an authentication error
       if (error?.status === 401 || error?.message?.includes('401')) {
         toast({
-          title: "Authentication Required",
-          description: "Your session has expired. Please refresh the page and log in again.",
-          variant: "destructive",
+          title: 'Authentication Required',
+          description: 'Your session has expired. Please refresh the page and log in again.',
+          variant: 'destructive',
         });
       } else {
         toast({
-          title: "Error",
-          description: error.message || "Failed to reorder subgenres",
-          variant: "destructive",
+          title: 'Error',
+          description: error.message || 'Failed to reorder subgenres',
+          variant: 'destructive',
         });
       }
     },
     onSettled: () => {
       // Always refetch after error or success to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subgenres"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
     },
   });
 
   // Create subgenre mutation
   const createSubgenreMutation = useMutation({
-    mutationFn: (data: SubgenreFormData) => apiRequest("POST", "/api/admin/subgenres", data),
+    mutationFn: (data: SubgenreFormData) => apiRequest('POST', '/api/admin/subgenres', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subgenres"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
       setShowCreateDialog(false);
       toast({
-        title: "Success",
-        description: "Subgenre created successfully",
+        title: 'Success',
+        description: 'Subgenre created successfully',
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create subgenre",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to create subgenre',
+        variant: 'destructive',
       });
     },
   });
 
   // Update subgenre mutation
   const updateSubgenreMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<SubgenreFormData> }) => 
-      apiRequest("PATCH", `/api/admin/subgenres/${id}`, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<SubgenreFormData> }) =>
+      apiRequest('PATCH', `/api/admin/subgenres/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subgenres"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
       setShowEditDialog(false);
       setEditingSubgenre(null);
       toast({
-        title: "Success",
-        description: "Subgenre updated successfully",
+        title: 'Success',
+        description: 'Subgenre updated successfully',
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update subgenre",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to update subgenre',
+        variant: 'destructive',
       });
     },
   });
 
   // Delete subgenre mutation
   const deleteSubgenreMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/admin/subgenres/${id}`),
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/subgenres/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subgenres"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
       toast({
-        title: "Success",
-        description: "Subgenre deleted successfully",
+        title: 'Success',
+        description: 'Subgenre deleted successfully',
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to delete subgenre",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Failed to delete subgenre',
+        variant: 'destructive',
       });
     },
   });
@@ -239,9 +259,9 @@ export function SubgenresManagement() {
   const createForm = useForm<SubgenreFormData>({
     resolver: zodResolver(subgenreFormSchema),
     defaultValues: {
-      name: "",
-      slug: "",
-      description: "",
+      name: '',
+      slug: '',
+      description: '',
       isActive: true,
     },
   });
@@ -250,9 +270,9 @@ export function SubgenresManagement() {
   const editForm = useForm<SubgenreFormData>({
     resolver: zodResolver(subgenreFormSchema),
     defaultValues: {
-      name: "",
-      slug: "",
-      description: "",
+      name: '',
+      slug: '',
+      description: '',
       isActive: true,
     },
   });
@@ -282,14 +302,14 @@ export function SubgenresManagement() {
     editForm.reset({
       name: subgenre.name,
       slug: subgenre.slug,
-      description: subgenre.description || "",
+      description: subgenre.description || '',
       isActive: subgenre.isActive || false,
     });
     setShowEditDialog(true);
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this subgenre? This action cannot be undone.")) {
+    if (confirm('Are you sure you want to delete this subgenre? This action cannot be undone.')) {
       deleteSubgenreMutation.mutate(id);
     }
   };
@@ -341,7 +361,7 @@ export function SubgenresManagement() {
                             field.onChange(e);
                             // Auto-generate slug
                             const slug = generateSlug(e.target.value);
-                            createForm.setValue("slug", slug);
+                            createForm.setValue('slug', slug);
                           }}
                         />
                       </FormControl>
@@ -349,7 +369,7 @@ export function SubgenresManagement() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={createForm.control}
                   name="slug"
@@ -381,8 +401,6 @@ export function SubgenresManagement() {
                   )}
                 />
 
-
-
                 <FormField
                   control={createForm.control}
                   name="isActive"
@@ -395,10 +413,7 @@ export function SubgenresManagement() {
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -406,7 +421,7 @@ export function SubgenresManagement() {
 
                 <DialogFooter>
                   <Button type="submit" disabled={createSubgenreMutation.isPending}>
-                    {createSubgenreMutation.isPending ? "Creating..." : "Create Subgenre"}
+                    {createSubgenreMutation.isPending ? 'Creating...' : 'Create Subgenre'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -420,18 +435,20 @@ export function SubgenresManagement() {
         <SortableContext items={items} strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
             {sortedSubgenres?.map((subgenre: Subgenre) => (
-              <SortableSubgenreCard 
-                key={subgenre.id} 
-                subgenre={subgenre} 
+              <SortableSubgenreCard
+                key={subgenre.id}
+                subgenre={subgenre}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />
             ))}
-            
+
             {sortedSubgenres?.length === 0 && (
               <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-400">No subgenres found. Create your first subgenre to get started.</p>
+                  <p className="text-gray-400">
+                    No subgenres found. Create your first subgenre to get started.
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -444,9 +461,7 @@ export function SubgenresManagement() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Subgenre</DialogTitle>
-            <DialogDescription>
-              Update subgenre information.
-            </DialogDescription>
+            <DialogDescription>Update subgenre information.</DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
@@ -464,7 +479,7 @@ export function SubgenresManagement() {
                           field.onChange(e);
                           // Auto-generate slug
                           const slug = generateSlug(e.target.value);
-                          editForm.setValue("slug", slug);
+                          editForm.setValue('slug', slug);
                         }}
                       />
                     </FormControl>
@@ -472,7 +487,7 @@ export function SubgenresManagement() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={editForm.control}
                 name="slug"
@@ -482,9 +497,7 @@ export function SubgenresManagement() {
                     <FormControl>
                       <Input {...field} placeholder="e.g., psychological-horror" />
                     </FormControl>
-                    <FormDescription>
-                      URL-friendly identifier
-                    </FormDescription>
+                    <FormDescription>URL-friendly identifier</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -504,8 +517,6 @@ export function SubgenresManagement() {
                 )}
               />
 
-
-
               <FormField
                 control={editForm.control}
                 name="isActive"
@@ -513,15 +524,10 @@ export function SubgenresManagement() {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
                       <FormLabel>Active</FormLabel>
-                      <FormDescription>
-                        Whether this subgenre is available for use
-                      </FormDescription>
+                      <FormDescription>Whether this subgenre is available for use</FormDescription>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -529,7 +535,7 @@ export function SubgenresManagement() {
 
               <DialogFooter>
                 <Button type="submit" disabled={updateSubgenreMutation.isPending}>
-                  {updateSubgenreMutation.isPending ? "Updating..." : "Update Subgenre"}
+                  {updateSubgenreMutation.isPending ? 'Updating...' : 'Update Subgenre'}
                 </Button>
               </DialogFooter>
             </form>
@@ -548,15 +554,15 @@ interface SortableSubgenreCardProps {
   isDeleting?: boolean;
 }
 
-function SortableSubgenreCard({ subgenre, onEdit, onDelete, isDeleting }: SortableSubgenreCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: subgenre.id });
+function SortableSubgenreCard({
+  subgenre,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: SortableSubgenreCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: subgenre.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -583,26 +589,21 @@ function SortableSubgenreCard({ subgenre, onEdit, onDelete, isDeleting }: Sortab
           {/* Subgenre Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-medium text-white truncate">
-                {subgenre.name}
-              </h3>
+              <h3 className="text-sm font-medium text-white truncate">{subgenre.name}</h3>
               <Badge
-                variant={subgenre.isActive ? "default" : "secondary"}
-                className={`text-xs ${subgenre.isActive ? 
-                  'bg-green-600 hover:bg-green-700 text-white' : 
-                  'bg-gray-600 hover:bg-gray-700 text-gray-300'
+                variant={subgenre.isActive ? 'default' : 'secondary'}
+                className={`text-xs ${
+                  subgenre.isActive
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-gray-600 hover:bg-gray-700 text-gray-300'
                 }`}
               >
                 {subgenre.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </div>
-            <p className="text-xs text-gray-400 mb-1">
-              Slug: {subgenre.slug}
-            </p>
+            <p className="text-xs text-gray-400 mb-1">Slug: {subgenre.slug}</p>
             {subgenre.description && (
-              <p className="text-xs text-gray-500 line-clamp-2">
-                {subgenre.description}
-              </p>
+              <p className="text-xs text-gray-500 line-clamp-2">{subgenre.description}</p>
             )}
           </div>
 

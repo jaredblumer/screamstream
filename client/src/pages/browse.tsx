@@ -1,21 +1,20 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import Header from "@/components/header";
-import FilterControls from "@/components/filter-controls";
-import MovieGrid from "@/components/movie-grid";
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import Header from '@/components/header';
+import FilterControls from '@/components/filter-controls';
+import MovieGrid from '@/components/movie-grid';
 
 export default function Browse() {
   const [location] = useLocation();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("all");
-  const [selectedYear, setSelectedYear] = useState("all");
-  const [selectedCriticsRating, setSelectedCriticsRating] = useState("all");
-  const [selectedUsersRating, setSelectedUsersRating] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedSubgenre, setSelectedSubgenre] = useState("all");
-  const [sortBy, setSortBy] = useState("rating");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
+  const [selectedCriticsRating, setSelectedCriticsRating] = useState('all');
+  const [selectedUsersRating, setSelectedUsersRating] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedSubgenre, setSelectedSubgenre] = useState('all');
+  const [sortBy, setSortBy] = useState('rating');
 
-  
   // Parse URL parameters and set initial subgenre
   useEffect(() => {
     const fullUrl = window.location.search;
@@ -23,42 +22,40 @@ export default function Browse() {
     const subgenreParam = urlParams.get('subgenre') || 'all';
     setSelectedSubgenre(subgenreParam);
   }, [location]);
-  
+
   // Helper function to format subgenre display name
   const getHeaderTitle = (subgenre: string) => {
-    if (selectedSubgenre !== "all") {
+    if (selectedSubgenre !== 'all') {
       return subgenre
         .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
     }
-    return "Browse Horror Content";
+    return 'Browse Horror';
   };
 
   const getHeaderSubtitle = () => {
-    if (selectedSubgenre !== "all") {
+    if (selectedSubgenre !== 'all') {
       return `Discover the best ${selectedSubgenre.split('-').join(' ')} movies and series`;
     }
     if (searchQuery) {
-      return "Matching content based on your search";
+      return 'Matching content based on your search';
     }
-    return "Filter and explore our complete horror collection";
+    return 'Filter and explore our complete horror collection';
   };
 
   return (
     <>
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-      
+
       <div className="min-h-screen horror-bg">
         {/* Browse Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
           <div className="text-center animate-fade-in">
             <h1 className="text-4xl font-bold text-white mb-4">
-              {getHeaderTitle(selectedSubgenre)}
+              {getHeaderTitle(selectedSubgenre)} Titles
             </h1>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              {getHeaderSubtitle()}
-            </p>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">{getHeaderSubtitle()}</p>
           </div>
         </div>
 
@@ -79,9 +76,7 @@ export default function Browse() {
             onTypeChange={setSelectedType}
             onSubgenreChange={setSelectedSubgenre}
             onSortChange={setSortBy}
-            showSubgenreFilter={true}
           />
-
         </div>
 
         {/* Content Grid */}

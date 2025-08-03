@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { useAuth } from "./use-auth";
-import { useToast } from "./use-toast";
-import { useWatchlistCount } from "@/contexts/WatchlistCountContext";
+import { useMemo } from 'react';
+import { useAuth } from './use-auth';
+import { useToast } from './use-toast';
+import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
 
 export function useWatchlist() {
   const { user } = useAuth();
@@ -9,20 +9,17 @@ export function useWatchlist() {
   const { toast } = useToast();
   const { watchlistContent, refreshWatchlist } = useWatchlistCount();
 
-  const watchlistIds = useMemo(
-    () => watchlistContent.map((item) => item.id),
-    [watchlistContent]
-  );
+  const watchlistIds = useMemo(() => watchlistContent.map((item) => item.id), [watchlistContent]);
 
   const requireAuth = (action: string) => {
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
+        title: 'Sign In Required',
         description: `Please sign in to ${action}.`,
-        variant: "destructive",
+        variant: 'destructive',
       });
       setTimeout(() => {
-        window.location.href = "/auth";
+        window.location.href = '/auth';
       }, 2000);
       return false;
     }
@@ -30,12 +27,12 @@ export function useWatchlist() {
   };
 
   const addToWatchlist = async (movieId: number) => {
-    if (!requireAuth("add to watchlist")) return false;
+    if (!requireAuth('add to watchlist')) return false;
 
     try {
       const response = await fetch(`/api/watchlist/${movieId}`, {
-        method: "POST",
-        credentials: "include",
+        method: 'POST',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -43,18 +40,18 @@ export function useWatchlist() {
         return true;
       }
     } catch (error) {
-      console.error("Failed to add to watchlist:", error);
+      console.error('Failed to add to watchlist:', error);
     }
     return false;
   };
 
   const removeFromWatchlist = async (movieId: number) => {
-    if (!requireAuth("remove from watchlist")) return false;
+    if (!requireAuth('remove from watchlist')) return false;
 
     try {
       const response = await fetch(`/api/watchlist/${movieId}`, {
-        method: "DELETE",
-        credentials: "include",
+        method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -62,7 +59,7 @@ export function useWatchlist() {
         return true;
       }
     } catch (error) {
-      console.error("Failed to remove from watchlist:", error);
+      console.error('Failed to remove from watchlist:', error);
     }
     return false;
   };
@@ -70,12 +67,12 @@ export function useWatchlist() {
   const toggleWatchlist = async (movieId: number): Promise<boolean> => {
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to manage your watchlist.",
-        variant: "destructive",
+        title: 'Sign In Required',
+        description: 'Please sign in to manage your watchlist.',
+        variant: 'destructive',
       });
       setTimeout(() => {
-        window.location.href = "/auth";
+        window.location.href = '/auth';
       }, 2000);
       return false;
     }
@@ -92,7 +89,7 @@ export function useWatchlist() {
   };
 
   const clearWatchlist = async () => {
-    if (!requireAuth("clear your watchlist")) return;
+    if (!requireAuth('clear your watchlist')) return;
 
     const results = await Promise.all(watchlistIds.map(removeFromWatchlist));
     if (results.every(Boolean)) {

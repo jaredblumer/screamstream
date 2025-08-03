@@ -25,19 +25,19 @@
   --radius: 0.5rem;
 
   /* Horror theme colors */
-  --horror-black: #0A0A0A;
+  --horror-black: #0a0a0a;
   --blood-red: hsl(0, 65%, 45%);
   --dark-gray: hsl(0, 0%, 12%);
   --crimson: hsl(0, 65%, 40%);
   --bright-red: hsl(0, 65%, 50%);
   --horror-orange: hsl(24, 95%, 53%);
-  
+
   /* Maroon theme variations */
   --maroon-primary: hsl(0, 65%, 45%);
   --maroon-dark: hsl(0, 65%, 40%);
   --maroon-light: hsl(0, 65%, 50%);
   --maroon-accent: hsl(0, 65%, 55%);
-  
+
   /* 80s Neon Style - Alternative Colors */
   --neon-purple: hsl(270, 100%, 6%);
   --electric-pink: hsl(320, 100%, 50%);
@@ -83,172 +83,201 @@
   .horror-bg {
     background-color: var(--horror-black);
   }
-  
+
   .blood-red {
     color: var(--blood-red);
   }
-  
+
   .blood-red-bg {
     background-color: var(--blood-red);
   }
-  
+
   .dark-gray-bg {
     background-color: var(--dark-gray);
   }
-  
+
   .crimson {
     color: var(--crimson);
   }
-  
+
   .crimson-bg {
     background-color: var(--crimson);
   }
-  
+
   .horror-orange {
     color: var(--horror-orange);
   }
-  
+
   /* Button styling overrides for horror theme */
   .horror-button-primary {
     background-color: var(--maroon-primary);
     color: white;
     border: 1px solid var(--maroon-primary);
   }
-  
+
   .horror-button-primary:hover {
     background-color: var(--maroon-dark);
     border-color: var(--maroon-dark);
   }
-  
+
   .horror-button-secondary {
     background-color: var(--dark-gray);
     color: white;
     border: 1px solid hsl(0, 0%, 30%);
   }
-  
+
   .horror-button-secondary:hover {
     background-color: hsl(0, 0%, 18%);
     border-color: hsl(0, 0%, 40%);
   }
-  
+
   .horror-button-outline {
     background-color: transparent;
     color: white;
     border: 1px solid hsl(0, 0%, 30%);
   }
-  
+
   .horror-button-outline:hover {
     background-color: var(--maroon-primary);
     border-color: var(--maroon-primary);
     color: white;
   }
-  
+
   .horror-button-ghost {
     background-color: transparent;
     color: hsl(0, 0%, 70%);
     border: none;
   }
-  
+
   .horror-button-ghost:hover {
     background-color: hsl(0, 0%, 15%);
     color: white;
   }
-  
+
   /* 80s Neon Utility Classes */
   .neon-purple-bg {
     background-color: var(--neon-purple);
   }
-  
+
   .electric-pink {
     color: var(--electric-pink);
   }
-  
+
   .electric-pink-bg {
     background-color: var(--electric-pink);
   }
-  
+
   .cyber-cyan {
     color: var(--cyber-cyan);
   }
-  
+
   .neon-green {
     color: var(--neon-green);
   }
-  
+
   .dark-purple-bg {
     background-color: var(--dark-purple);
   }
 }
 
 @keyframes glow {
-  from { 
-    box-shadow: 0 0 5px var(--maroon-primary), 0 0 10px var(--maroon-primary), 0 0 15px var(--maroon-primary); 
+  from {
+    box-shadow:
+      0 0 5px var(--maroon-primary),
+      0 0 10px var(--maroon-primary),
+      0 0 15px var(--maroon-primary);
   }
-  to { 
-    box-shadow: 0 0 10px var(--maroon-primary), 0 0 20px var(--maroon-primary), 0 0 30px var(--maroon-primary); 
+  to {
+    box-shadow:
+      0 0 10px var(--maroon-primary),
+      0 0 20px var(--maroon-primary),
+      0 0 30px var(--maroon-primary);
   }
 }
 
 @keyframes neon-glow {
-  from { 
-    box-shadow: 0 0 5px var(--electric-pink), 0 0 10px var(--electric-pink), 0 0 15px var(--electric-pink); 
-    text-shadow: 0 0 5px var(--electric-pink), 0 0 10px var(--electric-pink);
+  from {
+    box-shadow:
+      0 0 5px var(--electric-pink),
+      0 0 10px var(--electric-pink),
+      0 0 15px var(--electric-pink);
+    text-shadow:
+      0 0 5px var(--electric-pink),
+      0 0 10px var(--electric-pink);
   }
-  to { 
-    box-shadow: 0 0 10px var(--electric-pink), 0 0 20px var(--electric-pink), 0 0 30px var(--electric-pink); 
-    text-shadow: 0 0 10px var(--electric-pink), 0 0 20px var(--electric-pink);
+  to {
+    box-shadow:
+      0 0 10px var(--electric-pink),
+      0 0 20px var(--electric-pink),
+      0 0 30px var(--electric-pink);
+    text-shadow:
+      0 0 10px var(--electric-pink),
+      0 0 20px var(--electric-pink);
   }
 }
 
 @keyframes cyan-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 5px var(--cyber-cyan); 
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--cyber-cyan);
     border-color: var(--cyber-cyan);
   }
-  50% { 
-    box-shadow: 0 0 20px var(--cyber-cyan), 0 0 30px var(--cyber-cyan); 
+  50% {
+    box-shadow:
+      0 0 20px var(--cyber-cyan),
+      0 0 30px var(--cyber-cyan);
     border-color: var(--electric-pink);
   }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes float-small {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
+  from {
+    opacity: 0;
   }
-  to { 
-    opacity: 1; 
+  to {
+    opacity: 1;
   }
 }
 
 @keyframes slideUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(30px); 
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @keyframes fadeSlide {
-  from { 
-    opacity: 0; 
-    transform: translateY(20px) scale(0.95); 
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -342,8 +371,8 @@
   color: white !important;
 }
 
-[data-radix-select-item][data-state="checked"],
-.horror-select-content [data-radix-select-item][data-state="checked"] {
+[data-radix-select-item][data-state='checked'],
+.horror-select-content [data-radix-select-item][data-state='checked'] {
   background-color: hsl(0, 65%, 45%) !important;
   color: white !important;
 }
@@ -389,7 +418,7 @@
   color: white !important;
 }
 
-.horror-select-item[data-state="checked"] {
+.horror-select-item[data-state='checked'] {
   background-color: hsl(0, 65%, 45%) !important;
   color: white !important;
 }

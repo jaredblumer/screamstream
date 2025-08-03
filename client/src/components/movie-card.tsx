@@ -1,9 +1,9 @@
-import { Star, Heart, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { getPlatformLogo, getPlatformName, formatSubgenre } from "@/lib/utils";
-import { useWatchlist } from "@/hooks/use-watchlist";
-import type { Movie } from "@shared/schema";
-import { useState } from "react";
+import { Star, Heart, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getPlatformLogo, getPlatformName, formatSubgenre } from '@/lib/utils';
+import { useWatchlist } from '@/hooks/use-watchlist';
+import type { Movie } from '@shared/schema';
+import { useState } from 'react';
 
 interface MovieCardProps {
   movie: Movie;
@@ -12,29 +12,36 @@ interface MovieCardProps {
   onWatchlistToggle?: () => void;
 }
 
-export default function MovieCard({ movie, onClick, selectedSubgenre, onWatchlistToggle }: MovieCardProps) {
+export default function MovieCard({
+  movie,
+  onClick,
+  selectedSubgenre,
+  onWatchlistToggle,
+}: MovieCardProps) {
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const inWatchlist = isInWatchlist(movie.id);
   const [posterError, setPosterError] = useState(false);
 
   // Use placeholder if poster URL is missing or failed to load
-  const displayPosterUrl = posterError || !movie.posterUrl || movie.posterUrl.trim() === '' 
-    ? '/posters/default_poster.svg' 
-    : movie.posterUrl;
+  const displayPosterUrl =
+    posterError || !movie.posterUrl || movie.posterUrl.trim() === ''
+      ? '/posters/default_poster.svg'
+      : movie.posterUrl;
 
   // Helper function to determine which subgenre to display
   const getDisplaySubgenre = () => {
     // If we're filtering by a specific subgenre and the movie has that subgenre, show it
     if (selectedSubgenre && selectedSubgenre !== 'all') {
-      // Case-insensitive comparison to handle "slasher" vs "Slasher"
       const matchingSubgenre = movie.subgenres?.find(
-        subgenre => subgenre.toLowerCase() === selectedSubgenre.toLowerCase()
+        (subgenre) => subgenre.toLowerCase() === selectedSubgenre.toLowerCase()
       );
+      console.log('Matching subgenre:', formatSubgenre(matchingSubgenre));
       if (matchingSubgenre) {
         return formatSubgenre(matchingSubgenre);
       }
     }
     // Otherwise, show the primary subgenre
+    console.log('movie.subgenre:', formatSubgenre(movie.subgenre));
     return formatSubgenre(movie.subgenre);
   };
 
@@ -50,24 +57,24 @@ export default function MovieCard({ movie, onClick, selectedSubgenre, onWatchlis
   const isSeries = movie.type === 'series';
 
   return (
-    <div 
+    <div
       className="movie-card dark-gray-bg rounded-lg overflow-hidden shadow-lg hover:shadow-2xl cursor-pointer group transition-transform duration-300 hover:scale-105"
       onClick={onClick}
     >
       <div className="relative">
-        <img 
-          src={displayPosterUrl} 
-          alt={`${movie.title} poster`} 
-          className="w-full h-80 object-cover" 
+        <img
+          src={displayPosterUrl}
+          alt={`${movie.title} poster`}
+          className="w-full h-80 object-cover"
           onError={() => setPosterError(true)}
         />
         {/* Content Type Badge */}
         <div className="absolute top-2 left-2">
-          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-            isSeries 
-              ? 'bg-red-800 text-white' 
-              : 'bg-gray-800 text-white'
-          }`}>
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full ${
+              isSeries ? 'bg-red-800 text-white' : 'bg-gray-800 text-white'
+            }`}
+          >
             {isSeries ? 'SERIES' : 'MOVIE'}
           </span>
         </div>
@@ -88,12 +95,10 @@ export default function MovieCard({ movie, onClick, selectedSubgenre, onWatchlis
         <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="sm"
-            variant={inWatchlist ? "default" : "outline"}
+            variant={inWatchlist ? 'default' : 'outline'}
             onClick={handleWatchlistClick}
             className={`${
-              inWatchlist 
-                ? 'horror-button-primary' 
-                : 'horror-button-outline'
+              inWatchlist ? 'horror-button-primary' : 'horror-button-outline'
             } backdrop-blur-sm`}
           >
             <Heart className={`h-4 w-4 ${inWatchlist ? 'fill-current' : ''}`} />
@@ -103,13 +108,15 @@ export default function MovieCard({ movie, onClick, selectedSubgenre, onWatchlis
       <div className="p-4">
         <h3 className="font-semibold text-white mb-1 truncate">{movie.title}</h3>
         <p className="text-gray-400 text-sm mb-2">
-          {movie.year} • {formatSubgenre(getDisplaySubgenre())}
+          {movie.year} • {getDisplaySubgenre()}
           {isSeries && movie.seasons && movie.episodes && (
-            <span className="ml-2 text-red-400">• {movie.seasons} Season{movie.seasons > 1 ? 's' : ''} • {movie.episodes} Episodes</span>
+            <span className="ml-2 text-red-400">
+              • {movie.seasons} Season{movie.seasons > 1 ? 's' : ''} • {movie.episodes} Episodes
+            </span>
           )}
         </p>
         <p className="text-gray-300 text-sm line-clamp-2 mb-3">{movie.description}</p>
-        
+
         {/* Streaming Platforms */}
         <div className="flex items-center gap-2">
           {movie.platforms.map((platform, index) => {

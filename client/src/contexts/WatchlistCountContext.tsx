@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Content } from "@shared/schema";
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { Content } from '@shared/schema';
 
 interface WatchlistContextValue {
   watchlistContent: Content[];
@@ -29,16 +29,16 @@ export function WatchlistCountProvider({ children }: { children: React.ReactNode
 
     try {
       setWatchlistLoading(true);
-      const res = await fetch("/api/watchlist", { credentials: "include" });
+      const res = await fetch('/api/watchlist', { credentials: 'include' });
       if (res.ok) {
         const json: Content[] = await res.json();
 
         // Deduplicate by `id`
-        const unique = Array.from(new Map(json.map(item => [item.id, item])).values());
+        const unique = Array.from(new Map(json.map((item) => [item.id, item])).values());
         setWatchlistContent(unique);
       }
     } catch (err) {
-      console.error("Failed to fetch watchlist:", err);
+      console.error('Failed to fetch watchlist:', err);
     } finally {
       setWatchlistLoading(false);
     }
@@ -51,7 +51,9 @@ export function WatchlistCountProvider({ children }: { children: React.ReactNode
   const watchlistCount = watchlistContent.length;
 
   return (
-    <WatchlistContext.Provider value={{ watchlistContent, watchlistCount, refreshWatchlist, isWatchlistLoading }}>
+    <WatchlistContext.Provider
+      value={{ watchlistContent, watchlistCount, refreshWatchlist, isWatchlistLoading }}
+    >
       {children}
     </WatchlistContext.Provider>
   );
