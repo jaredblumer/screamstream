@@ -16,32 +16,6 @@ export default function Home() {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedSubgenre, setSelectedSubgenre] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
-  // const [dynamicTitle, setDynamicTitle] = useState("Streaming Horror Rated");
-  const [dynamicSubtitle, setDynamicSubtitle] = useState('');
-  const [showHero, setShowHero] = useState(true);
-
-  // Check for subgenre filter in URL on component mount
-  useEffect(() => {
-    const fullUrl = window.location.search;
-    const urlParams = new URLSearchParams(fullUrl);
-    const subgenreParam = urlParams.get('subgenre');
-    if (subgenreParam && subgenreParam !== 'all') {
-      setSelectedSubgenre(subgenreParam);
-      // Use same logic as browse page to handle "horror" suffix
-      const formatSubgenreTitle = (subgenre: string) => {
-        return subgenre
-          .split(' ')
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-      };
-      const formattedSubgenre = formatSubgenreTitle(subgenreParam);
-      const title = formattedSubgenre.toLowerCase().includes('horror')
-        ? formattedSubgenre
-        : `${formattedSubgenre} Horror`;
-      // setDynamicTitle(title);
-      // setDynamicSubtitle(`Discover the best ${subgenreParam.toLowerCase()} horror content`);
-    }
-  }, [location]);
 
   const handleViewTopRated = () => {
     // Reset filters to show top rated movies
@@ -69,6 +43,10 @@ export default function Home() {
 
   const handleNewToStreaming = () => {
     setLocation('/new-to-streaming');
+  };
+
+  const handleSubgenres = () => {
+    setLocation('/subgenres');
   };
 
   const isSearching = searchQuery.trim().length > 0;
@@ -128,7 +106,7 @@ export default function Home() {
             <div className="animate-fade-in">
               <HeroSection
                 onViewTopRanked={handleViewTopRated}
-                onBrowseGenres={() => {}}
+                onBrowseGenres={handleSubgenres}
                 onNewToStreaming={handleNewToStreaming}
               />
             </div>
