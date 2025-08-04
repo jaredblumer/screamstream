@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,61 +9,56 @@ import MovieCard from './movie-card';
 import type { Movie } from '@shared/schema';
 
 interface MovieGridProps {
-  searchQuery: string;
-  selectedPlatform: string;
-  selectedYear: string;
-  selectedCriticsRating: string;
-  selectedUsersRating: string;
-  selectedType: string;
-  sortBy: string;
+  searchQuery?: string;
+  selectedPlatform?: string;
+  selectedYear?: string;
+  selectedCriticsRating?: string;
+  selectedUsersRating?: string;
+  selectedType?: string;
   selectedSubgenre?: string;
-  onHeaderUpdate?: (title: string, subtitle: string) => void;
+  sortBy?: string;
 }
 
 export default function MovieGrid({
-  searchQuery,
-  selectedPlatform,
-  selectedYear,
-  selectedCriticsRating,
-  selectedUsersRating,
-  selectedType,
-  sortBy,
+  searchQuery = '',
+  selectedPlatform = 'all',
+  selectedYear = 'all',
+  selectedCriticsRating = 'all',
+  selectedUsersRating = 'all',
+  selectedType = 'all',
   selectedSubgenre = 'all',
-  onHeaderUpdate,
+  sortBy = 'rating',
 }: MovieGridProps) {
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const moviesPerPage = 15;
 
-  // Build query parameters
   const queryParams = new URLSearchParams();
   if (searchQuery) queryParams.append('search', searchQuery);
-  if (selectedPlatform && selectedPlatform !== 'all')
-    queryParams.append('platform', selectedPlatform);
-  if (selectedYear && selectedYear !== 'all') queryParams.append('year', selectedYear);
-  if (selectedCriticsRating && selectedCriticsRating !== 'all')
+  if (selectedPlatform !== 'all') queryParams.append('platform', selectedPlatform);
+  if (selectedYear !== 'all') queryParams.append('year', selectedYear);
+  if (selectedCriticsRating !== 'all')
     queryParams.append('minCriticsRating', selectedCriticsRating);
-  if (selectedUsersRating && selectedUsersRating !== 'all')
-    queryParams.append('minUsersRating', selectedUsersRating);
-  if (selectedType && selectedType !== 'all') queryParams.append('type', selectedType);
-  if (selectedSubgenre && selectedSubgenre !== 'all')
-    queryParams.append('subgenre', selectedSubgenre);
+  if (selectedUsersRating !== 'all') queryParams.append('minUsersRating', selectedUsersRating);
+  if (selectedType !== 'all') queryParams.append('type', selectedType);
+  if (selectedSubgenre !== 'all') queryParams.append('subgenre', selectedSubgenre);
   if (sortBy) queryParams.append('sortBy', sortBy);
 
   const {
-    data: movies,
+    data: fetchedMovies,
     isLoading,
     error,
   } = useQuery<Movie[]>({
     queryKey: ['/api/content', queryParams.toString()],
     queryFn: async () => {
       const response = await fetch(`/api/content?${queryParams.toString()}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch content');
-      }
+      if (!response.ok) throw new Error('Failed to fetch content');
       return response.json();
     },
+    enabled: true,
   });
+
+  const movies = fetchedMovies || [];
 
   const handleMovieClick = (movieId: number) => {
     setLocation(`/title/${movieId}`);

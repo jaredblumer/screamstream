@@ -38,7 +38,7 @@ export default function NewToStreaming() {
   if (isLoading) {
     return (
       <>
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Header />
         <div className="min-h-screen horror-bg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center mb-12">
@@ -54,7 +54,7 @@ export default function NewToStreaming() {
   if (error) {
     return (
       <>
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Header />
         <div className="min-h-screen horror-bg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="text-center">
@@ -76,7 +76,7 @@ export default function NewToStreaming() {
 
   return (
     <>
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Header />
 
       <div className="min-h-screen horror-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

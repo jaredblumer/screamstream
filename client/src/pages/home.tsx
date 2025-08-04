@@ -53,44 +53,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen horror-bg">
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Search Results */}
-        <div
-          className={`transition-all duration-700 ease-in-out overflow-hidden ${
-            isSearching
-              ? 'max-h-none opacity-100 transform translate-y-0'
-              : 'max-h-0 opacity-0 transform -translate-y-4'
-          }`}
-        >
-          <div
-            className={`py-12 sm:py-16 mt-6 sm:mt-0 transition-opacity duration-300 ${
-              isSearching ? 'delay-200' : 'delay-0'
-            }`}
-          >
-            <div className="mb-8 animate-slide-up">
-              <h1 className="text-4xl font-bold text-white mb-4">
-                Search Results for "<span className="blood-red">{searchQuery}</span>"
-              </h1>
-              <p className="text-gray-300">Found horror movies matching your search</p>
-            </div>
-            <div className="animate-fade-slide stagger-1">
-              <MovieGrid
-                searchQuery={searchQuery}
-                selectedPlatform="all"
-                selectedYear="all"
-                selectedCriticsRating="all"
-                selectedUsersRating="all"
-                selectedType="all"
-                selectedSubgenre="all"
-                sortBy="rating"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Browse Content */}
         <div
           className={`transition-all duration-700 ease-in-out overflow-hidden ${
             !isSearching

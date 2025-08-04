@@ -70,7 +70,7 @@ export default function Subgenres() {
   if (isLoading) {
     return (
       <>
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Header />
         <div className="horror-bg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="text-center mb-12">
@@ -85,7 +85,7 @@ export default function Subgenres() {
 
   return (
     <>
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Header />
 
       <div className="horror-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
