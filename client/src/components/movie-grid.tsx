@@ -9,10 +9,6 @@ import MovieCard from './movie-card';
 import type { Movie } from '@shared/schema';
 
 interface MovieGridProps {
-  // Either pass pre-fetched movies...
-  movies?: Movie[];
-
-  // Or let the grid fetch them with filters:
   searchQuery?: string;
   selectedPlatform?: string;
   selectedYear?: string;
@@ -24,7 +20,6 @@ interface MovieGridProps {
 }
 
 export default function MovieGrid({
-  movies: preloadedMovies,
   searchQuery = '',
   selectedPlatform = 'all',
   selectedYear = 'all',
@@ -37,8 +32,6 @@ export default function MovieGrid({
   const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const moviesPerPage = 15;
-
-  const shouldFetch = !preloadedMovies;
 
   const queryParams = new URLSearchParams();
   if (searchQuery) queryParams.append('search', searchQuery);
@@ -62,10 +55,10 @@ export default function MovieGrid({
       if (!response.ok) throw new Error('Failed to fetch content');
       return response.json();
     },
-    enabled: shouldFetch,
+    enabled: true,
   });
 
-  const movies = preloadedMovies || fetchedMovies || [];
+  const movies = fetchedMovies || [];
 
   const handleMovieClick = (movieId: number) => {
     setLocation(`/title/${movieId}`);
@@ -75,7 +68,7 @@ export default function MovieGrid({
     setPage((prev) => prev + 1);
   };
 
-  if (shouldFetch && isLoading) {
+  if (isLoading) {
     return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-2">
         <div className="mb-8">
@@ -95,7 +88,7 @@ export default function MovieGrid({
     );
   }
 
-  if (shouldFetch && error) {
+  if (error) {
     return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-2">
         <Alert className="max-w-md mx-auto dark-gray-bg border-red-600">
