@@ -55,6 +55,7 @@ export class WatchmodeAPI {
     genres?: number[];
     source_ids?: number[];
     type?: 'movie' | 'tv';
+    minimum_rating?: number;
     sort_by?: string;
     page?: number;
     limit?: number;
@@ -63,6 +64,8 @@ export class WatchmodeAPI {
     if (params.genres) searchParams.genres = params.genres.join(',');
     if (params.source_ids) searchParams.source_ids = params.source_ids.join(',');
     if (params.type) searchParams.type = params.type;
+    if (params.minimum_rating) searchParams.critic_score_low = params.minimum_rating.toString();
+    if (params.minimum_rating) searchParams.user_rating_low = params.minimum_rating.toString();
     if (params.sort_by) searchParams.sort_by = params.sort_by;
     if (params.page) searchParams.page = params.page.toString();
     if (params.limit) searchParams.limit = params.limit.toString();

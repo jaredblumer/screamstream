@@ -1,6 +1,7 @@
 import type { Express } from 'express';
-import { storage } from '../../storage';
+import { storage } from '@server/storage';
 import { insertContentSchema } from '@shared/schema';
+import { contentSyncService } from '@server/services/content-sync';
 
 export function registerContentRoutes(app: Express) {
   app.get('/api/content', async (req, res) => {
@@ -76,7 +77,6 @@ export function registerContentRoutes(app: Express) {
 
   app.post('/api/content/sync', async (req, res) => {
     try {
-      const { contentSyncService } = await import('../../content-sync');
       const result = await contentSyncService.syncHorrorContent(req.body);
       res.json(result);
     } catch (error) {
