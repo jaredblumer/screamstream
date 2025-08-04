@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRoute, useLocation } from 'wouter';
-import { ArrowLeft, Star, Calendar, Award, Heart, Share, Info, User } from 'lucide-react';
+import { ArrowLeft, Star, Calendar, Heart, Share, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertCircle } from 'lucide-react';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +12,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { getPlatformLogo, getPlatformName, formatSubgenre } from '@/lib/utils';
 import FeedbackButton from '@/components/feedback-button';
+import { useSearch } from '@/contexts/SearchContext';
 import type { Movie } from '@shared/schema';
 
 export default function MovieDetail() {
@@ -23,6 +23,11 @@ export default function MovieDetail() {
   const [posterError, setPosterError] = useState(false);
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const { toast } = useToast();
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, []);
 
   const {
     data: movie,
@@ -43,7 +48,7 @@ export default function MovieDetail() {
   if (!match || movieId === 0) {
     return (
       <>
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Header />
         <div className="min-h-screen horror-bg flex items-center justify-center">
           <Alert className="max-w-md dark-gray-bg border-red-600">
             <AlertCircle className="h-4 w-4" />
@@ -57,7 +62,7 @@ export default function MovieDetail() {
   if (isLoading) {
     return (
       <>
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Header />
         <div className="min-h-screen horror-bg">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Skeleton className="h-8 w-32 mb-8 horror-bg" />
@@ -79,7 +84,7 @@ export default function MovieDetail() {
   if (error || !movie) {
     return (
       <>
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Header />
         <div className="min-h-screen horror-bg flex items-center justify-center">
           <Alert className="max-w-md dark-gray-bg border-red-600">
             <AlertCircle className="h-4 w-4" />
@@ -94,7 +99,7 @@ export default function MovieDetail() {
 
   return (
     <>
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Header />
       <div className="horror-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-0">
           {/* Back Button */}

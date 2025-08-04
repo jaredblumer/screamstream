@@ -1,24 +1,34 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Search, Menu, Skull, User, Heart, LogOut, Settings } from 'lucide-react';
+import { Search, Menu, Skull, User, LogOut, Settings } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/use-auth';
 import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
+import { useSearch } from '@/contexts/SearchContext';
 
 interface HeaderProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  autoFocusSearch?: boolean;
 }
 
-export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
-  const [location] = useLocation();
+export default function Header({ autoFocusSearch }: HeaderProps) {
+  const [location, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const { user, logoutMutation } = useAuth();
   const { watchlistCount } = useWatchlistCount();
+  const { query: searchQuery, setQuery } = useSearch();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoFocusSearch && inputRef.current) {
+      // Delay focus to avoid layout shift
+      const timeout = setTimeout(() => inputRef.current?.focus(), 10);
+      return () => clearTimeout(timeout);
+    }
+  }, [autoFocusSearch]);
 
   const navigation = [
     { name: 'Top Rated', href: '/', active: location === '/' },
@@ -36,6 +46,16 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
     },
   ];
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+
+    const isOnSearchPage = location.startsWith('/search');
+    if (!isOnSearchPage && value.trim()) {
+      setLocation('/search');
+    }
+  };
+
   return (
     <header className="dark-gray-bg border-b border-gray-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +65,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
             href="/"
             className="flex items-center"
             onClick={() => {
-              onSearchChange('');
+              setQuery('');
               setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
             }}
           >
@@ -67,16 +87,15 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
 
           {/* Search Bar */}
           <div
-            className={`transition-all duration-300 max-w-lg ${
-              isSearchFocused ? 'flex-1 mx-1 sm:mx-4 md:mx-8' : 'flex-1 mx-2 sm:mx-4 md:mx-8'
-            }`}
+            className={`transition-all duration-300 max-w-lg ${isSearchFocused ? 'flex-1 mx-1 sm:mx-4 md:mx-8' : 'flex-1 mx-2 sm:mx-4 md:mx-8'}`}
           >
             <div className="relative">
               <Input
+                ref={inputRef}
                 type="text"
-                placeholder="Search horror..."
+                placeholder="Search horror titles..."
                 value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={handleSearchChange}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
                 className="w-full horror-bg border-gray-700 text-white placeholder-gray-400 focus:border-red-600 focus:ring-red-600 pl-10 text-sm sm:text-base transition-all duration-300"
@@ -85,21 +104,17 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
             </div>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav */}
           <nav className="hidden md:block">
             <div className="flex items-center space-x-6">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() =>
-                    item.name === 'Top Rankings' || item.name === 'New Releases'
-                      ? onSearchChange('')
-                      : undefined
-                  }
-                  className={`transition-colors flex items-center gap-2 ${
-                    item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'
-                  }`}
+                  onClick={() => {
+                    setQuery('');
+                  }}
+                  className={`transition-colors flex items-center gap-2 ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
                 >
                   {item.name}
                   {item.badge && (
@@ -112,14 +127,8 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                   )}
                 </Link>
               ))}
-
               {user ? (
                 <>
-                  {/* <Link href="/profile">
-                    <Button size="sm" className="horror-button-primary">
-                      <User className="h-4 w-4" />
-                    </Button>
-                  </Link> */}
                   <Link href="/admin">
                     <Button size="sm" className="horror-button-secondary">
                       <Settings className="h-4 w-4" />
@@ -145,7 +154,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
             </div>
           </nav>
 
-          {/* Mobile menu button */}
+          {/* Mobile Nav */}
           <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
@@ -159,13 +168,12 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`text-lg transition-colors ${
-                        item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'
-                      }`}
+                      className={`text-lg transition-colors ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        if (item.name === 'Top Rankings' || item.name === 'New Releases')
-                          onSearchChange('');
+                        if (['Top Rated', 'New to Streaming'].includes(item.name)) {
+                          setQuery('');
+                        }
                       }}
                     >
                       {item.name}
@@ -173,12 +181,6 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
                   ))}
                   {user ? (
                     <>
-                      {/* <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Button className="horror-button-primary mt-4">
-                          <User className="h-4 w-4 mr-2" />
-                          Profile
-                        </Button>
-                      </Link> */}
                       <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
                         <Button className="horror-button-secondary mt-2">
                           <Settings className="h-4 w-4 mr-2" />

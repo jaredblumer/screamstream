@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Redirect, useLocation, Link, useRouter } from 'wouter';
-import { Eye, EyeOff, Mail, User, Lock, ArrowLeft, Skull, Shield } from 'lucide-react';
+import { Eye, EyeOff, Mail, User, Lock, ArrowLeft, Skull } from 'lucide-react';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';

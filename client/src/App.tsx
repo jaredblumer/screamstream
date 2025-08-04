@@ -6,13 +6,14 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/hooks/use-auth';
 import { WatchlistCountProvider } from './contexts/WatchlistCountContext';
+import { SearchProvider } from '@/contexts/SearchContext';
 import { ProtectedRoute } from '@/lib/protected-route';
 import Home from '@/pages/home';
 import Subgenres from '@/pages/subgenres';
 import NewToStreaming from '@/pages/new-to-streaming';
 import Browse from '@/pages/browse';
+import Search from '@/pages/search';
 import Watchlist from '@/pages/watchlist';
-import Profile from '@/pages/profile';
 import MovieDetail from '@/pages/movie-detail';
 import Admin from '@/pages/admin';
 import AuthPage from '@/pages/auth-page';
@@ -33,9 +34,9 @@ function Router() {
       <Route path="/subgenres" component={Subgenres} />
       <Route path="/new-to-streaming" component={NewToStreaming} />
       <Route path="/browse" component={Browse} />
+      <Route path="/search" component={Search} />
       <Route path="/title/:id" component={MovieDetail} />
       <Route path="/watchlist" component={Watchlist} />
-      {/* <ProtectedRoute path="/profile" component={Profile} /> */}
       <ProtectedRoute path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
@@ -48,10 +49,12 @@ function App() {
       <AuthProvider>
         <WatchlistCountProvider>
           <TooltipProvider>
-            <div className="min-h-screen horror-bg text-white">
-              <Toaster />
-              <Router />
-            </div>
+            <SearchProvider>
+              <div className="min-h-screen horror-bg text-white">
+                <Toaster />
+                <Router />
+              </div>
+            </SearchProvider>
           </TooltipProvider>
         </WatchlistCountProvider>
       </AuthProvider>

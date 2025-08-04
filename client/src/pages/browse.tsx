@@ -46,7 +46,7 @@ export default function Browse() {
 
   return (
     <>
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Header />
 
       <div className="min-h-screen horror-bg">
         {/* Browse Header */}
@@ -91,7 +91,6 @@ export default function Browse() {
               selectedType={selectedType}
               selectedSubgenre={selectedSubgenre}
               sortBy={sortBy}
-              onHeaderUpdate={() => {}}
             />
           </div>
         </div>
