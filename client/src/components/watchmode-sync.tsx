@@ -52,7 +52,7 @@ const defaultPlatforms = ['Netflix', 'Amazon Prime', 'Hulu', 'HBO Max', 'Shudder
 export default function WatchmodeSync() {
   const { toast } = useToast();
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(defaultPlatforms);
-  const [maxRequests, setMaxRequests] = useState(50);
+  const [titlesToSyncCount, setTitlesToSyncCount] = useState(10);
   const [minRating, setMinRating] = useState(0.0);
   const [manualCount, setManualCount] = useState<string>('');
 
@@ -116,7 +116,7 @@ export default function WatchmodeSync() {
     mutationFn: async () => {
       console.log('syncMutation');
       const res = await apiRequest('POST', '/api/content/sync', {
-        maxRequests,
+        titlesToSyncCount,
         selectedPlatforms,
         minRating,
       });
@@ -338,15 +338,15 @@ export default function WatchmodeSync() {
           {/* Request Limit */}
           <div className="space-y-2">
             <Label htmlFor="max-requests" className="text-gray-300">
-              Max API Requests ({maxRequests})
+              Titles to Sync ({titlesToSyncCount})
             </Label>
             <Input
               id="max-requests"
               type="range"
               min="1"
-              max="200"
-              value={maxRequests}
-              onChange={(e) => setMaxRequests(parseInt(e.target.value))}
+              max="50"
+              value={titlesToSyncCount}
+              onChange={(e) => setTitlesToSyncCount(parseInt(e.target.value))}
               className="horror-bg border-gray-700"
             />
           </div>

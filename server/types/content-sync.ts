@@ -1,5 +1,5 @@
 export interface SyncOptions {
-  maxRequests?: number;
+  titlesToSyncCount?: number;
   selectedPlatforms?: string[];
   minRating?: number;
 }
