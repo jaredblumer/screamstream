@@ -1,7 +1,8 @@
-import { db } from '../db';
+import { db } from '@server/db';
 import { content } from '@shared/schema';
 import { eq, sql, ilike, desc, asc, and, or } from 'drizzle-orm';
-import type { Content, InsertContent } from '@shared/schema';
+import { getPlatformsForContentIds } from './content-platforms';
+import type { Content } from '@shared/schema';
 
 function getDecadeYearRange(decade: string): { min: number; max: number } | null {
   switch (decade) {
@@ -33,9 +34,9 @@ export async function getContent(filters?: {
   search?: string;
   type?: 'movie' | 'series';
   subgenre?: string;
-  sortBy?: 'rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
+  sortBy?: 'average_rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
   includeHidden?: boolean;
-}): Promise<Content[]> {
+}): Promise<(Content & { platformsBadges: any[] })[]> {
   let query = db.select().from(content);
   const conditions = [];
 
@@ -101,8 +102,8 @@ export async function getContent(filters?: {
   }
 
   switch (filters?.sortBy) {
-    case 'rating':
-      query = query.orderBy(desc(content.rating));
+    case 'average_rating':
+      query = query.orderBy(desc(content.averageRating));
       break;
     case 'critics_rating':
       query = query.orderBy(desc(content.criticsRating));
@@ -117,11 +118,18 @@ export async function getContent(filters?: {
       query = query.orderBy(asc(content.year));
       break;
     default:
-      query = query.orderBy(desc(content.rating));
+      query = query.orderBy(desc(content.averageRating));
       break;
   }
 
-  return await query;
+  const rows = await query;
+  const contentIds = rows.map((item) => item.id);
+  const platformMap = contentIds.length ? await getPlatformsForContentIds(contentIds) : new Map();
+
+  return rows.map((item) => ({
+    ...item,
+    platformsBadges: platformMap.get(item.id) || [],
+  }));
 }
 
 export async function getContentItem(id: number): Promise<Content | undefined> {
