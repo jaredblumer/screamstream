@@ -15,7 +15,7 @@ export default function Home() {
   const [selectedUsersRating, setSelectedUsersRating] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedSubgenre, setSelectedSubgenre] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [sortBy, setSortBy] = useState('average_rating');
 
   const handleViewTopRated = () => {
     // Reset filters to show top rated movies
@@ -23,7 +23,7 @@ export default function Home() {
     setSelectedYear('all');
     setSelectedCriticsRating('all');
     setSelectedUsersRating('all');
-    setSortBy('rating');
+    setSortBy('average_rating');
     setSearchQuery('');
 
     // Scroll to filter section with smooth animation

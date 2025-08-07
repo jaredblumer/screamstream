@@ -13,7 +13,7 @@ export default function Browse() {
   const [selectedUsersRating, setSelectedUsersRating] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedSubgenre, setSelectedSubgenre] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [sortBy, setSortBy] = useState('average_rating');
 
   // Parse URL parameters and set initial subgenre
   useEffect(() => {
