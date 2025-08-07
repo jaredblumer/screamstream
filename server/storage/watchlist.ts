@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { db } from '@server/db';
 import { watchlist, content } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import type { Content } from '@shared/schema';
