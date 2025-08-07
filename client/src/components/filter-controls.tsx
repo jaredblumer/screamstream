@@ -134,7 +134,7 @@ export default function FilterControls({
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
                     <SelectItem value="all">All Content</SelectItem>
                     <SelectItem value="movie">Movies</SelectItem>
-                    <SelectItem value="series">TV Series</SelectItem>
+                    <SelectItem value="series">Series</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -147,7 +147,7 @@ export default function FilterControls({
                   <SelectValue placeholder="Sort by" className="text-white" />
                 </SelectTrigger>
                 <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                  <SelectItem value="rating">Rating</SelectItem>
+                  <SelectItem value="average_rating">Average Rating</SelectItem>
                   <SelectItem value="critics_rating">Critics Rating</SelectItem>
                   <SelectItem value="users_rating">Users Rating</SelectItem>
                   <SelectItem value="year_newest">Newest First</SelectItem>

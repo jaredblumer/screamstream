@@ -1,6 +1,7 @@
 import type { Express } from 'express';
 import { storage } from '../../storage';
 import { requireAdmin, requireAuth } from '../../auth';
+import { watchmodeAPI } from '@server/watchmode';
 
 export function registerWatchmodeRoutes(app: Express) {
   app.put('/api/admin/watchmode/usage', requireAdmin, async (req, res) => {
@@ -68,12 +69,11 @@ export function registerWatchmodeRoutes(app: Express) {
 
   app.get('/api/watchmode/sources', requireAuth, async (_req, res) => {
     try {
-      const { watchmodeAPI } = await import('../../watchmode');
       const sources = await watchmodeAPI.getSources();
 
       const popularSources = sources.filter(
         (source) =>
-          source.type === 'sub' &&
+          (source.type === 'free' || source.type === 'sub') &&
           source.regions.includes('US') &&
           [
             'Netflix',

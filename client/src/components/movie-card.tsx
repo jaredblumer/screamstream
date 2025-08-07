@@ -53,7 +53,6 @@ export default function MovieCard({
     }
   };
 
-  const isMovie = movie.type === 'movie';
   const isSeries = movie.type === 'series';
 
   return (
@@ -119,37 +118,32 @@ export default function MovieCard({
 
         {/* Streaming Platforms */}
         <div className="flex items-center gap-2">
-          {movie.platforms.map((platform, index) => {
-            const platformLink = movie.platformLinks?.[index];
-            const PlatformElement = (
+          {movie.platformsBadges?.map((badge) => {
+            const { platformId, platformName, imageUrl, webUrl } = badge;
+
+            const logo = (
               <img
-                src={getPlatformLogo(platform)}
-                alt={getPlatformName(platform)}
-                title={`Watch on ${getPlatformName(platform)}`}
+                src={imageUrl || getPlatformLogo(platformId)}
+                alt={platformName}
+                title={`Watch on ${platformName}`}
                 className="w-6 h-6 rounded platform-logo transition-transform hover:scale-110 cursor-pointer"
               />
             );
 
-            // If we have a direct link, make the platform logo clickable
-            if (platformLink && platformLink.trim()) {
-              return (
-                <a
-                  key={platform}
-                  href={platformLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block transition-opacity hover:opacity-80"
-                  title={`Watch "${movie.title}" on ${getPlatformName(platform)}`}
-                >
-                  {PlatformElement}
-                </a>
-              );
-            }
-
-            // Fallback to non-clickable logo if no link available
-            return (
-              <div key={platform} className="inline-block">
-                {PlatformElement}
+            return webUrl ? (
+              <a
+                key={platformId}
+                href={webUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-opacity hover:opacity-80"
+                title={`Watch "${movie.title}" on ${platformName}`}
+              >
+                {logo}
+              </a>
+            ) : (
+              <div key={platformId} className="inline-block">
+                {logo}
               </div>
             );
           })}

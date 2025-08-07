@@ -1,11 +1,14 @@
-import { storage } from '@server/storage';
+import { getContent, createContent } from '@server/storage/content';
+import { incrementWatchmodeRequests, getCurrentMonthUsage } from '@server/storage/usage';
+import { createContentPlatform } from '@server/storage/content-platforms';
 import {
   watchmodeAPI,
   convertWatchmodeTitleToContent,
   popularStreamingPlatforms,
 } from '@server/watchmode';
-import { Content, InsertContent } from '@shared/schema';
-import { incrementWatchmodeRequests, getCurrentMonthUsage } from '@server/storage/usage';
+import { Content, InsertContent, InsertContentPlatform } from '@shared/schema';
+
+import { getOrCreatePlatformByWatchmodeId } from '@server/storage/platforms';
 
 import type { SyncOptions, SyncResult } from '@server/types/content-sync';
 
@@ -57,11 +60,17 @@ class ContentSyncService {
         result
       );
 
-      for (const content of newContent) {
+      for (const { content, platforms } of newContent) {
         try {
           const existing = await this.findExistingContent(content.title, content.year);
           if (!existing) {
-            await storage.createContent(content);
+            const createdContent = await createContent(content);
+            for (const platform of platforms) {
+              await createContentPlatform({
+                ...platform,
+                contentId: createdContent.id,
+              });
+            }
             result.newMoviesAdded++;
           }
         } catch (error) {
@@ -82,8 +91,16 @@ class ContentSyncService {
     minRating: number,
     titlesToSync: number,
     result: SyncResult
-  ): Promise<InsertContent[]> {
-    const content: InsertContent[] = [];
+  ): Promise<
+    Array<{
+      content: InsertContent;
+      platforms: Omit<InsertContentPlatform, 'contentId'>[];
+    }>
+  > {
+    const content: Array<{
+      content: InsertContent;
+      platforms: Omit<InsertContentPlatform, 'contentId'>[];
+    }> = [];
     const platformMap = popularStreamingPlatforms;
     const selectedPlatformIds = platforms
       .map((platform) => platformMap[platform])
@@ -94,7 +111,7 @@ class ContentSyncService {
 
     while (content.length < titlesToSync) {
       const searchResult = await watchmodeAPI.searchTitles({
-        genres: [11], // Horror genre ID
+        genres: [11],
         source_ids: selectedPlatformIds,
         minimum_rating: minRating,
         sort_by: 'popularity_desc',
@@ -138,13 +155,35 @@ class ContentSyncService {
             console.log(`Could not fetch sources for "${titleDetails.title}": ${error.message}`);
           }
 
-          const enrichedTitleDetails = {
-            ...titleDetails,
-            sources: titleSources,
-          };
+          const convertedContent = await convertWatchmodeTitleToContent(titleDetails);
 
-          const convertedContent = await convertWatchmodeTitleToContent(enrichedTitleDetails);
-          content.push(convertedContent);
+          const popularPlatformIds = new Set(Object.values(popularStreamingPlatforms));
+          const filteredSources = titleSources.filter(
+            (source) =>
+              source.type === 'sub' &&
+              source.region === 'US' &&
+              source.web_url &&
+              popularPlatformIds.has(source.source_id)
+          );
+
+          const contentPlatforms: Omit<InsertContentPlatform, 'contentId'>[] = [];
+
+          for (const source of filteredSources) {
+            const platform = await getOrCreatePlatformByWatchmodeId(source.source_id);
+            contentPlatforms.push({
+              platformId: platform.id,
+              webUrl: source.web_url,
+              format: source.format,
+              seasons: source.seasons,
+              episodes: source.episodes,
+            });
+          }
+
+          if (convertedContent.genres?.includes(33)) {
+            convertedContent.hidden = true;
+          }
+
+          content.push({ content: convertedContent, platforms: contentPlatforms });
 
           result.titlesProcessed.push({
             title: titleResult.title,
@@ -170,7 +209,7 @@ class ContentSyncService {
   }
 
   private async findExistingContent(title: string, year: number): Promise<Content | null> {
-    const existingContent = await storage.getContent();
+    const existingContent = await getContent();
     return (
       existingContent.find(
         (content) =>
@@ -180,50 +219,28 @@ class ContentSyncService {
   }
 
   private async findContentByWatchmodeId(watchmodeId?: number): Promise<Content | null> {
-    const existingContent = await storage.getContent();
-
+    const existingContent = await getContent();
     if (watchmodeId) {
       const found = existingContent.find((content) => content.watchmodeId === watchmodeId);
       if (found) return found;
     }
-
     return null;
   }
 
   private generateSummary(result: SyncResult): string {
     const parts = [];
 
-    if (result.newMoviesAdded > 0) {
-      parts.push(`${result.newMoviesAdded} new content items added`);
-    }
-
-    if (result.moviesValidated > 0) {
-      parts.push(`${result.moviesValidated} items validated`);
-    }
-
-    if (result.moviesRemoved > 0) {
-      parts.push(`${result.moviesRemoved} items removed`);
-    }
-
-    if (result.searchStats.duplicatesSkipped > 0) {
+    if (result.newMoviesAdded > 0) parts.push(`${result.newMoviesAdded} new content items added`);
+    if (result.moviesValidated > 0) parts.push(`${result.moviesValidated} items validated`);
+    if (result.moviesRemoved > 0) parts.push(`${result.moviesRemoved} items removed`);
+    if (result.searchStats.duplicatesSkipped > 0)
       parts.push(`${result.searchStats.duplicatesSkipped} duplicates skipped`);
-    }
-
-    if (result.searchStats.filteredOut > 0) {
+    if (result.searchStats.filteredOut > 0)
       parts.push(`${result.searchStats.filteredOut} filtered out`);
-    }
-
-    if (result.requestsUsed > 0) {
-      parts.push(`${result.requestsUsed} API requests used`);
-    }
-
-    if (result.searchStats.pagesSearched > 0) {
+    if (result.requestsUsed > 0) parts.push(`${result.requestsUsed} API requests used`);
+    if (result.searchStats.pagesSearched > 0)
       parts.push(`${result.searchStats.pagesSearched} pages searched`);
-    }
-
-    if (result.errors.length > 0) {
-      parts.push(`${result.errors.length} errors occurred`);
-    }
+    if (result.errors.length > 0) parts.push(`${result.errors.length} errors occurred`);
 
     return parts.length > 0 ? parts.join(', ') + '.' : 'No changes made.';
   }
