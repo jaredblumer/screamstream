@@ -1,12 +1,12 @@
 import { Star, Heart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getPlatformLogo, getPlatformName, formatSubgenre } from '@/lib/utils';
+import { getPlatformLogo, formatSubgenre } from '@/lib/utils';
 import { useWatchlist } from '@/hooks/use-watchlist';
-import type { Movie } from '@shared/schema';
+import type { ContentWithPlatforms } from '@shared/schema';
 import { useState } from 'react';
 
 interface MovieCardProps {
-  movie: Movie;
+  movie: ContentWithPlatforms;
   onClick: () => void;
   selectedSubgenre?: string;
   onWatchlistToggle?: () => void;
@@ -30,18 +30,14 @@ export default function MovieCard({
 
   // Helper function to determine which subgenre to display
   const getDisplaySubgenre = () => {
-    // If we're filtering by a specific subgenre and the movie has that subgenre, show it
     if (selectedSubgenre && selectedSubgenre !== 'all') {
       const matchingSubgenre = movie.subgenres?.find(
         (subgenre) => subgenre.toLowerCase() === selectedSubgenre.toLowerCase()
       );
-      console.log('Matching subgenre:', formatSubgenre(matchingSubgenre));
       if (matchingSubgenre) {
         return formatSubgenre(matchingSubgenre);
       }
     }
-    // Otherwise, show the primary subgenre
-    console.log('movie.subgenre:', formatSubgenre(movie.subgenre));
     return formatSubgenre(movie.subgenre);
   };
 
@@ -130,6 +126,9 @@ export default function MovieCard({
               />
             );
 
+            // Helper to stop card navigation when clicking a badge
+            const stop = (e: React.MouseEvent) => e.stopPropagation();
+
             return webUrl ? (
               <a
                 key={platformId}
@@ -138,11 +137,13 @@ export default function MovieCard({
                 rel="noopener noreferrer"
                 className="inline-block transition-opacity hover:opacity-80"
                 title={`Watch "${movie.title}" on ${platformName}`}
+                onClick={stop}
+                onAuxClick={stop} // middle click
               >
                 {logo}
               </a>
             ) : (
-              <div key={platformId} className="inline-block">
+              <div key={platformId} className="inline-block" onClick={stop} onAuxClick={stop}>
                 {logo}
               </div>
             );
