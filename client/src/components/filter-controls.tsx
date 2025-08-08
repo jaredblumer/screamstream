@@ -106,7 +106,7 @@ export default function FilterControls({
                     <SelectValue placeholder="Critics Rating" className="text-white" />
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">Critic Rating</SelectItem>
+                    <SelectItem value="all">Critics Rating</SelectItem>
                     <SelectItem value="9">9.0+ Critics</SelectItem>
                     <SelectItem value="8">8.0+ Critics</SelectItem>
                     <SelectItem value="7">7.0+ Critics</SelectItem>
@@ -116,14 +116,14 @@ export default function FilterControls({
 
                 <Select value={selectedUsersRating} onValueChange={onUsersRatingChange}>
                   <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="Users Rating" className="text-white" />
+                    <SelectValue placeholder="Audience Rating" className="text-white" />
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">User Rating</SelectItem>
-                    <SelectItem value="9">9.0+ Users</SelectItem>
-                    <SelectItem value="8">8.0+ Users</SelectItem>
-                    <SelectItem value="7">7.0+ Users</SelectItem>
-                    <SelectItem value="6">6.0+ Users</SelectItem>
+                    <SelectItem value="all">Audience Rating</SelectItem>
+                    <SelectItem value="9">9.0+ Audience</SelectItem>
+                    <SelectItem value="8">8.0+ Audience</SelectItem>
+                    <SelectItem value="7">7.0+ Audience</SelectItem>
+                    <SelectItem value="6">6.0+ Audience</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -149,7 +149,7 @@ export default function FilterControls({
                 <SelectContent className="horror-bg border-gray-700 horror-select-content">
                   <SelectItem value="average_rating">Average Rating</SelectItem>
                   <SelectItem value="critics_rating">Critics Rating</SelectItem>
-                  <SelectItem value="users_rating">Users Rating</SelectItem>
+                  <SelectItem value="users_rating">Audience Rating</SelectItem>
                   <SelectItem value="year_newest">Newest First</SelectItem>
                   <SelectItem value="year_oldest">Oldest First</SelectItem>
                 </SelectContent>
