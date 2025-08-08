@@ -1,8 +1,8 @@
 import { db } from '@server/db';
 import { content } from '@shared/schema';
 import { eq, sql, ilike, desc, asc, and, or } from 'drizzle-orm';
-import { getPlatformsForContentIds } from './content-platforms';
-import type { Content } from '@shared/schema';
+import { getPlatformsForContentId, getPlatformsForContentIds } from './content-platforms';
+import type { InsertContent, Content, ContentWithPlatforms } from '@shared/schema';
 
 function getDecadeYearRange(decade: string): { min: number; max: number } | null {
   switch (decade) {
@@ -132,9 +132,12 @@ export async function getContent(filters?: {
   }));
 }
 
-export async function getContentItem(id: number): Promise<Content | undefined> {
+export async function getContentItem(id: number): Promise<ContentWithPlatforms | undefined> {
   const [item] = await db.select().from(content).where(eq(content.id, id));
-  return item || undefined;
+  if (!item) return undefined;
+
+  const platformsBadges = await getPlatformsForContentId(id);
+  return { ...item, platformsBadges };
 }
 
 export async function createContent(data: InsertContent): Promise<Content> {

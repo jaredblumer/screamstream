@@ -1,5 +1,5 @@
 import { db } from '@server/db';
-import { contentPlatforms, platforms, InsertContentPlatform } from '@shared/schema';
+import { contentPlatforms, platforms, InsertContentPlatform, PlatformBadge } from '@shared/schema';
 import { eq, inArray } from 'drizzle-orm';
 
 export async function createContentPlatform(data: InsertContentPlatform & { contentId: number }) {
@@ -39,4 +39,25 @@ export async function getPlatformsForContentIds(contentIds: number[]) {
     console.error('Error fetching platforms for content IDs:', error);
     throw error;
   }
+}
+
+export async function getPlatformsForContentId(contentId: number): Promise<PlatformBadge[]> {
+  const rows = await db
+    .select({
+      contentId: contentPlatforms.contentId,
+      platformId: contentPlatforms.platformId,
+      webUrl: contentPlatforms.webUrl,
+      platformName: platforms.platformName,
+      imageUrl: platforms.imageUrl,
+    })
+    .from(contentPlatforms)
+    .innerJoin(platforms, eq(contentPlatforms.platformId, platforms.id))
+    .where(eq(contentPlatforms.contentId, contentId));
+
+  return rows.map((r) => ({
+    platformId: r.platformId,
+    platformName: r.platformName,
+    imageUrl: r.imageUrl ?? '',
+    webUrl: r.webUrl ?? undefined,
+  }));
 }

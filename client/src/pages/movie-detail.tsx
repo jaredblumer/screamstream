@@ -13,13 +13,12 @@ import Footer from '@/components/footer';
 import { getPlatformLogo, getPlatformName, formatSubgenre } from '@/lib/utils';
 import FeedbackButton from '@/components/feedback-button';
 import { useSearch } from '@/contexts/SearchContext';
-import type { Movie } from '@shared/schema';
+import type { ContentWithPlatforms } from '@shared/schema';
 
 export default function MovieDetail() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/title/:id');
   const movieId = params?.id ? parseInt(params.id) : 0;
-  const [searchQuery, setSearchQuery] = useState('');
   const [posterError, setPosterError] = useState(false);
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const { toast } = useToast();
@@ -33,7 +32,7 @@ export default function MovieDetail() {
     data: movie,
     isLoading,
     error,
-  } = useQuery<Movie>({
+  } = useQuery<ContentWithPlatforms>({
     queryKey: ['/api/content', movieId],
     queryFn: async () => {
       const response = await fetch(`/api/content/${movieId}`);
@@ -164,7 +163,7 @@ export default function MovieDetail() {
                   {movie.usersRating && (
                     <div className="flex items-center">
                       <User className="h-5 w-5 mr-2 text-red-400" />
-                      {movie.usersRating.toFixed(1)} Users
+                      {movie.usersRating.toFixed(1)} Audience
                     </div>
                   )}
                 </div>
@@ -193,29 +192,30 @@ export default function MovieDetail() {
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-white mb-3">Available On</h3>
                 <div className="flex flex-wrap gap-3">
-                  {movie.platforms.map((platform, index) => {
-                    const platformLink = movie.platformLinks?.[index];
-                    const PlatformComponent = platformLink ? 'a' : 'div';
+                  {movie.platformsBadges.map((badge) => {
+                    const { platformId, platformName, imageUrl, webUrl } = badge;
+                    const PlatformComponent = webUrl ? 'a' : 'div';
 
                     return (
                       <PlatformComponent
-                        key={platform}
-                        href={platformLink || undefined}
-                        target={platformLink ? '_blank' : undefined}
-                        rel={platformLink ? 'noopener noreferrer' : undefined}
+                        key={platformId}
+                        href={webUrl ?? undefined}
+                        target={webUrl ? '_blank' : undefined}
+                        rel={webUrl ? 'noopener noreferrer' : undefined}
                         className={`flex items-center dark-gray-bg rounded-lg px-3 py-2 border border-gray-700 ${
-                          platformLink ? 'hover:bg-gray-700 transition-colors cursor-pointer' : ''
+                          webUrl ? 'hover:bg-gray-700 transition-colors cursor-pointer' : ''
                         }`}
+                        title={webUrl ? `Watch on ${platformName}` : platformName}
                       >
                         <img
-                          src={getPlatformLogo(platform)}
-                          alt={getPlatformName(platform)}
+                          src={imageUrl || getPlatformLogo(platformId)}
+                          alt={platformName || getPlatformName(platformId)}
                           className="w-6 h-6 rounded mr-2"
                         />
                         <span className="text-white text-sm font-medium">
-                          {getPlatformName(platform)}
+                          {platformName || getPlatformName(platformId)}
                         </span>
-                        {platformLink && <span className="ml-2 text-xs text-gray-400">↗</span>}
+                        {webUrl && <span className="ml-2 text-xs text-gray-400">↗</span>}
                       </PlatformComponent>
                     );
                   })}
