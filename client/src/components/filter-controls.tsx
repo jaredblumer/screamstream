@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import { Subgenre } from '@shared/schema';
+import { Subgenre, Platform } from '@shared/schema';
 
 interface FilterControlsProps {
   selectedPlatform: string;
@@ -50,6 +50,17 @@ export default function FilterControls({
     },
   });
 
+  const { data: platforms = [] } = useQuery<Platform[]>({
+    queryKey: ['/api/platforms'],
+    queryFn: async () => {
+      const res = await fetch('/api/platforms');
+      if (!res.ok) throw new Error('Failed to load platforms');
+      return res.json();
+    },
+  });
+
+  const handleSubgenreChange = onSubgenreChange ?? (() => {});
+
   return (
     <section className="dark-gray-bg py-3 sm:py-6 border-b border-gray-800 relative z-0 mt-2 sm:mt-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -64,14 +75,15 @@ export default function FilterControls({
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
                     <SelectItem value="all">All Platforms</SelectItem>
-                    <SelectItem value="netflix">Netflix</SelectItem>
-                    <SelectItem value="hulu">Hulu</SelectItem>
-                    <SelectItem value="amazon_prime">Amazon Prime</SelectItem>
-                    <SelectItem value="hbo_max">HBO Max</SelectItem>
+                    {platforms.map((p) => (
+                      <SelectItem key={p.id} value={p.platformKey}>
+                        {p.platformName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedSubgenre} onValueChange={onSubgenreChange}>
+                <Select value={selectedSubgenre} onValueChange={handleSubgenreChange}>
                   <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
                     <SelectValue placeholder="All Subgenres" className="text-white" />
                   </SelectTrigger>

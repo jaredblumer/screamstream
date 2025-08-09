@@ -1,7 +1,7 @@
 import { db } from '@server/db';
-import { content } from '@shared/schema';
 import { eq, sql, ilike, desc, asc, and, or } from 'drizzle-orm';
 import { getPlatformsForContentId, getPlatformsForContentIds } from './content-platforms';
+import { content, platforms, contentPlatforms } from '@shared/schema';
 import type { InsertContent, Content, ContentWithPlatforms } from '@shared/schema';
 
 function getDecadeYearRange(decade: string): { min: number; max: number } | null {
@@ -26,13 +26,19 @@ function getDecadeYearRange(decade: string): { min: number; max: number } | null
 }
 
 export async function getContent(filters?: {
-  platform?: string;
+  // platform filter accepts platform key/name (string or string[])
+  platform?: string | string[];
+  // optional: filter by platform ids directly
+  platformIds?: number[];
+  // mode for multi-platform filtering: any (default) or all
+  platformsMode?: 'any' | 'all';
+
   year?: number | string;
-  minRating?: number;
+  minRating?: number; // interpreted as averageRating
   minCriticsRating?: number;
   minUsersRating?: number;
   search?: string;
-  type?: 'movie' | 'series';
+  type?: 'movie' | 'series' | 'all';
   subgenre?: string;
   sortBy?: 'average_rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
   includeHidden?: boolean;
@@ -40,14 +46,44 @@ export async function getContent(filters?: {
   let query = db.select().from(content);
   const conditions = [];
 
+  // Hide by default
   if (!filters?.includeHidden) {
     conditions.push(or(eq(content.hidden, false), sql`${content.hidden} IS NULL`));
   }
 
-  if (filters?.platform && filters.platform !== 'all') {
-    conditions.push(sql`${content.platforms} @> ${JSON.stringify([filters.platform])}`);
-  }
+  // ---- PLATFORM FILTERS (normalized schema) ----
+  const mode = filters?.platformsMode ?? 'any';
 
+  // helper: EXISTS for a single platform match by key/name
+  const existsForKeyOrName = (value: string) =>
+    sql`EXISTS (
+    SELECT 1
+    FROM ${contentPlatforms} cp
+    JOIN ${platforms} p ON p.id = cp.platform_id
+    WHERE cp.content_id = ${content.id}
+      AND (p.platform_key = ${value} OR p.platform_name = ${value})
+  )`;
+
+  // helper: EXISTS for a single platform match by id
+  const existsForId = (id: number) =>
+    sql`EXISTS (
+    SELECT 1
+    FROM ${contentPlatforms} cp
+    WHERE cp.content_id = ${content.id}
+      AND cp.platform_id = ${id}
+  )`;
+
+  if (filters?.platformIds && filters.platformIds.length > 0) {
+    const idConds = filters.platformIds.map((id) => existsForId(id));
+    conditions.push(mode === 'all' ? and(...idConds) : or(...idConds));
+  } else if (filters?.platform && filters.platform !== 'all') {
+    const values = Array.isArray(filters.platform) ? filters.platform : [filters.platform];
+    const keyConds = values.map((v) => existsForKeyOrName(v));
+    conditions.push(mode === 'all' ? and(...keyConds) : or(...keyConds));
+  }
+  // ---------------------------------------------
+
+  // Year or decade
   if (filters?.year) {
     if (typeof filters.year === 'string') {
       const range = getDecadeYearRange(filters.year);
@@ -61,22 +97,23 @@ export async function getContent(filters?: {
     }
   }
 
+  // Ratings (note: minRating maps to averageRating)
   if (filters?.minRating !== undefined) {
-    conditions.push(sql`${content.rating} >= ${filters.minRating}`);
+    conditions.push(sql`${content.averageRating} >= ${filters.minRating}`);
   }
-
   if (filters?.minCriticsRating !== undefined) {
     conditions.push(sql`${content.criticsRating} >= ${filters.minCriticsRating}`);
   }
-
   if (filters?.minUsersRating !== undefined) {
     conditions.push(sql`${content.usersRating} >= ${filters.minUsersRating}`);
   }
 
+  // Type
   if (filters?.type && filters.type !== 'all') {
     conditions.push(eq(content.type, filters.type));
   }
 
+  // Search
   if (filters?.search) {
     const searchTerm = `%${filters.search.toLowerCase()}%`;
     conditions.push(
@@ -88,6 +125,7 @@ export async function getContent(filters?: {
     );
   }
 
+  // Subgenre: matches primary subgenre or in `subgenres` array
   if (filters?.subgenre && filters.subgenre !== 'all') {
     conditions.push(
       or(
@@ -101,6 +139,7 @@ export async function getContent(filters?: {
     query = query.where(and(...conditions));
   }
 
+  // Sorting
   switch (filters?.sortBy) {
     case 'average_rating':
       query = query.orderBy(desc(content.averageRating));
@@ -123,6 +162,8 @@ export async function getContent(filters?: {
   }
 
   const rows = await query;
+
+  // Attach platform badges
   const contentIds = rows.map((item) => item.id);
   const platformMap = contentIds.length ? await getPlatformsForContentIds(contentIds) : new Map();
 
