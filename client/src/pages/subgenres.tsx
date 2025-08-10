@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Film, Star, Calendar } from 'lucide-react';
+import { ArrowRight, Film, Star, User, Calendar } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieGrid from '@/components/movie-grid';
@@ -89,38 +89,6 @@ export default function Subgenres() {
 
       <div className="horror-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Search Results */}
-          <div
-            className={`transition-all duration-700 ease-in-out overflow-hidden ${
-              isSearching
-                ? 'max-h-none opacity-100 transform translate-y-0'
-                : 'max-h-0 opacity-0 transform -translate-y-4'
-            }`}
-          >
-            <div
-              className={`transition-opacity duration-300 ${isSearching ? 'delay-200' : 'delay-0'}`}
-            >
-              <div className="mb-8 animate-slide-up">
-                <h1 className="text-4xl font-bold text-white mb-4">
-                  Search Results for "<span className="blood-red">{searchQuery}</span>"
-                </h1>
-                <p className="text-gray-300">Found streaming horror content matching your search</p>
-              </div>
-              <div className="animate-fade-slide stagger-1">
-                <MovieGrid
-                  searchQuery={searchQuery}
-                  selectedPlatform="all"
-                  selectedYear="all"
-                  selectedCriticsRating="all"
-                  selectedUsersRating="all"
-                  selectedType="all"
-                  sortBy="rating"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Genres Content */}
           <div
             className={`transition-all duration-700 ease-in-out overflow-hidden ${
               !isSearching
@@ -183,10 +151,22 @@ export default function Subgenres() {
                                       {movie.year}
                                     </div>
                                   </div>
-                                  <div className="flex items-center text-yellow-400 ml-2">
-                                    <Star className="h-3 w-3 mr-1 fill-current" />
-                                    <span className="text-xs font-medium">{movie.rating}</span>
-                                  </div>
+                                  {movie.criticsRating && (
+                                    <div className="flex items-center horror-orange ml-2">
+                                      <Star className="h-3 w-3 mr-1 fill-current" />
+                                      <span className="text-xs font-medium text-white">
+                                        {movie.criticsRating.toFixed(1)}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {movie.usersRating && (
+                                    <div className="flex items-center text-red-400 ml-2">
+                                      <User className="h-3 w-3 mr-1 fill-current" />
+                                      <span className="text-xs font-medium text-white">
+                                        {movie.usersRating.toFixed(1)}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </Link>
                             ))}
