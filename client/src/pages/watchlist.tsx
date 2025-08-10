@@ -7,21 +7,12 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieCard from '@/components/movie-card';
 import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
-import { useWatchlist } from '@/hooks/use-watchlist';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Watchlist() {
-  const { isAuthenticated } = useWatchlist();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { watchlistContent, refreshWatchlist, isWatchlistLoading } = useWatchlistCount();
-
-  const filteredContent = searchQuery.trim()
-    ? watchlistContent.filter(
-        (content) =>
-          content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          content.subgenre?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : watchlistContent;
 
   if (isWatchlistLoading) {
     return (
@@ -75,27 +66,23 @@ export default function Watchlist() {
               <p className="text-gray-400 mb-8 max-w-md mx-auto">
                 Start building your horror movie collection by adding films you want to watch.
               </p>
-              <Link href="/">
-                <Button className="horror-button-primary px-8 py-3">Browse Movies</Button>
-              </Link>
-            </div>
-          )}
-
-          {/* No results */}
-          {watchlistContent.length > 0 && filteredContent.length === 0 && searchQuery.trim() && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold text-white mb-2">No results found</h3>
-              <p className="text-gray-400">
-                No watchlist items match "{searchQuery}". Try a different search term.
-              </p>
+              {user ? (
+                <Link href="/browse">
+                  <Button className="horror-button-primary px-8 py-3">Browse Movies</Button>
+                </Link>
+              ) : (
+                <Link href="/auth">
+                  <Button className="horror-button-primary px-8 py-3">Log In to Add Movies</Button>
+                </Link>
+              )}
             </div>
           )}
 
           {/* Grid */}
-          {filteredContent.length > 0 && (
+          {watchlistContent.length > 0 && (
             <div className="animate-fade-slide stagger-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {filteredContent.map((content) => (
+                {watchlistContent.map((content) => (
                   <MovieCard
                     key={content.id}
                     movie={content}
