@@ -73,9 +73,11 @@ export function registerContentRoutes(app: Express) {
           return s && allowed.has(s) ? (s as any) : 'average_rating';
         })(),
 
-        // optional: includeHidden=true
         includeHidden:
           (Array.isArray(q.includeHidden) ? q.includeHidden[0] : q.includeHidden) === 'true',
+
+        includeInactive:
+          (Array.isArray(q.includeInactive) ? q.includeInactive[0] : q.includeInactive) === 'true',
       };
 
       const rows = await storage.getContent(filters);

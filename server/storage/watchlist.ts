@@ -3,12 +3,30 @@ import { watchlist, content } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import type { Content } from '@shared/schema';
 
-export async function getUserWatchlist(userId: number): Promise<Content[]> {
+type WatchlistOptions = {
+  includeHidden?: boolean;
+  includeInactive?: boolean;
+};
+
+export async function getUserWatchlist(
+  userId: number,
+  options: WatchlistOptions = {}
+): Promise<Content[]> {
+  const conditions = [eq(watchlist.userId, userId)];
+
+  if (!options.includeHidden) {
+    conditions.push(eq(content.hidden, false));
+  }
+
+  if (!options.includeInactive) {
+    conditions.push(eq(content.active, true));
+  }
+
   const results = await db
     .select({ content })
     .from(watchlist)
     .innerJoin(content, eq(watchlist.contentId, content.id))
-    .where(eq(watchlist.userId, userId));
+    .where(and(...conditions));
 
   return results.map((r) => r.content);
 }

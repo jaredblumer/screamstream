@@ -40,6 +40,7 @@ type ContentFormData = {
   platforms: string[];
   platformLinks: string[];
   type: 'movie' | 'series';
+  active: boolean;
 };
 
 const initialFormData: ContentFormData = {
@@ -55,6 +56,7 @@ const initialFormData: ContentFormData = {
   platforms: [],
   platformLinks: [],
   type: 'movie',
+  active: false,
 };
 
 export function ContentFormDialog({
@@ -93,6 +95,7 @@ export function ContentFormDialog({
         platforms,
         platformLinks: normalizedLinks,
         type: editingContent.type,
+        active: Boolean(editingContent.active),
       });
     } else {
       setFormData(initialFormData);
@@ -104,8 +107,7 @@ export function ContentFormDialog({
       ...formData,
       subgenre:
         formData.primarySubgenre || (formData.subgenres.length > 0 ? formData.subgenres[0] : ''),
-      platforms: formData.platforms,
-      platformLinks: formData.platformLinks,
+      active: formData.active,
     };
 
     if (editingContent) {
@@ -187,7 +189,7 @@ export function ContentFormDialog({
                 step="0.1"
                 min="0"
                 max="10"
-                value={formData.criticsRating.toFixed(1)}
+                value={formData.criticsRating?.toFixed(1)}
                 onChange={(e) =>
                   setFormData((p) => ({
                     ...p,
@@ -207,7 +209,7 @@ export function ContentFormDialog({
                 step="0.1"
                 min="0"
                 max="10"
-                value={formData.usersRating.toFixed(1)}
+                value={formData.usersRating?.toFixed(1)}
                 onChange={(e) =>
                   setFormData((p) => ({
                     ...p,
@@ -370,6 +372,28 @@ export function ContentFormDialog({
               className="horror-bg border-gray-700 text-white"
               rows={3}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="active" className="text-white">
+              Status
+            </Label>
+            <Select
+              value={formData.active ? 'true' : 'false'}
+              onValueChange={(v) => setFormData((p) => ({ ...p, active: v === 'true' }))}
+            >
+              <SelectTrigger className="horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="Select status" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="false" className="horror-select-item">
+                  Inactive
+                </SelectItem>
+                <SelectItem value="true" className="horror-select-item">
+                  Active
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

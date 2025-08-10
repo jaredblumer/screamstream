@@ -44,6 +44,7 @@ export const content = pgTable('content', {
   sourceReleaseDate: text('source_release_date'),
   watchmodeData: jsonb('watchmode_data'),
   hidden: boolean('hidden').default(false),
+  active: boolean('active').notNull().default(false),
 });
 
 export const insertContentSchema = createInsertSchema(content).omit({ id: true });

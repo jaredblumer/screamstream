@@ -42,6 +42,7 @@ export async function getContent(filters?: {
   subgenre?: string;
   sortBy?: 'average_rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
   includeHidden?: boolean;
+  includeInactive?: boolean;
 }): Promise<(Content & { platformsBadges: any[] })[]> {
   let query = db.select().from(content);
   const conditions = [];
@@ -49,6 +50,10 @@ export async function getContent(filters?: {
   // Hide by default
   if (!filters?.includeHidden) {
     conditions.push(or(eq(content.hidden, false), sql`${content.hidden} IS NULL`));
+  }
+
+  if (!filters?.includeInactive) {
+    conditions.push(eq(content.active, true));
   }
 
   // ---- PLATFORM FILTERS (normalized schema) ----

@@ -207,6 +207,9 @@ export default function Admin() {
     },
   });
 
+  const setActive = (id: number, next: boolean) =>
+    updateMutation.mutate({ id, data: { active: next } });
+
   // Search & filter
   const filteredContent = useMemo(() => {
     if (!searchQuery.trim()) return content;
@@ -359,9 +362,11 @@ export default function Admin() {
               }
               onHide={(id) => hideContentMutation.mutate(id)}
               onShow={(id) => showContentMutation.mutate(id)}
+              onToggleActive={setActive}
               isDeleting={deleteMutation.isPending}
               isHiding={hideContentMutation.isPending}
               isShowing={showContentMutation.isPending}
+              isTogglingActive={updateMutation.isPending}
               showVisibilityControls
             />
           </TabsContent>
@@ -376,9 +381,11 @@ export default function Admin() {
               }
               onHide={(id) => hideContentMutation.mutate(id)}
               onShow={(id) => showContentMutation.mutate(id)}
+              onToggleActive={setActive}
               isDeleting={deleteMutation.isPending}
               isHiding={hideContentMutation.isPending}
               isShowing={showContentMutation.isPending}
+              isTogglingActive={updateMutation.isPending}
               showVisibilityControls
             />
           </TabsContent>
@@ -393,9 +400,11 @@ export default function Admin() {
               }
               onHide={(id) => hideContentMutation.mutate(id)}
               onShow={(id) => showContentMutation.mutate(id)}
+              onToggleActive={setActive}
               isDeleting={deleteMutation.isPending}
               isHiding={hideContentMutation.isPending}
               isShowing={showContentMutation.isPending}
+              isTogglingActive={updateMutation.isPending}
               showVisibilityControls
             />
           </TabsContent>

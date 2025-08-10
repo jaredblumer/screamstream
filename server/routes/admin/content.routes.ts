@@ -6,7 +6,7 @@ import { requireAuth, requireAdmin } from '../../auth';
 export function registerAdminContentRoutes(app: Express) {
   app.get('/api/admin/content', requireAdmin, async (_req, res) => {
     try {
-      const content = await storage.getContent({ includeHidden: true });
+      const content = await storage.getContent({ includeHidden: true, includeInactive: true });
       res.json(content);
     } catch (error) {
       res.status(500).json({
