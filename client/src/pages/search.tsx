@@ -1,9 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieGrid from '@/components/movie-grid';
 import { useSearch } from '@/contexts/SearchContext';
-import { query } from 'express';
 
 export default function Search() {
   const { query: searchQuery } = useSearch();
@@ -16,7 +14,7 @@ export default function Search() {
         <div className="mb-8 animate-slide-up">
           <h1 className="text-4xl font-bold text-white mb-4">
             {searchQuery.trim().length === 0
-              ? 'Search for Horror Titles'
+              ? 'Search for Streaming Horror Titles'
               : `Search Results for "${searchQuery}"`}
           </h1>
 
