@@ -75,10 +75,12 @@ export default function MovieCard({
         </div>
         {/* Rating Badges */}
         <div className="absolute top-2 right-2 flex flex-col gap-1">
-          <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
-            <Star className="inline w-3 h-3 mr-1 horror-orange fill-current" />
-            {(movie.criticsRating || movie.rating).toFixed(1)}
-          </div>
+          {movie.criticsRating && (
+            <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
+              <Star className="inline w-3 h-3 mr-1 horror-orange fill-current" />
+              {movie.criticsRating.toFixed(1)}
+            </div>
+          )}
           {movie.usersRating && (
             <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
               <User className="inline w-3 h-3 mr-1 text-red-400" />
