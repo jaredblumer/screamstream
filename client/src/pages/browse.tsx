@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import Header from '@/components/header';
 import FilterControls from '@/components/filter-controls';
 import MovieGrid from '@/components/movie-grid';
+import Footer from '@/components/footer';
 
 export default function Browse() {
   const [location] = useLocation();
@@ -26,42 +27,53 @@ export default function Browse() {
   // Helper function to format subgenre display name
   const getHeaderTitle = (subgenre: string) => {
     if (selectedSubgenre !== 'all') {
-      return subgenre
+      let title = subgenre
         .split('-')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+      return title + ' Titles';
     }
-    return 'Browse Horror';
-  };
-
-  const getHeaderSubtitle = () => {
-    if (selectedSubgenre !== 'all') {
-      return `Discover the best ${selectedSubgenre.split('-').join(' ')} movies and series`;
-    }
-    if (searchQuery) {
-      return 'Matching content based on your search';
-    }
-    return 'Filter and explore our complete horror collection';
+    return 'Explore the Best in Streaming Horror';
   };
 
   return (
-    <>
+    <div className="min-h-screen horror-bg">
       <Header />
-
-      <div className="min-h-screen horror-bg">
-        {/* Browse Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-          <div className="text-center animate-fade-in">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              {getHeaderTitle(selectedSubgenre)} Titles
-            </h1>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">{getHeaderSubtitle()}</p>
-          </div>
+      {/* Browse Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+        <div className="text-center animate-fade-in">
+          <h1 className="text-4xl font-bold text-white mb-4">{getHeaderTitle(selectedSubgenre)}</h1>
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+            Filter by subgenre, decade, rating, or platform to discover your next watch.
+          </p>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="animate-slide-up stagger-1">
-          <FilterControls
+      {/* Filters */}
+      <div className="animate-slide-up stagger-1">
+        <FilterControls
+          selectedPlatform={selectedPlatform}
+          selectedYear={selectedYear}
+          selectedCriticsRating={selectedCriticsRating}
+          selectedUsersRating={selectedUsersRating}
+          selectedType={selectedType}
+          selectedSubgenre={selectedSubgenre}
+          sortBy={sortBy}
+          onPlatformChange={setSelectedPlatform}
+          onYearChange={setSelectedYear}
+          onCriticsRatingChange={setSelectedCriticsRating}
+          onUsersRatingChange={setSelectedUsersRating}
+          onTypeChange={setSelectedType}
+          onSubgenreChange={setSelectedSubgenre}
+          onSortChange={setSortBy}
+        />
+      </div>
+
+      {/* Content Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="animate-fade-slide stagger-2">
+          <MovieGrid
+            searchQuery={searchQuery}
             selectedPlatform={selectedPlatform}
             selectedYear={selectedYear}
             selectedCriticsRating={selectedCriticsRating}
@@ -69,32 +81,10 @@ export default function Browse() {
             selectedType={selectedType}
             selectedSubgenre={selectedSubgenre}
             sortBy={sortBy}
-            onPlatformChange={setSelectedPlatform}
-            onYearChange={setSelectedYear}
-            onCriticsRatingChange={setSelectedCriticsRating}
-            onUsersRatingChange={setSelectedUsersRating}
-            onTypeChange={setSelectedType}
-            onSubgenreChange={setSelectedSubgenre}
-            onSortChange={setSortBy}
           />
         </div>
-
-        {/* Content Grid */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="animate-fade-slide stagger-2">
-            <MovieGrid
-              searchQuery={searchQuery}
-              selectedPlatform={selectedPlatform}
-              selectedYear={selectedYear}
-              selectedCriticsRating={selectedCriticsRating}
-              selectedUsersRating={selectedUsersRating}
-              selectedType={selectedType}
-              selectedSubgenre={selectedSubgenre}
-              sortBy={sortBy}
-            />
-          </div>
-        </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
