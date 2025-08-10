@@ -16,6 +16,8 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import ReCAPTCHA from 'react-google-recaptcha';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -251,38 +253,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen horror-bg flex flex-col">
-      {/* Header */}
-      <header className="dark-gray-bg border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-xl sm:text-2xl font-bold blood-red flex items-center">
-                  <Skull className="mr-1 sm:mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                  Scream Stream
-                </h1>
-              </div>
-            </Link>
-
-            {/* Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              <Link
-                href="/"
-                className="text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Browse Movies
-              </Link>
-              <Link
-                href="/subgenres"
-                className="text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Subgenres
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
@@ -733,59 +704,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="dark-gray-bg border-t border-gray-800 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center mb-4">
-                <h3 className="text-xl font-bold blood-red flex items-center">
-                  <Skull className="mr-2 h-5 w-5" />
-                  Scream Stream
-                </h3>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Your ultimate destination for discovering and rating the best horror movies
-                currently streaming across all platforms.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Browse</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    href="/"
-                    className="text-gray-400 hover:text-white transition-colors text-sm"
-                  >
-                    Top Rated
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/new-to-streaming"
-                    className="text-gray-400 hover:text-white transition-colors text-sm"
-                  >
-                    New to Streaming
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/subgenres"
-                    className="text-gray-400 hover:text-white transition-colors text-sm"
-                  >
-                    Subgenres
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-500 text-sm">© 2025 Scream Stream. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
