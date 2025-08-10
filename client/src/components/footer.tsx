@@ -45,11 +45,11 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold text-white mb-4">Browse</h4>
+            <h4 className="text-lg font-semibold text-white mb-4">Discover</h4>
             <ul className="space-y-2">
               <li>
-                <a href="/" className="text-gray-400 hover:text-white transition-colors">
-                  Top Rated
+                <a href="/browse" className="text-gray-400 hover:text-white transition-colors">
+                  Browse
                 </a>
               </li>
               <li>
