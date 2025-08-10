@@ -156,10 +156,12 @@ export default function MovieDetail() {
                   </div>
                 )}
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center">
-                    <Star className="h-5 w-5 mr-2 horror-orange fill-current" />
-                    {(movie.criticsRating || movie.rating).toFixed(1)} Critics
-                  </div>
+                  {movie.criticsRating && (
+                    <div className="flex items-center">
+                      <Star className="h-5 w-5 mr-2 horror-orange fill-current" />
+                      {movie.criticsRating.toFixed(1)} Critics
+                    </div>
+                  )}
                   {movie.usersRating && (
                     <div className="flex items-center">
                       <User className="h-5 w-5 mr-2 text-red-400" />
@@ -254,7 +256,7 @@ export default function MovieDetail() {
                     navigator.clipboard.writeText(window.location.href);
                     toast({
                       title: 'Link Copied',
-                      description: 'Movie link has been copied to your clipboard.',
+                      description: "This title's link has been copied to your clipboard.",
                     });
                   }}
                 >
