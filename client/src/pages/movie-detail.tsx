@@ -231,12 +231,14 @@ export default function MovieDetail() {
                   isInWatchlist(movieId) ? 'horror-button-secondary' : 'horror-button-primary'
                 }`}
                 onClick={async () => {
-                  const was = isInWatchlist(movieId);
+                  const wasInWatchlist = isInWatchlist(movieId);
                   const ok = await toggleWatchlist(movieId);
                   if (ok) {
                     toast({
-                      title: was ? 'Removed from Watchlist' : 'Added to Watchlist',
-                      description: was ? `${movie.title} removed.` : `${movie.title} added.`,
+                      title: wasInWatchlist ? 'Removed from Watchlist' : 'Added to Watchlist',
+                      description: wasInWatchlist
+                        ? `${movie.title} has been removed from your watchlist.`
+                        : `${movie.title} has been added to your watchlist.`,
                     });
                   }
                 }}
