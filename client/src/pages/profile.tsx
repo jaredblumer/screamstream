@@ -92,7 +92,7 @@ export default function Profile() {
       <>
         <Header />
         <div className="min-h-screen horror-bg">
-          <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 py-24">
+          <div className="max-w-4xl mx-auto text-center px-6 sm:px-6 lg:px-8 py-24">
             <User className="h-16 w-16 text-gray-600 mx-auto mb-6" />
             <h1 className="text-4xl font-bold text-white mb-6">Sign In to Access Your Profile</h1>
             <p className="text-xl text-gray-300 mb-8">
@@ -116,7 +116,7 @@ export default function Profile() {
       <Header />
 
       <div className="min-h-screen horror-bg">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-6xl mx-auto px-6 sm:px-6 lg:px-8 py-12">
           {/* Profile Header */}
           <div className="mb-12 animate-fade-in">
             <div className="flex flex-col md:flex-row gap-8 items-start">

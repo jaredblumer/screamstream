@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { db } from '@server/db';
 import { feedback } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import type { Feedback, InsertFeedback } from '@shared/schema';

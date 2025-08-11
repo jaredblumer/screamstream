@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { db } from '@server/db';
 import { subgenres } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import type { Subgenre, InsertSubgenre } from '@shared/schema';

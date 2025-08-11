@@ -1,4 +1,15 @@
-import { storage } from '../storage';
+import { getContent, createContent } from '@server/storage/content';
+import { createContentPlatform } from '@server/storage/content-platforms';
+import { getOrCreatePlatformByWatchmodeId } from '@server/storage/platforms';
+import { incrementWatchmodeRequests, getCurrentMonthUsage } from '@server/storage/usage';
+
+import {
+  watchmodeAPI,
+  convertWatchmodeTitleToContent,
+  popularStreamingPlatforms,
+} from '@server/watchmode';
+
+import type { InsertContent, InsertContentPlatform } from '@shared/schema';
 
 interface SyncSummary {
   newTitlesAdded: number;
@@ -8,183 +19,199 @@ interface SyncSummary {
   timestamp: string;
 }
 
+type QueuedItem = {
+  content: InsertContent;
+  platforms: Omit<InsertContentPlatform, 'contentId'>[];
+};
+
 export class NewToStreamingSyncService {
   async sync(): Promise<SyncSummary> {
-    const { watchmodeAPI } = await import('../watchmode.js');
-    const { tvdbAPI } = await import('../tvdb.js');
+    // Respect monthly request cap (same pattern as ContentSyncService)
+    const usage = await getCurrentMonthUsage();
+    if (!usage || usage.watchmodeRequests >= 1000) {
+      return {
+        newTitlesAdded: 0,
+        duplicatesSkipped: 0,
+        totalProcessed: 0,
+        apiCallsUsed: 0,
+        timestamp: new Date().toISOString(),
+      };
+    }
 
-    const popularPlatforms = {
-      Netflix: 203,
-      'Amazon Prime Video': 26,
-      Hulu: 157,
-      'HBO Max': 384,
-      Shudder: 99,
-      Tubi: 283,
+    const queue: QueuedItem[] = [];
+    let requestsUsed = 0;
+
+    const selectedPlatformIds = Object.values(popularStreamingPlatforms);
+    const isPopularUSSub = (s: any) =>
+      s &&
+      s.region === 'US' &&
+      s.web_url &&
+      s.type === 'sub' &&
+      selectedPlatformIds.includes(s.source_id);
+
+    // Helper: fetch details + sources, convert to InsertContent + platform rows
+    const loadDetailsAndPlatforms = async (watchmodeId: number): Promise<QueuedItem | null> => {
+      try {
+        const details = await watchmodeAPI.getTitleDetails(watchmodeId);
+        requestsUsed++;
+        await incrementWatchmodeRequests();
+
+        let sources: any[] = [];
+        try {
+          sources = await watchmodeAPI.getTitleSources(watchmodeId);
+          requestsUsed++;
+          await incrementWatchmodeRequests();
+        } catch {
+          // okay: no sources
+        }
+
+        const converted = await convertWatchmodeTitleToContent(details);
+
+        // Hide anime (33) to mirror your other service’s behavior
+        if (converted.genres?.includes(33)) converted.hidden = true;
+
+        // Ensure we have a sourceReleaseDate for “new to streaming” context
+        converted.sourceReleaseDate =
+          converted.sourceReleaseDate ||
+          details.release_date ||
+          new Date().toISOString().split('T')[0];
+
+        const filtered = sources.filter(isPopularUSSub);
+        const platformRows: Omit<InsertContentPlatform, 'contentId'>[] = [];
+
+        for (const src of filtered) {
+          const platform = await getOrCreatePlatformByWatchmodeId(src.source_id);
+          platformRows.push({
+            platformId: platform.id,
+            webUrl: src.web_url,
+            format: src.format,
+            seasons: src.seasons,
+            episodes: src.episodes,
+          });
+        }
+
+        return { content: converted, platforms: platformRows };
+      } catch {
+        return null;
+      }
     };
 
-    const horrorReleases: any[] = [];
-
-    // 1. Fetch from Watchmode's horror search
+    // Step 1: Watchmode horror search (recent by release date)
     try {
-      const horrorSearchResults = await watchmodeAPI.searchTitles({
+      const horrorSearch = await watchmodeAPI.searchTitles({
         genres: [11],
-        source_ids: Object.values(popularPlatforms),
+        source_ids: selectedPlatformIds,
         sort_by: 'release_date_desc',
         limit: 15,
       });
+      requestsUsed++;
+      await incrementWatchmodeRequests();
 
-      for (const title of horrorSearchResults.titles.slice(0, 8)) {
+      const top = (horrorSearch.titles || []).slice(0, 8);
+      for (const t of top) {
+        const item = await loadDetailsAndPlatforms(t.id);
+        if (item) queue.push(item);
+      }
+    } catch {
+      // continue
+    }
+
+    // Step 2: Watchmode recent releases (new/changed to subscription) for last 30 days
+    try {
+      const releases = await watchmodeAPI.getRecentReleases({
+        source_ids: selectedPlatformIds,
+        change_type: 'new,subscription',
+        types: 'movie,tv',
+        days_back: 30,
+        limit: 100,
+      });
+      requestsUsed++;
+      await incrementWatchmodeRequests();
+
+      // Filter using Watchmode genres (no TVDB calls)
+      for (const r of releases || []) {
         try {
-          const fullTitleDetails = await watchmodeAPI.getTitleDetails(title.id);
-          let availablePlatforms = ['Various Platforms'];
+          const item = await loadDetailsAndPlatforms(r.id);
+          if (!item) continue;
 
-          if (fullTitleDetails.sources?.length > 0) {
-            const streamingPlatforms = fullTitleDetails.sources
-              .filter((source: any) =>
-                ['subscription', 'free', 'subscription_with_ads'].includes(source.type)
-              )
-              .map((source: any) => source.name)
-              .filter((name: string, index: number, arr: string[]) => arr.indexOf(name) === index)
-              .slice(0, 3);
+          // Horror = Watchmode genre id 11
+          const isHorror = Array.isArray(item.content.genres) && item.content.genres.includes(11);
+          if (!isHorror) continue;
 
-            if (streamingPlatforms.length > 0) {
-              availablePlatforms = streamingPlatforms;
-            }
-          }
-
-          horrorReleases.push({
-            id: title.id,
-            title: fullTitleDetails.title,
-            type: fullTitleDetails.type,
-            imdb_id: fullTitleDetails.imdb_id,
-            tmdb_id: fullTitleDetails.tmdb_id,
-            poster_url: fullTitleDetails.poster,
-            source_release_date:
-              fullTitleDetails.release_date || new Date().toISOString().split('T')[0],
-            source_id: 203,
-            source_name: availablePlatforms[0],
-            is_original: 0,
-            plot_overview: fullTitleDetails.plot_overview,
-            user_rating: fullTitleDetails.user_rating,
-            critic_score: fullTitleDetails.critic_score,
-            genre_names: fullTitleDetails.genre_names,
-            year: fullTitleDetails.year,
-            runtime_minutes: fullTitleDetails.runtime_minutes,
-            us_rating: fullTitleDetails.us_rating,
-            backdrop: fullTitleDetails.backdrop,
-            available_platforms: availablePlatforms,
-          });
-        } catch {}
-      }
-    } catch {}
-
-    // 2. Add any Shudder releases directly from Watchmode's release list
-    const releases = await watchmodeAPI.getRecentReleases({
-      source_ids: Object.values(popularPlatforms),
-      change_type: 'new,subscription',
-      types: 'movie,tv',
-      days_back: 30,
-      limit: 100,
-    });
-
-    horrorReleases.push(...releases.filter((r: any) => r.source_name === 'Shudder'));
-
-    // 3. Filter and enrich remaining non-Shudder releases via TVDB
-    const recentWithImdb = releases
-      .filter((r: any) => r.imdb_id && r.source_name !== 'Shudder')
-      .slice(0, 5);
-
-    for (const release of recentWithImdb) {
-      try {
-        let hasHorrorGenre = false;
-
-        if (release.type === 'tv_series') {
-          const series = await tvdbAPI.getSeriesByRemoteId(release.imdb_id);
-          hasHorrorGenre = series?.genres?.some((g: any) =>
-            ['Horror', 'Thriller', 'Mystery', 'Suspense'].includes(g.name)
-          );
-        } else {
-          const movie = await tvdbAPI.getMovieByRemoteId(release.imdb_id);
-          hasHorrorGenre = movie?.genres?.some((g: any) =>
-            ['Horror', 'Thriller', 'Mystery', 'Suspense'].includes(g.name)
-          );
+          queue.push(item);
+        } catch {
+          // ignore individual failures
         }
-
-        if (hasHorrorGenre) horrorReleases.push(release);
-      } catch {}
+      }
+    } catch {
+      // ignore
     }
 
-    // 4. Convert and save to DB
-    const newContent = horrorReleases.slice(0, 15).map((release: any, index: number) => {
-      const type = release.type === 'tv_series' ? 'series' : 'movie';
-      return {
-        id: index + 1000,
-        title: release.title,
-        year: release.year || new Date(release.source_release_date).getFullYear(),
-        rating: release.critic_score ? release.critic_score / 10 : release.user_rating || 6.5,
-        criticsRating: release.critic_score ? release.critic_score / 10 : 6.5,
-        usersRating: release.user_rating || 6.5,
-        description:
-          release.plot_overview ||
-          `A ${type} available on streaming platforms${
-            release.genre_names ? ` - Genres: ${release.genre_names.join(', ')}` : ''
-          }`,
-        posterUrl: release.poster_url || '/posters/default_poster.svg',
-        platforms: release.available_platforms || [release.source_name],
-        platformLinks: [],
-        type,
-        seasons: null,
-        episodes: null,
-        sourceReleaseDate: release.source_release_date,
-        runtimeMinutes: release.runtime_minutes || 0,
-        usRating: release.us_rating || '',
-        backdropUrl: release.backdrop || '',
-        originalTitle: release.title,
-        releaseDate: release.source_release_date,
-        originalLanguage: 'en',
-        endYear: null,
-        watchmodeData: release,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-    });
+    // De-dupe queued items by IDs ONLY: watchmodeId -> imdbId -> tmdbId
+    // (No title/year fallback)
+    const unique: QueuedItem[] = [];
+    const seenWM = new Set<number>();
+    const seenIMDB = new Set<string>();
+    const seenTMDB = new Set<number>();
 
-    const savedContent = [];
+    for (const q of queue) {
+      const wm = q.content.watchmodeId ?? undefined;
+      const imdb = q.content.imdbId ?? undefined;
+      const tmdb = q.content.tmdbId ?? undefined;
 
-    for (const content of newContent) {
+      const already =
+        (wm && seenWM.has(wm)) || (imdb && seenIMDB.has(imdb)) || (tmdb && seenTMDB.has(tmdb));
+
+      if (already) continue;
+
+      if (wm) seenWM.add(wm);
+      if (imdb) seenIMDB.add(imdb);
+      if (tmdb) seenTMDB.add(tmdb);
+      unique.push(q);
+    }
+
+    // Build quick lookup sets from existing DB to skip duplicates fast
+    const existing = await getContent({ includeHidden: true, includeInactive: true });
+    const existingWM = new Set<number>(
+      existing.map((e) => e.watchmodeId).filter(Boolean) as number[]
+    );
+    const existingIMDB = new Set<string>(existing.map((e) => e.imdbId).filter(Boolean) as string[]);
+    const existingTMDB = new Set<number>(existing.map((e) => e.tmdbId).filter(Boolean) as number[]);
+
+    const isDuplicateInDB = (c: InsertContent) =>
+      (!!c.watchmodeId && existingWM.has(c.watchmodeId)) ||
+      (!!c.imdbId && existingIMDB.has(c.imdbId)) ||
+      (!!c.tmdbId && existingTMDB.has(c.tmdbId));
+
+    // Save up to 15 items; add platform join rows
+    let newTitlesAdded = 0;
+    let duplicatesSkipped = 0;
+    let totalProcessed = 0;
+
+    for (const { content, platforms } of unique.slice(0, 15)) {
+      totalProcessed++;
+
+      if (isDuplicateInDB(content)) {
+        duplicatesSkipped++;
+        continue;
+      }
+
       try {
-        const existing = await storage.getContent();
-        const isDuplicate = existing.some(
-          (e) =>
-            e.title.toLowerCase().trim() === content.title.toLowerCase().trim() &&
-            e.year === content.year
-        );
-
-        if (!isDuplicate) {
-          const { id, ...rest } = content;
-          const saved = await storage.createContent(rest);
-          savedContent.push(saved);
-        } else {
-          const match = existing.find(
-            (e) => e.title.toLowerCase() === content.title.toLowerCase() && e.year === content.year
-          );
-          if (match) savedContent.push(match);
+        const created = await createContent(content);
+        for (const p of platforms) {
+          await createContentPlatform({ ...p, contentId: created.id });
         }
+        newTitlesAdded++;
       } catch {
-        savedContent.push(content);
+        // skip on error
       }
     }
-
-    const actualNewItems = savedContent.filter(
-      (item) => typeof item.id === 'number' && item.id > 0
-    ).length;
-    const duplicatesSkipped = newContent.length - actualNewItems;
 
     return {
-      newTitlesAdded: actualNewItems,
+      newTitlesAdded,
       duplicatesSkipped,
-      totalProcessed: newContent.length,
-      apiCallsUsed: watchmodeAPI.getRequestCount(),
+      totalProcessed,
+      apiCallsUsed: requestsUsed,
       timestamp: new Date().toISOString(),
     };
   }

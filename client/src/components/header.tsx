@@ -31,7 +31,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
   }, [autoFocusSearch]);
 
   const navigation = [
-    { name: 'Top Rated', href: '/', active: location === '/' },
+    { name: 'Browse', href: '/browse', active: location === '/browse' },
     {
       name: 'New to Streaming',
       href: '/new-to-streaming',

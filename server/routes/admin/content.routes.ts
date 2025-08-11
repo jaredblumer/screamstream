@@ -6,7 +6,7 @@ import { requireAuth, requireAdmin } from '../../auth';
 export function registerAdminContentRoutes(app: Express) {
   app.get('/api/admin/content', requireAdmin, async (_req, res) => {
     try {
-      const content = await storage.getContent({ includeHidden: true });
+      const content = await storage.getContent({ includeHidden: true, includeInactive: true });
       res.json(content);
     } catch (error) {
       res.status(500).json({
@@ -73,6 +73,18 @@ export function registerAdminContentRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({
         message: 'Failed to fetch hidden content',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
+  app.get('/api/admin/content/inactive', requireAuth, requireAdmin, async (_req, res) => {
+    try {
+      const inactiveContent = await storage.getInactiveContent();
+      res.json(inactiveContent);
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to fetch inactive content',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

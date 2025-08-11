@@ -71,9 +71,7 @@ export function useWatchlist() {
         description: 'Please sign in to manage your watchlist.',
         variant: 'destructive',
       });
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 2000);
+
       return false;
     }
 
