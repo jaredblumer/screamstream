@@ -219,7 +219,7 @@ class ContentSyncService {
   }
 
   private async findContentByWatchmodeId(watchmodeId?: number): Promise<Content | null> {
-    const existingContent = await getContent();
+    const existingContent = await getContent({ includeHidden: true, includeInactive: true });
     if (watchmodeId) {
       const found = existingContent.find((content) => content.watchmodeId === watchmodeId);
       if (found) return found;
