@@ -46,7 +46,7 @@ export default function Watchlist() {
         </div>
 
         {!isWatchlistLoading && watchlistContent.length === 0 && (
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-7xl px-6">
             <div className="text-center animate-slide-up mb-16">
               <Heart className="h-16 w-16 text-gray-600 mx-auto mb-6" />
               <h3 className="text-2xl font-bold text-white mb-4">Your watchlist is empty</h3>
