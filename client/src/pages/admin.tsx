@@ -56,8 +56,13 @@ export default function Admin() {
   }, [authLoading, isAuthenticated, user?.role, toast]);
 
   // Content queries
-  const { data: content = [], isLoading } = useQuery<Content[]>({
+  const { data: content = [] } = useQuery<Content[]>({
     queryKey: ['/api/admin/content'],
+    retry: false,
+  });
+
+  const { data: inactiveContent = [] } = useQuery<Content[]>({
+    queryKey: ['/api/admin/content/inactive'],
     retry: false,
   });
 
@@ -299,6 +304,13 @@ export default function Admin() {
               Series ({series.length})
             </TabsTrigger>
             <TabsTrigger
+              value="inactive"
+              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+            >
+              <EyeOff className="w-4 h-4 mr-2" />
+              Inactive ({inactiveContent.length})
+            </TabsTrigger>
+            <TabsTrigger
               value="hidden"
               className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
             >
@@ -323,6 +335,7 @@ export default function Admin() {
           {(activeTab === 'all' ||
             activeTab === 'movies' ||
             activeTab === 'series' ||
+            activeTab === 'inactive' ||
             activeTab === 'hidden') && (
             <div className="mb-4">
               <div className="relative max-w-md">
@@ -409,6 +422,32 @@ export default function Admin() {
             />
           </TabsContent>
 
+          <TabsContent value="inactive">
+            <Card className="horror-bg border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <EyeOff className="w-5 h-5 mr-2" />
+                  Inactive Content ({inactiveContent.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ContentTable
+                  content={inactiveContent}
+                  onEdit={openEdit}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onHide={(id) => hideContentMutation.mutate(id)}
+                  onShow={(id) => showContentMutation.mutate(id)}
+                  onToggleActive={setActive}
+                  isDeleting={deleteMutation.isPending}
+                  isHiding={hideContentMutation.isPending}
+                  isShowing={showContentMutation.isPending}
+                  isTogglingActive={updateMutation.isPending}
+                  showVisibilityControls
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="hidden">
             <Card className="horror-bg border-gray-700">
               <CardHeader>
@@ -424,11 +463,12 @@ export default function Admin() {
                   onDelete={(id) => deleteMutation.mutate(id)}
                   onHide={(id) => hideContentMutation.mutate(id)}
                   onShow={(id) => showContentMutation.mutate(id)}
+                  onToggleActive={setActive}
                   isDeleting={deleteMutation.isPending}
                   isHiding={hideContentMutation.isPending}
                   isShowing={showContentMutation.isPending}
+                  isTogglingActive={updateMutation.isPending}
                   showVisibilityControls
-                  isHiddenContent
                 />
               </CardContent>
             </Card>

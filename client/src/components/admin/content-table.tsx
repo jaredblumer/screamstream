@@ -140,7 +140,7 @@ export function ContentTable({
                     disabled={!!isTogglingActive}
                     onClick={() => onToggleActive(item.id, !(item as any).active)}
                     title={(item as any).active ? 'Deactivate' : 'Activate'}
-                    className="bg-black text-white border border-gray-700 hover:bg-black/80"
+                    className="bg-black text-white border border-gray-700 horror-button-outline hover:bg-gray-800"
                   >
                     {(item as any).active ? 'Deactivate' : 'Activate'}
                   </Button>

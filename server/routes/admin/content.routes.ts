@@ -78,6 +78,18 @@ export function registerAdminContentRoutes(app: Express) {
     }
   });
 
+  app.get('/api/admin/content/inactive', requireAuth, requireAdmin, async (_req, res) => {
+    try {
+      const inactiveContent = await storage.getInactiveContent();
+      res.json(inactiveContent);
+    } catch (error) {
+      res.status(500).json({
+        message: 'Failed to fetch inactive content',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
   app.post('/api/admin/content/:id/hide', requireAuth, requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

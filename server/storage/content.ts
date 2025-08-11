@@ -225,3 +225,7 @@ export async function showContent(id: number): Promise<boolean> {
 export async function getHiddenContent(): Promise<Content[]> {
   return await db.select().from(content).where(eq(content.hidden, true));
 }
+
+export async function getInactiveContent(): Promise<Content[]> {
+  return await db.select().from(content).where(eq(content.active, false));
+}
