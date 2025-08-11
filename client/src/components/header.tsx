@@ -75,7 +75,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                 <span
                   className={`transition-all duration-300 overflow-hidden ${
                     isSearchFocused
-                      ? 'w-0 opacity-0 sm:w-auto sm:opacity-100'
+                      ? 'w-0 opacity-0 md:w-auto md:opacity-100'
                       : 'w-auto opacity-100'
                   }`}
                 >
@@ -105,7 +105,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:block">
+          <nav className="hidden lg:block">
             <div className="flex items-center space-x-6">
               {navigation.map((item) => (
                 <Link
@@ -157,7 +157,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
           </nav>
 
           {/* Mobile Nav */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm" className="horror-button-ghost">
