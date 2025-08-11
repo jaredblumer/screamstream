@@ -31,49 +31,34 @@ export default function Browse() {
         .split('-')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
-      return title + ' Titles';
+      return (
+        <h1 className="text-5xl font-bold text-white text-center">
+          Explore <span className="blood-red">{title}</span> Titles
+        </h1>
+      );
     }
-    return 'Explore the Best in Streaming Horror';
+    return (
+      <h1 className="text-5xl font-bold text-white text-center">
+        Browse <span className="blood-red">Streaming Horror</span>
+      </h1>
+    );
   };
 
   return (
-    <div className="min-h-screen horror-bg">
+    <>
       <Header />
-      {/* Browse Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-        <div className="text-center animate-fade-in">
-          <h1 className="text-4xl font-bold text-white mb-4">{getHeaderTitle(selectedSubgenre)}</h1>
-          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+
+      <div className="horror-bg">
+        <div className="text-center mx-auto px-2 py-12 animate-fade-in">
+          <div className="mb-2">{getHeaderTitle(selectedSubgenre)}</div>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Filter by subgenre, decade, rating, or platform to discover your next watch.
           </p>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="animate-slide-up stagger-1">
-        <FilterControls
-          selectedPlatform={selectedPlatform}
-          selectedYear={selectedYear}
-          selectedCriticsRating={selectedCriticsRating}
-          selectedUsersRating={selectedUsersRating}
-          selectedType={selectedType}
-          selectedSubgenre={selectedSubgenre}
-          sortBy={sortBy}
-          onPlatformChange={setSelectedPlatform}
-          onYearChange={setSelectedYear}
-          onCriticsRatingChange={setSelectedCriticsRating}
-          onUsersRatingChange={setSelectedUsersRating}
-          onTypeChange={setSelectedType}
-          onSubgenreChange={setSelectedSubgenre}
-          onSortChange={setSortBy}
-        />
-      </div>
-
-      {/* Content Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="animate-fade-slide stagger-2">
-          <MovieGrid
-            searchQuery={searchQuery}
+        {/* Filters */}
+        <div className="animate-slide-up stagger-1">
+          <FilterControls
             selectedPlatform={selectedPlatform}
             selectedYear={selectedYear}
             selectedCriticsRating={selectedCriticsRating}
@@ -81,10 +66,33 @@ export default function Browse() {
             selectedType={selectedType}
             selectedSubgenre={selectedSubgenre}
             sortBy={sortBy}
+            onPlatformChange={setSelectedPlatform}
+            onYearChange={setSelectedYear}
+            onCriticsRatingChange={setSelectedCriticsRating}
+            onUsersRatingChange={setSelectedUsersRating}
+            onTypeChange={setSelectedType}
+            onSubgenreChange={setSelectedSubgenre}
+            onSortChange={setSortBy}
           />
+        </div>
+
+        {/* Content Grid */}
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-fade-slide stagger-2">
+            <MovieGrid
+              searchQuery={searchQuery}
+              selectedPlatform={selectedPlatform}
+              selectedYear={selectedYear}
+              selectedCriticsRating={selectedCriticsRating}
+              selectedUsersRating={selectedUsersRating}
+              selectedType={selectedType}
+              selectedSubgenre={selectedSubgenre}
+              sortBy={sortBy}
+            />
+          </div>
         </div>
       </div>
       <Footer />
-    </div>
+    </>
   );
 }

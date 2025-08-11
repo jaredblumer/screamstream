@@ -63,7 +63,7 @@ export default function FilterControls({
 
   return (
     <section className="dark-gray-bg py-3 sm:py-6 border-b border-gray-800 relative z-0 mt-2 sm:mt-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="space-y-4">
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-3">

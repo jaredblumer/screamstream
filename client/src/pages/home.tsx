@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -8,7 +8,6 @@ import MovieGrid from '@/components/movie-grid';
 
 export default function Home() {
   const [location, setLocation] = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
   const [selectedCriticsRating, setSelectedCriticsRating] = useState('all');
@@ -24,7 +23,6 @@ export default function Home() {
     setSelectedCriticsRating('all');
     setSelectedUsersRating('all');
     setSortBy('average_rating');
-    setSearchQuery('');
 
     // Scroll to filter section with smooth animation
     setTimeout(() => {
@@ -49,25 +47,13 @@ export default function Home() {
     setLocation('/subgenres');
   };
 
-  const isSearching = searchQuery.trim().length > 0;
-
   return (
     <div className="min-h-screen horror-bg">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div
-          className={`transition-all duration-700 ease-in-out overflow-hidden ${
-            !isSearching
-              ? 'max-h-none opacity-100 transform translate-y-0'
-              : 'max-h-0 opacity-0 transform -translate-y-4'
-          }`}
-        >
-          <div
-            className={`pt-8 sm:pt-0 transition-opacity duration-300 ${
-              !isSearching ? 'delay-200' : 'delay-0'
-            }`}
-          >
+      <div className="mx-auto">
+        <div className="transition-all duration-700 ease-in-out overflow-hidden max-h-none opacity-100 transform translate-y-0">
+          <div className="pt-8 sm:pt-0 transition-opacity duration-300">
             <div className="animate-fade-in">
               <HeroSection
                 onViewTopRanked={handleViewTopRated}
@@ -97,7 +83,6 @@ export default function Home() {
 
             <div className="animate-fade-slide stagger-2 pt-4 sm:pt-0">
               <MovieGrid
-                searchQuery={searchQuery}
                 selectedPlatform={selectedPlatform}
                 selectedYear={selectedYear}
                 selectedCriticsRating={selectedCriticsRating}
