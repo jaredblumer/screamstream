@@ -37,7 +37,7 @@ function Router() {
       <Route path="/search" component={Search} />
       <Route path="/title/:id" component={MovieDetail} />
       <Route path="/watchlist" component={Watchlist} />
-      <ProtectedRoute path="/admin" component={Admin} />
+      <ProtectedRoute path="/admin" component={Admin} requiredRole="admin" />
       <Route component={NotFound} />
     </Switch>
   );

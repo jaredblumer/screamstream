@@ -9,12 +9,6 @@ import { User as SelectUser } from '@shared/schema';
 import { sendEmail, generatePasswordResetEmail } from './email';
 import connectPg from 'connect-pg-simple';
 
-declare global {
-  namespace Express {
-    interface User extends SelectUser {}
-  }
-}
-
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {

@@ -58,7 +58,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
 
   return (
     <header className="dark-gray-bg border-b border-gray-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
           {/* Logo */}
           <Link
@@ -114,7 +114,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                   onClick={() => {
                     setQuery('');
                   }}
-                  className={`transition-colors flex items-center gap-2 ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
+                  className={`transition-colors flex text-center gap-2 ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
                 >
                   {item.name}
                   {item.badge && (
@@ -129,11 +129,13 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
               ))}
               {user ? (
                 <>
-                  <Link href="/admin">
-                    <Button size="sm" className="horror-button-secondary">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  {user.role === 'admin' && ( // ✅ Only show if admin
+                    <Link href="/admin">
+                      <Button size="sm" className="horror-button-secondary">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -168,25 +170,38 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`text-lg transition-colors ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        if (['Top Rated', 'New to Streaming'].includes(item.name)) {
-                          setQuery('');
-                        }
+                        if (['Top Rated', 'New to Streaming'].includes(item.name)) setQuery('');
                       }}
+                      className="block" // keep link full-width for tapping
                     >
-                      {item.name}
+                      <div
+                        className={`flex items-center ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
+                      >
+                        <span className="text-lg">{item.name}</span>
+                        {item.badge && (
+                          <span
+                            className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1
+                     bg-red-600 text-white text-xs font-semibold leading-none"
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
                     </Link>
                   ))}
+
                   {user ? (
                     <>
-                      <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Button className="horror-button-secondary mt-2">
-                          <Settings className="h-4 w-4 mr-2" />
-                          Admin
-                        </Button>
-                      </Link>
+                      {user.role === 'admin' && (
+                        <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Button className="horror-button-secondary mt-2">
+                            <Settings className="h-4 w-4 mr-2" />
+                            Admin
+                          </Button>
+                        </Link>
+                      )}
                       <Button
                         variant="outline"
                         className="horror-button-outline mt-2"
