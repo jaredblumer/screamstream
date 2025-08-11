@@ -87,8 +87,8 @@ export default function Watchlist() {
 
         {/* Bottom CTA */}
         {watchlistContent.length > 0 && (
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center m-6 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
+          <div className="max-w-7xl mx-auto p-6">
+            <div className="text-center p-6 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
               <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
               <p className="text-gray-300 mb-6">
                 Discover cult classics, hidden gems, and spine-chilling surprises lurking below the

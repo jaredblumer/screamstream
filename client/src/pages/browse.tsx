@@ -7,7 +7,6 @@ import Footer from '@/components/footer';
 
 export default function Browse() {
   const [location] = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
   const [selectedCriticsRating, setSelectedCriticsRating] = useState('all');
@@ -80,7 +79,6 @@ export default function Browse() {
         <div className="max-w-7xl mx-auto">
           <div className="animate-fade-slide stagger-2">
             <MovieGrid
-              searchQuery={searchQuery}
               selectedPlatform={selectedPlatform}
               selectedYear={selectedYear}
               selectedCriticsRating={selectedCriticsRating}
