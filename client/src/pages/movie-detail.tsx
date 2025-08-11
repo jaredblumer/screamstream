@@ -127,7 +127,7 @@ export default function MovieDetail() {
                   }
                   onError={() => setPosterError(true)}
                   alt={`${movie.title} poster`}
-                  className="w-32 h-48 object-cover rounded-lg shadow-2xl"
+                  className="w-36 h-52 object-cover rounded-lg shadow-2xl"
                 />
 
                 <div className="min-w-0">
@@ -172,7 +172,7 @@ export default function MovieDetail() {
                     )}
                   </div>
 
-                  {/* Line 3: subgenres (moved up to right column) */}
+                  {/* Line 3: subgenres (right column) */}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {(movie.subgenres?.length ? movie.subgenres : [movie.subgenre])
                       .filter(Boolean)
@@ -190,7 +190,7 @@ export default function MovieDetail() {
             </div>
 
             {/* Platforms – wrap */}
-            <div className="mb-6">
+            <div className="mt-4 mb-6">
               <h3 className="text-base font-semibold text-white mb-2">Available On</h3>
               <div className="flex flex-wrap gap-3">
                 {movie.platformsBadges.map((badge) => {
@@ -219,9 +219,51 @@ export default function MovieDetail() {
             </div>
 
             {/* Synopsis (mobile) */}
-            <div>
+            <div className="mb-4">
               <h3 className="text-base font-semibold text-white mb-2">Synopsis</h3>
               <p className="text-gray-300 leading-relaxed">{movie.description}</p>
+            </div>
+
+            {/* Mobile action buttons */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                className={`flex-1 min-w-[48%] ${
+                  isInWatchlist(movieId) ? 'horror-button-secondary' : 'horror-button-primary'
+                }`}
+                onClick={async () => {
+                  const was = isInWatchlist(movieId);
+                  const ok = await toggleWatchlist(movieId);
+                  if (ok) {
+                    toast({
+                      title: was ? 'Removed from Watchlist' : 'Added to Watchlist',
+                      description: was ? `${movie.title} removed.` : `${movie.title} added.`,
+                    });
+                  }
+                }}
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isInWatchlist(movieId) ? 'fill-current' : ''}`} />
+                {isInWatchlist(movieId) ? 'In Watchlist' : 'Add to Watchlist'}
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex-1 min-w-[48%] horror-button-outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({ title: 'Link Copied', description: 'URL saved to clipboard.' });
+                }}
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+
+              <FeedbackButton
+                contentId={movieId}
+                initialType="data_error"
+                initialTitle={`Issue with "${movie.title}"`}
+                variant="outline"
+                className="w-full horror-button-outline"
+              />
             </div>
           </div>
 
@@ -351,7 +393,7 @@ export default function MovieDetail() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons (desktop stays here) */}
                 <div className="flex flex-wrap gap-3">
                   <Button
                     className={`px-4 py-2 ${
@@ -400,47 +442,12 @@ export default function MovieDetail() {
               </div>
             </div>
 
-            {/* Synopsis Section */}
+            {/* Synopsis Section (desktop) */}
             <div className="mb-0">
               <h2 className="text-xl font-semibold text-white mb-3">Synopsis</h2>
               <p className="text-gray-300 leading-relaxed text-lg">{movie.description}</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Sticky bottom action bar (mobile only) */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-black/80 backdrop-blur border-t border-gray-800 p-3">
-        <div className="max-w-6xl mx-auto flex gap-3">
-          <Button
-            className={`flex-1 ${
-              isInWatchlist(movieId) ? 'horror-button-secondary' : 'horror-button-primary'
-            }`}
-            onClick={async () => {
-              const was = isInWatchlist(movieId);
-              const ok = await toggleWatchlist(movieId);
-              if (ok) {
-                toast({
-                  title: was ? 'Removed from Watchlist' : 'Added to Watchlist',
-                  description: was ? `${movie.title} removed.` : `${movie.title} added.`,
-                });
-              }
-            }}
-          >
-            <Heart className={`h-4 w-4 mr-2 ${isInWatchlist(movieId) ? 'fill-current' : ''}`} />
-            {isInWatchlist(movieId) ? 'In Watchlist' : 'Add to Watchlist'}
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 horror-button-outline"
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-              toast({ title: 'Link Copied', description: 'URL saved to clipboard.' });
-            }}
-          >
-            <Share className="h-4 w-4 mr-2" />
-            Share
-          </Button>
         </div>
       </div>
 
