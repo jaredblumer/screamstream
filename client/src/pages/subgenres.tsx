@@ -167,21 +167,23 @@ export default function Subgenres() {
           ))}
         </div>
 
-        <div className="text-center m-8 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
-          <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
-          <p className="text-gray-300 mb-6">
-            Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
-            surface.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/browse">
-              <Button className="horror-button-primary">Browse More Movies</Button>
-            </Link>
-            <Link href="/watchlist">
-              <Button variant="outline" className="horror-button-outline">
-                View Watchlist
-              </Button>
-            </Link>
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center m-6 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
+            <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
+            <p className="text-gray-300 mb-6">
+              Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
+              surface.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/browse">
+                <Button className="horror-button-primary">Browse More Movies</Button>
+              </Link>
+              <Link href="/watchlist">
+                <Button variant="outline" className="horror-button-outline">
+                  View Watchlist
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

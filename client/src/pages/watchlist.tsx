@@ -18,7 +18,7 @@ export default function Watchlist() {
       <>
         <Header />
         <div className="horror-bg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-7xl mx-auto px-6 py-12">
             <div className="text-center mb-12">
               <Skeleton className="h-12 w-64 mx-auto mb-4" />
               <Skeleton className="h-6 w-96 mx-auto" />
@@ -66,9 +66,9 @@ export default function Watchlist() {
           </div>
         )}
 
-        <div className="flex justify-center mx-6">
+        <div className="flex justify-center">
           {watchlistContent.length > 0 && (
-            <div className="max-w-7xl animate-fade-slide stagger-1 px-4">
+            <div className="max-w-7xl animate-fade-slide stagger-1 px-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {watchlistContent.map((content) => (
                   <MovieCard
@@ -87,21 +87,23 @@ export default function Watchlist() {
 
         {/* Bottom CTA */}
         {watchlistContent.length > 0 && (
-          <div className="text-center m-8 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
-            <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
-            <p className="text-gray-300 mb-6">
-              Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
-              surface.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/browse">
-                <Button className="horror-button-primary">Browse More Movies</Button>
-              </Link>
-              <Link href="/subgenres">
-                <Button variant="outline" className="horror-button-outline">
-                  Explore Subgenres
-                </Button>
-              </Link>
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center m-6 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
+              <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
+              <p className="text-gray-300 mb-6">
+                Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
+                surface.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/browse">
+                  <Button className="horror-button-primary">Browse More Movies</Button>
+                </Link>
+                <Link href="/subgenres">
+                  <Button variant="outline" className="horror-button-outline">
+                    Explore Subgenres
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         )}

@@ -10,7 +10,7 @@ export default function Search() {
     <div className="min-h-screen horror-bg">
       <Header autoFocusSearch />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-slide-up">
+      <div className="max-w-7xl mx-auto px-6 animate-slide-up">
         <h1 className="text-4xl font-bold text-white mb-4">
           {searchQuery.trim().length === 0
             ? 'Search for Streaming Horror Titles'

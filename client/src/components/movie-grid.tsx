@@ -131,7 +131,7 @@ export default function MovieGrid({
       </div>
 
       {hasMore && (
-        <div className="text-center mt-12">
+        <div className="text-center mt-6">
           <Button
             onClick={handleLoadMore}
             className="blood-red-bg hover:crimson-bg text-white px-8 py-3 font-semibold"

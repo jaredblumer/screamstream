@@ -89,13 +89,12 @@ export default function MovieCard({
           )}
         </div>
         {/* Watchlist Button */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="sm"
-            variant={inWatchlist ? 'default' : 'outline'}
             onClick={handleWatchlistClick}
             className={`${
-              inWatchlist ? 'horror-button-primary' : 'horror-button-outline'
+              inWatchlist ? 'horror-button-primary' : 'horror-button-secondary'
             } backdrop-blur-sm`}
           >
             <Heart className={`h-4 w-4 ${inWatchlist ? 'fill-current' : ''}`} />
