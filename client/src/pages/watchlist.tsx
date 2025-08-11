@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -46,71 +45,66 @@ export default function Watchlist() {
           </p>
         </div>
 
-        <div>
-          {/* Empty state */}
+        {!isWatchlistLoading && watchlistContent.length === 0 && (
           <div className="mx-auto max-w-7xl">
-            {!isWatchlistLoading && watchlistContent.length === 0 && (
-              <div className="text-center animate-slide-up mb-16">
-                <Heart className="h-16 w-16 text-gray-600 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-white mb-4">Your watchlist is empty</h3>
-                <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                  Start building your horror movie collection by adding films you want to watch.
-                </p>
-                {user ? (
-                  <Link href="/browse">
-                    <Button className="horror-button-primary px-8 py-3">Browse Movies</Button>
-                  </Link>
-                ) : (
-                  <Link href="/auth">
-                    <Button className="horror-button-primary px-8 py-3">
-                      Log In to Add Movies
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="mx-auto max-w-7xl mx-6">
-            {/* Grid */}
-            {watchlistContent.length > 0 && (
-              <div className="animate-fade-slide stagger-1 px-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {watchlistContent.map((content) => (
-                    <MovieCard
-                      key={content.id}
-                      movie={content}
-                      onClick={() => setLocation(`/title/${content.id}`)}
-                      onWatchlistToggle={async () => {
-                        await refreshWatchlist();
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Bottom CTA */}
-          {watchlistContent.length > 0 && (
-            <div className="text-center m-8 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
-              <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
-              <p className="text-gray-300 mb-6">
-                Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
-                surface.
+            <div className="text-center animate-slide-up mb-16">
+              <Heart className="h-16 w-16 text-gray-600 mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-white mb-4">Your watchlist is empty</h3>
+              <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                Start building your horror movie collection by adding films you want to watch.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {user ? (
                 <Link href="/browse">
-                  <Button className="horror-button-primary">Browse More Movies</Button>
+                  <Button className="horror-button-primary px-8 py-3">Browse Movies</Button>
                 </Link>
-                <Link href="/subgenres">
-                  <Button variant="outline" className="horror-button-outline">
-                    Explore Subgenres
-                  </Button>
+              ) : (
+                <Link href="/auth">
+                  <Button className="horror-button-primary px-8 py-3">Log In to Add Movies</Button>
                 </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-center mx-6">
+          {watchlistContent.length > 0 && (
+            <div className="max-w-7xl animate-fade-slide stagger-1 px-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {watchlistContent.map((content) => (
+                  <MovieCard
+                    key={content.id}
+                    movie={content}
+                    onClick={() => setLocation(`/title/${content.id}`)}
+                    onWatchlistToggle={async () => {
+                      await refreshWatchlist();
+                    }}
+                  />
+                ))}
               </div>
             </div>
           )}
         </div>
+
+        {/* Bottom CTA */}
+        {watchlistContent.length > 0 && (
+          <div className="text-center m-8 p-8 rounded-lg border border-gray-700 dark-gray-bg animate-slide-up stagger-2">
+            <h3 className="text-2xl font-bold text-white mb-4">Find Your Next Fright</h3>
+            <p className="text-gray-300 mb-6">
+              Discover cult classics, hidden gems, and spine-chilling surprises lurking below the
+              surface.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/browse">
+                <Button className="horror-button-primary">Browse More Movies</Button>
+              </Link>
+              <Link href="/subgenres">
+                <Button variant="outline" className="horror-button-outline">
+                  Explore Subgenres
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       <Footer />
