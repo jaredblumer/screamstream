@@ -70,7 +70,7 @@ export default function Watchlist() {
               </div>
             )}
           </div>
-          <div className="mx-auto max-w-7xl mx-4">
+          <div className="mx-auto max-w-7xl mx-6">
             {/* Grid */}
             {watchlistContent.length > 0 && (
               <div className="animate-fade-slide stagger-1 px-4">
