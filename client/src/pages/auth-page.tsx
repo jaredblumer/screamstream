@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Redirect, useLocation, Link, useRouter } from 'wouter';
-import { Eye, EyeOff, Mail, User, Lock, ArrowLeft, Skull } from 'lucide-react';
+import { Redirect, useLocation, useRouter } from 'wouter';
+import { Eye, EyeOff, Mail, User, Lock, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -251,6 +251,23 @@ export default function AuthPage() {
     );
   }
 
+  // Dynamic headings
+  const heading = resetToken
+    ? 'Reset Password'
+    : showForgotPassword
+      ? 'Forgot Password'
+      : activeTab === 'login'
+        ? 'Sign In'
+        : 'Create An Account';
+
+  const subheading = resetToken
+    ? 'Enter your new password below.'
+    : showForgotPassword
+      ? 'Enter your email to receive a password reset link.'
+      : activeTab === 'login'
+        ? 'Sign in to access your personalized horror content.'
+        : 'Create an account to save titles to your watchlist and receive recommendations.';
+
   return (
     <div className="min-h-screen horror-bg flex flex-col">
       <Header />
@@ -294,20 +311,8 @@ export default function AuthPage() {
           <div className="w-full max-w-md mx-auto">
             <Card className="horror-bg border-gray-700">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-white">
-                  {resetToken
-                    ? 'Reset Password'
-                    : showForgotPassword
-                      ? 'Forgot Password'
-                      : 'Get Started'}
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  {resetToken
-                    ? 'Enter your new password below'
-                    : showForgotPassword
-                      ? 'Enter your email to receive a password reset link'
-                      : 'Sign in to your account or create a new one'}
-                </CardDescription>
+                <CardTitle className="text-2xl text-white">{heading}</CardTitle>
+                <CardDescription className="text-gray-400">{subheading}</CardDescription>
               </CardHeader>
               <CardContent>
                 {resetToken ? (
@@ -371,24 +376,24 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full bg-blood-red hover:bg-red-700 text-white"
+                      className="w-full horror-button-primary"
                       disabled={resetPasswordMutation.isPending}
                     >
                       {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
                     </Button>
 
                     <div className="text-center">
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           setResetToken(null);
                           window.history.replaceState({}, '', '/auth');
                         }}
-                        className="text-sm text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center gap-1"
+                        className="horror-button-outline flex items-center justify-center gap-1 text-sm"
                       >
                         <ArrowLeft className="h-3 w-3" />
-                        Back to login
-                      </button>
+                        Back to Login
+                      </Button>
                     </div>
                   </form>
                 ) : showForgotPassword ? (
@@ -447,256 +452,261 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full bg-blood-red hover:bg-red-700 text-white"
+                      className="w-full horror-button-primary"
                       disabled={forgotPasswordMutation.isPending}
                     >
                       {forgotPasswordMutation.isPending ? 'Sending...' : 'Send Reset Link'}
                     </Button>
 
                     <div className="text-center">
-                      <button
+                      <Button
                         type="button"
                         onClick={() => setShowForgotPassword(false)}
-                        className="text-sm text-gray-400 hover:text-red-400 transition-colors flex items-center justify-center gap-1"
+                        className="horror-button-outline flex items-center justify-center gap-1 text-sm"
                       >
                         <ArrowLeft className="h-3 w-3" />
-                        Back to login
-                      </button>
+                        Back to Login
+                      </Button>
                     </div>
                   </form>
                 ) : (
                   // Regular Login/Register Tabs
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-2 horror-bg">
-                      <TabsTrigger
-                        value="login"
-                        className="data-[state=active]:bg-blood-red data-[state=active]:text-white"
-                      >
-                        Sign In
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="register"
-                        className="data-[state=active]:bg-blood-red data-[state=active]:text-white"
-                      >
-                        Sign Up
-                      </TabsTrigger>
-                    </TabsList>
+                  <>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="grid w-full grid-cols-2 gap-2 bg-transparent p-0">
+                        <TabsTrigger
+                          value="login"
+                          className="horror-button-outline data-[state=active]:horror-button-primary"
+                        >
+                          Sign In
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="register"
+                          className="horror-button-outline data-[state=active]:horror-button-primary"
+                        >
+                          Sign Up
+                        </TabsTrigger>
+                      </TabsList>
 
-                    <TabsContent value="login" className="space-y-4 mt-6">
-                      <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="login-username" className="text-gray-300">
-                            Username
-                          </Label>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <Input
-                              id="login-username"
-                              type="text"
-                              placeholder="Enter your username"
-                              className="pl-10 horror-bg border-gray-700 text-white placeholder-gray-500"
-                              {...loginForm.register('username')}
-                            />
-                          </div>
-                          {loginForm.formState.errors.username && (
-                            <p className="text-red-400 text-sm">
-                              {loginForm.formState.errors.username.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="login-password" className="text-gray-300">
-                            Password
-                          </Label>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <Input
-                              id="login-password"
-                              type={showPassword ? 'text' : 'password'}
-                              placeholder="Enter your password"
-                              className="pl-10 pr-10 horror-bg border-gray-700 text-white placeholder-gray-500"
-                              {...loginForm.register('password')}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                          {loginForm.formState.errors.password && (
-                            <p className="text-red-400 text-sm">
-                              {loginForm.formState.errors.password.message}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* reCAPTCHA */}
-                        {config.recaptchaSiteKey && (
-                          <div className="space-y-2 flex flex-col items-center">
-                            <ReCAPTCHA
-                              ref={loginRecaptchaRef}
-                              sitekey={config.recaptchaSiteKey}
-                              onChange={(token) => {
-                                loginForm.setValue('recaptchaToken', token || '');
-                                loginForm.clearErrors('recaptchaToken');
-                              }}
-                              onExpired={() => {
-                                loginForm.setValue('recaptchaToken', '');
-                              }}
-                              onError={() => {
-                                console.error('reCAPTCHA error occurred');
-                                loginForm.setValue('recaptchaToken', '');
-                              }}
-                              theme="dark"
-                            />
-                            {loginForm.formState.errors.recaptchaToken && (
-                              <p className="text-red-400 text-sm text-center">
-                                {loginForm.formState.errors.recaptchaToken.message}
+                      <TabsContent value="login" className="space-y-4 mt-6">
+                        <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="login-username" className="text-gray-300">
+                              Username
+                            </Label>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <Input
+                                id="login-username"
+                                type="text"
+                                placeholder="Enter your username"
+                                className="pl-10 horror-bg border-gray-700 text-white placeholder-gray-500"
+                                {...loginForm.register('username')}
+                              />
+                            </div>
+                            {loginForm.formState.errors.username && (
+                              <p className="text-red-400 text-sm">
+                                {loginForm.formState.errors.username.message}
                               </p>
                             )}
                           </div>
-                        )}
 
-                        <Button
-                          type="submit"
-                          className="w-full bg-blood-red hover:bg-red-700 text-white"
-                          disabled={loginMutation.isPending}
-                        >
-                          {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
-                        </Button>
+                          <div className="space-y-2">
+                            <Label htmlFor="login-password" className="text-gray-300">
+                              Password
+                            </Label>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <Input
+                                id="login-password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Enter your password"
+                                className="pl-10 pr-10 horror-bg border-gray-700 text-white placeholder-gray-500"
+                                {...loginForm.register('password')}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                            {loginForm.formState.errors.password && (
+                              <p className="text-red-400 text-sm">
+                                {loginForm.formState.errors.password.message}
+                              </p>
+                            )}
+                          </div>
 
-                        <div className="text-center">
-                          <button
-                            type="button"
-                            onClick={() => setShowForgotPassword(true)}
-                            className="text-sm text-gray-400 hover:text-red-400 transition-colors"
+                          {/* reCAPTCHA */}
+                          {config.recaptchaSiteKey && (
+                            <div className="space-y-2 flex flex-col items-center">
+                              <ReCAPTCHA
+                                ref={loginRecaptchaRef}
+                                sitekey={config.recaptchaSiteKey}
+                                onChange={(token) => {
+                                  loginForm.setValue('recaptchaToken', token || '');
+                                  loginForm.clearErrors('recaptchaToken');
+                                }}
+                                onExpired={() => {
+                                  loginForm.setValue('recaptchaToken', '');
+                                }}
+                                onError={() => {
+                                  console.error('reCAPTCHA error occurred');
+                                  loginForm.setValue('recaptchaToken', '');
+                                }}
+                                theme="dark"
+                              />
+                              {loginForm.formState.errors.recaptchaToken && (
+                                <p className="text-red-400 text-sm text-center">
+                                  {loginForm.formState.errors.recaptchaToken.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          <Button
+                            type="submit"
+                            className="w-full horror-button-primary"
+                            disabled={loginMutation.isPending}
                           >
-                            Forgot your password?
-                          </button>
-                        </div>
-                      </form>
-                    </TabsContent>
+                            {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
+                          </Button>
 
-                    <TabsContent value="register" className="space-y-4 mt-6">
-                      <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="register-username" className="text-gray-300">
-                            Username
-                          </Label>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <Input
-                              id="register-username"
-                              type="text"
-                              placeholder="Choose a username"
-                              className="pl-10 horror-bg border-gray-700 text-white placeholder-gray-500"
-                              {...registerForm.register('username')}
-                            />
-                          </div>
-                          {registerForm.formState.errors.username && (
-                            <p className="text-red-400 text-sm">
-                              {registerForm.formState.errors.username.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="email" className="text-gray-300">
-                            Email
-                          </Label>
-                          <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="john@example.com"
-                              className="pl-10 horror-bg border-gray-700 text-white placeholder-gray-500"
-                              {...registerForm.register('email')}
-                            />
-                          </div>
-                          {registerForm.formState.errors.email && (
-                            <p className="text-red-400 text-sm">
-                              {registerForm.formState.errors.email.message}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="register-password" className="text-gray-300">
-                            Password
-                          </Label>
-                          <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                            <Input
-                              id="register-password"
-                              type={showPassword ? 'text' : 'password'}
-                              placeholder="Create a password"
-                              className="pl-10 pr-10 horror-bg border-gray-700 text-white placeholder-gray-500"
-                              {...registerForm.register('password')}
-                            />
-                            <button
+                          <div className="text-center">
+                            <Button
                               type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                              onClick={() => setShowForgotPassword(true)}
+                              className="horror-button-outline text-sm"
                             >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
+                              Forgot your password?
+                            </Button>
                           </div>
-                          {registerForm.formState.errors.password && (
-                            <p className="text-red-400 text-sm">
-                              {registerForm.formState.errors.password.message}
-                            </p>
-                          )}
-                        </div>
+                        </form>
+                      </TabsContent>
 
-                        {/* reCAPTCHA */}
-                        {config.recaptchaSiteKey && (
-                          <div className="space-y-2 flex flex-col items-center">
-                            <ReCAPTCHA
-                              ref={registerRecaptchaRef}
-                              sitekey={config.recaptchaSiteKey}
-                              onChange={(token) => {
-                                registerForm.setValue('recaptchaToken', token || '');
-                                registerForm.clearErrors('recaptchaToken');
-                              }}
-                              onExpired={() => {
-                                registerForm.setValue('recaptchaToken', '');
-                              }}
-                              onError={() => {
-                                console.error('reCAPTCHA error occurred');
-                                registerForm.setValue('recaptchaToken', '');
-                              }}
-                              theme="dark"
-                            />
-                            {registerForm.formState.errors.recaptchaToken && (
-                              <p className="text-red-400 text-sm text-center">
-                                {registerForm.formState.errors.recaptchaToken.message}
+                      <TabsContent value="register" className="space-y-4 mt-6">
+                        <form
+                          onSubmit={registerForm.handleSubmit(onRegister)}
+                          className="space-y-4"
+                        >
+                          <div className="space-y-2">
+                            <Label htmlFor="register-username" className="text-gray-300">
+                              Username
+                            </Label>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <Input
+                                id="register-username"
+                                type="text"
+                                placeholder="Choose a username"
+                                className="pl-10 horror-bg border-gray-700 text-white placeholder-gray-500"
+                                {...registerForm.register('username')}
+                              />
+                            </div>
+                            {registerForm.formState.errors.username && (
+                              <p className="text-red-400 text-sm">
+                                {registerForm.formState.errors.username.message}
                               </p>
                             )}
                           </div>
-                        )}
 
-                        <Button
-                          type="submit"
-                          className="w-full bg-blood-red hover:bg-red-700 text-white"
-                          disabled={registerMutation.isPending}
-                        >
-                          {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
-                        </Button>
-                      </form>
-                    </TabsContent>
-                  </Tabs>
+                          <div className="space-y-2">
+                            <Label htmlFor="email" className="text-gray-300">
+                              Email
+                            </Label>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <Input
+                                id="email"
+                                type="email"
+                                placeholder="john@example.com"
+                                className="pl-10 horror-bg border-gray-700 text-white placeholder-gray-500"
+                                {...registerForm.register('email')}
+                              />
+                            </div>
+                            {registerForm.formState.errors.email && (
+                              <p className="text-red-400 text-sm">
+                                {registerForm.formState.errors.email.message}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="register-password" className="text-gray-300">
+                              Password
+                            </Label>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                              <Input
+                                id="register-password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Create a password"
+                                className="pl-10 pr-10 horror-bg border-gray-700 text-white placeholder-gray-500"
+                                {...registerForm.register('password')}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                            {registerForm.formState.errors.password && (
+                              <p className="text-red-400 text-sm">
+                                {registerForm.formState.errors.password.message}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* reCAPTCHA */}
+                          {config.recaptchaSiteKey && (
+                            <div className="space-y-2 flex flex-col items-center">
+                              <ReCAPTCHA
+                                ref={registerRecaptchaRef}
+                                sitekey={config.recaptchaSiteKey}
+                                onChange={(token) => {
+                                  registerForm.setValue('recaptchaToken', token || '');
+                                  registerForm.clearErrors('recaptchaToken');
+                                }}
+                                onExpired={() => {
+                                  registerForm.setValue('recaptchaToken', '');
+                                }}
+                                onError={() => {
+                                  console.error('reCAPTCHA error occurred');
+                                  registerForm.setValue('recaptchaToken', '');
+                                }}
+                                theme="dark"
+                              />
+                              {registerForm.formState.errors.recaptchaToken && (
+                                <p className="text-red-400 text-sm text-center">
+                                  {registerForm.formState.errors.recaptchaToken.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          <Button
+                            type="submit"
+                            className="w-full horror-button-primary"
+                            disabled={registerMutation.isPending}
+                          >
+                            {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
+                          </Button>
+                        </form>
+                      </TabsContent>
+                    </Tabs>
+                  </>
                 )}
               </CardContent>
             </Card>
