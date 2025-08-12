@@ -14,8 +14,8 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-gray-400 mb-4">
-              Discover the highest-rated horror movies and series currently streaming. Rated by
-              critics and audiences across all major platforms.
+              Discover the highest-rated horror movies and series streaming now. Explore subgenres,
+              see what’s new to streaming, or filter by platform, decade, and rating.
             </p>
           </div>
 
@@ -77,7 +77,16 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-red-400 hover:text-red-300 transition-colors underline"
             >
-              Watchmode.com
+              Watchmode
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://www.thetvdb.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-red-400 hover:text-red-300 transition-colors underline"
+            >
+              TheTVDB
             </a>
           </p>
         </div>
