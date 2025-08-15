@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
     onError: (error: Error) => {
+      console.log('Registration error:', error);
       toast({
         title: 'Registration failed',
         description: error.message,

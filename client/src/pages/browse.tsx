@@ -31,13 +31,13 @@ export default function Browse() {
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
       return (
-        <h1 className="text-5xl font-bold text-white text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">
           Explore <span className="blood-red">{title}</span> Titles
         </h1>
       );
     }
     return (
-      <h1 className="text-5xl font-bold text-white text-center">
+      <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">
         Browse <span className="blood-red">Streaming Horror</span>
       </h1>
     );
@@ -48,9 +48,9 @@ export default function Browse() {
       <Header />
 
       <div className="horror-bg">
-        <div className="text-center mx-auto px-2 py-12 animate-fade-in">
+        <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">{getHeaderTitle(selectedSubgenre)}</div>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto">
             Filter by subgenre, decade, rating, or platform to discover your next watch.
           </p>
         </div>

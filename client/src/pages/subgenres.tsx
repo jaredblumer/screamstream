@@ -80,13 +80,13 @@ export default function Subgenres() {
       <Header />
 
       <div className="horror-bg">
-        <div className="text-center mx-auto px-2 py-12 animate-fade-in">
+        <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">
-            <h1 className="text-5xl font-bold text-white text-center">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">
               Horror <span className="blood-red">Subgenres</span>
             </h1>
           </div>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto">
             From supernatural scares to psychological thrillers, discover what makes each subgenre
             uniquely terrifying.
           </p>

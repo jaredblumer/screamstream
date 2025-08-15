@@ -15,11 +15,11 @@ export default function HeroSection({
     <section className="relative min-h-[500px] flex items-center">
       <div className="relative z-20 w-full max-w-7xl mx-auto p-6">
         <div className="max-w-2xl text-center sm:text-left mx-auto sm:mx-0">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-thin text-white mb-4 animate-float leading-tight break-words">
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-thin text-white mb-4 animate-float leading-tight break-words">
             Top Rated
             <span className="blood-red font-bold block">Streaming Horror</span>
           </h2>
-          <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+          <p className="text-lg sm:text-xl text-gray-300 mb-8 leading-relaxed">
             Discover the highest-rated horror movies and series streaming now. Explore subgenres,
             see what’s new to streaming, or filter by platform, decade, and rating.
           </p>

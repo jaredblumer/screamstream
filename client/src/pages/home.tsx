@@ -53,7 +53,7 @@ export default function Home() {
 
       <div className="mx-auto">
         <div className="transition-all duration-700 ease-in-out overflow-hidden max-h-none opacity-100 transform translate-y-0">
-          <div className="pt-8 sm:pt-0 transition-opacity duration-300">
+          <div className="transition-opacity duration-300">
             <div className="animate-fade-in bg-black/50">
               <HeroSection
                 onViewTopRanked={handleViewTopRated}

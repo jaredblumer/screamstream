@@ -279,7 +279,10 @@ export default function AuthPage() {
           <div className="hidden lg:block">
             <div className="text-center lg:text-left">
               <h1 className="text-6xl font-bold text-white mb-6 leading-tight">
-                Welcome to <span className="blood-red">Scream Stream</span>
+                <div>Welcome to</div>
+                <div>
+                  <span className="blood-red">Scream Stream</span>
+                </div>
               </h1>
               <p className="text-xl text-gray-300 mb-8 leading-relaxed">
                 Discover the best horror movies and series across all streaming platforms. Get
@@ -301,7 +304,7 @@ export default function AuthPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blood-red rounded-full"></div>
-                  <span>Expert Reviews & Ratings</span>
+                  <span>Critic and Audience Ratings</span>
                 </div>
               </div>
             </div>
@@ -311,7 +314,7 @@ export default function AuthPage() {
           <div className="w-full max-w-md mx-auto">
             <Card className="horror-bg border-gray-700">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-white">{heading}</CardTitle>
+                <CardTitle className="text-3xl text-white">{heading}</CardTitle>
                 <CardDescription className="text-gray-400">{subheading}</CardDescription>
               </CardHeader>
               <CardContent>
