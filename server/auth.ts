@@ -5,6 +5,8 @@ import session from 'express-session';
 import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 import { storage } from './storage';
+import { RegisterBody } from './validation/auth';
+import { validateBody } from './utils/validate';
 import { User as SelectUser } from '@shared/schema';
 import { sendEmail, generatePasswordResetEmail } from './email';
 import connectPg from 'connect-pg-simple';
@@ -91,15 +93,16 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/register', async (req, res, next) => {
+  app.post('/api/register', validateBody(RegisterBody), async (req, res, next) => {
     try {
-      const { username, password, email, firstName, lastName, recaptchaToken } = req.body;
+      const { username, password, email, recaptchaToken } = req.body as {
+        username: string;
+        password: string;
+        email: string;
+        recaptchaToken?: string;
+      };
 
-      if (!username || !password) {
-        return res.status(400).json({ message: 'Username and password are required' });
-      }
-
-      // Verify reCAPTCHA if key is configured and not in development (required when configured)
+      // reCAPTCHA (your existing logic)
       if (process.env.RECAPTCHA_SECRET_KEY && process.env.NODE_ENV !== 'development') {
         if (!recaptchaToken) {
           return res.status(400).json({
@@ -114,23 +117,21 @@ export function setupAuth(app: Express) {
         }
       }
 
+      // Uniqueness checks (your existing logic)
       const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: 'Username already exists' });
-      }
+      if (existingUser) return res.status(400).json({ message: 'Username already exists' });
 
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) return res.status(400).json({ message: 'Email already exists' });
+
+      // Hash + create
       const user = await storage.createUser({
         username,
         password: await hashPassword(password),
         email,
-        firstName,
-        lastName,
       });
 
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
+      req.login(user, (err) => (err ? next(err) : res.status(201).json(user)));
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({ message: 'Registration failed' });

@@ -129,8 +129,6 @@ export const insertContentPlatformSchema = createInsertSchema(contentPlatforms).
 export type InsertContentPlatform = z.infer<typeof insertContentPlatformSchema>;
 export type ContentPlatform = typeof contentPlatforms.$inferSelect;
 
-// --- Re-added Tables ---
-
 // Users table
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),

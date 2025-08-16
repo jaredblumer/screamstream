@@ -8,7 +8,6 @@ export async function createContentPlatform(data: InsertContentPlatform & { cont
 }
 
 export async function getPlatformsForContentIds(contentIds: number[]) {
-  console.log('Getting platforms for content IDs:', contentIds);
   try {
     const rows = await db
       .select({
