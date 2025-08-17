@@ -5,7 +5,6 @@ import * as watchlist from './watchlist';
 import * as movies from './movies';
 import * as usage from './usage';
 import * as subgenres from './subgenres';
-import * as platformImages from './platformImages';
 
 export const storage = {
   ...content,
@@ -15,5 +14,4 @@ export const storage = {
   ...movies,
   ...usage,
   ...subgenres,
-  ...platformImages,
 };
