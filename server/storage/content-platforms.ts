@@ -19,7 +19,8 @@ export async function getPlatformsForContentIds(contentIds: number[]) {
       })
       .from(contentPlatforms)
       .innerJoin(platforms, eq(contentPlatforms.platformId, platforms.id))
-      .where(inArray(contentPlatforms.contentId, contentIds));
+      .where(inArray(contentPlatforms.contentId, contentIds))
+      .orderBy(platforms.platformName);
 
     const map = new Map<number, any[]>();
     for (const row of rows) {
@@ -51,7 +52,8 @@ export async function getPlatformsForContentId(contentId: number): Promise<Platf
     })
     .from(contentPlatforms)
     .innerJoin(platforms, eq(contentPlatforms.platformId, platforms.id))
-    .where(eq(contentPlatforms.contentId, contentId));
+    .where(eq(contentPlatforms.contentId, contentId))
+    .orderBy(platforms.platformName);
 
   return rows.map((r) => ({
     platformId: r.platformId,
