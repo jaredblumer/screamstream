@@ -10,7 +10,7 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { getPlatformLogo, getPlatformName, formatSubgenre } from '@/lib/utils';
+import { formatSubgenre } from '@/lib/utils';
 import FeedbackButton from '@/components/feedback-button';
 import { useSearch } from '@/contexts/SearchContext';
 import type { ContentWithPlatforms } from '@shared/schema';
@@ -195,8 +195,8 @@ export default function MovieDetail() {
               <div className="flex flex-wrap gap-3">
                 {movie.platformsBadges.map((badge) => {
                   const { platformId, platformName, imageUrl, webUrl } = badge;
-                  const name = platformName || getPlatformName(platformId);
-                  const logo = imageUrl || getPlatformLogo(platformId);
+                  const name = platformName;
+                  const logo = imageUrl;
                   const Comp: any = webUrl ? 'a' : 'div';
                   return (
                     <Comp
@@ -380,14 +380,8 @@ export default function MovieDetail() {
                           }`}
                           title={webUrl ? `Watch on ${platformName}` : platformName}
                         >
-                          <img
-                            src={imageUrl || getPlatformLogo(platformId)}
-                            alt={platformName || getPlatformName(platformId)}
-                            className="w-6 h-6 rounded mr-2"
-                          />
-                          <span className="text-white text-sm font-medium">
-                            {platformName || getPlatformName(platformId)}
-                          </span>
+                          <img src={imageUrl} alt={platformName} className="w-6 h-6 rounded mr-2" />
+                          <span className="text-white text-sm font-medium">{platformName}</span>
                           {webUrl && <span className="ml-2 text-xs text-gray-400">↗</span>}
                         </PlatformComponent>
                       );
