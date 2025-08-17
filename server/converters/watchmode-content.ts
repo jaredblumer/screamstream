@@ -2,6 +2,7 @@ import { InsertContent } from '@shared/schema';
 import { WatchmodeRelease, WatchmodeTitle } from '@server/types/watchmode';
 import { getOptimalPosterUrl } from '@server/utils/watchmode-helpers';
 import { calculateAverageRating } from '@server/routes/utils/average-rating';
+import { tvdbAPI } from '@server/tvdb';
 
 /**
  * Convert a Watchmode release into InsertContent format
@@ -27,7 +28,6 @@ export async function convertWatchmodeTitleToContent(
   let tvdbPosterUrl = '';
   try {
     if (process.env.TVDB_API_KEY) {
-      const { tvdbAPI } = await import('@server/tvdb');
       if (title.imdb_id) {
         const lookup =
           title.type === 'tv_series'
