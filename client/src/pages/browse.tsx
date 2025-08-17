@@ -3,17 +3,17 @@ import { useLocation } from 'wouter';
 import Header from '@/components/header';
 import FilterControls from '@/components/filter-controls';
 import MovieGrid from '@/components/movie-grid';
+import Footer from '@/components/footer';
 
 export default function Browse() {
   const [location] = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
   const [selectedCriticsRating, setSelectedCriticsRating] = useState('all');
   const [selectedUsersRating, setSelectedUsersRating] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedSubgenre, setSelectedSubgenre] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [sortBy, setSortBy] = useState('average_rating');
 
   // Parse URL parameters and set initial subgenre
   useEffect(() => {
@@ -26,37 +26,33 @@ export default function Browse() {
   // Helper function to format subgenre display name
   const getHeaderTitle = (subgenre: string) => {
     if (selectedSubgenre !== 'all') {
-      return subgenre
+      let title = subgenre
         .split('-')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+      return (
+        <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">
+          Explore <span className="blood-red">{title}</span> Titles
+        </h1>
+      );
     }
-    return 'Browse Horror';
-  };
-
-  const getHeaderSubtitle = () => {
-    if (selectedSubgenre !== 'all') {
-      return `Discover the best ${selectedSubgenre.split('-').join(' ')} movies and series`;
-    }
-    if (searchQuery) {
-      return 'Matching content based on your search';
-    }
-    return 'Filter and explore our complete horror collection';
+    return (
+      <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">
+        Browse <span className="blood-red">Streaming Horror</span>
+      </h1>
+    );
   };
 
   return (
     <>
       <Header />
 
-      <div className="min-h-screen horror-bg">
-        {/* Browse Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-          <div className="text-center animate-fade-in">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              {getHeaderTitle(selectedSubgenre)} Titles
-            </h1>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">{getHeaderSubtitle()}</p>
-          </div>
+      <div className="horror-bg">
+        <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
+          <div className="mb-2">{getHeaderTitle(selectedSubgenre)}</div>
+          <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto">
+            Filter by subgenre, decade, rating, or platform to discover your next watch.
+          </p>
         </div>
 
         {/* Filters */}
@@ -80,10 +76,9 @@ export default function Browse() {
         </div>
 
         {/* Content Grid */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="max-w-7xl mx-auto">
           <div className="animate-fade-slide stagger-2">
             <MovieGrid
-              searchQuery={searchQuery}
               selectedPlatform={selectedPlatform}
               selectedYear={selectedYear}
               selectedCriticsRating={selectedCriticsRating}
@@ -95,6 +90,7 @@ export default function Browse() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

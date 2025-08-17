@@ -1,12 +1,15 @@
 import type { Express } from 'express';
 import { createServer, type Server } from 'http';
 import { setupAuth } from './../auth';
+
 import { registerConfigRoutes } from './public/config.routes';
 import { registerContentRoutes } from './public/content.routes';
 import { registerNewToStreamingRoutes } from './public/newToStreaming.routes';
 import { registerWatchlistRoutes } from './public/watchlist.routes';
 import { registerFeedbackRoutes } from './public/feedback.routes';
 import { registerPublicSubgenreRoutes } from './public/subgenres.routes';
+import { registerPlatformRoutes } from './public/platforms.routes';
+
 import { registerPasswordRoutes } from './auth/password.routes';
 
 import { registerAdminContentRoutes } from './admin/content.routes';
@@ -25,6 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerFeedbackRoutes(app);
   registerPublicSubgenreRoutes(app);
   registerPasswordRoutes(app);
+  registerPlatformRoutes(app);
 
   registerAdminContentRoutes(app);
   registerAdminSyncRoutes(app);

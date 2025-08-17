@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import { Subgenre } from '@shared/schema';
+import { Subgenre, Platform } from '@shared/schema';
 
 interface FilterControlsProps {
   selectedPlatform: string;
@@ -50,9 +50,20 @@ export default function FilterControls({
     },
   });
 
+  const { data: platforms = [] } = useQuery<Platform[]>({
+    queryKey: ['/api/platforms'],
+    queryFn: async () => {
+      const res = await fetch('/api/platforms');
+      if (!res.ok) throw new Error('Failed to load platforms');
+      return res.json();
+    },
+  });
+
+  const handleSubgenreChange = onSubgenreChange ?? (() => {});
+
   return (
     <section className="dark-gray-bg py-3 sm:py-6 border-b border-gray-800 relative z-0 mt-2 sm:mt-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="space-y-4">
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -64,14 +75,15 @@ export default function FilterControls({
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
                     <SelectItem value="all">All Platforms</SelectItem>
-                    <SelectItem value="netflix">Netflix</SelectItem>
-                    <SelectItem value="hulu">Hulu</SelectItem>
-                    <SelectItem value="amazon_prime">Amazon Prime</SelectItem>
-                    <SelectItem value="hbo_max">HBO Max</SelectItem>
+                    {platforms.map((p) => (
+                      <SelectItem key={p.id} value={p.platformKey}>
+                        {p.platformName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedSubgenre} onValueChange={onSubgenreChange}>
+                <Select value={selectedSubgenre} onValueChange={handleSubgenreChange}>
                   <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
                     <SelectValue placeholder="All Subgenres" className="text-white" />
                   </SelectTrigger>
@@ -106,7 +118,7 @@ export default function FilterControls({
                     <SelectValue placeholder="Critics Rating" className="text-white" />
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">Critic Rating</SelectItem>
+                    <SelectItem value="all">Critics Rating</SelectItem>
                     <SelectItem value="9">9.0+ Critics</SelectItem>
                     <SelectItem value="8">8.0+ Critics</SelectItem>
                     <SelectItem value="7">7.0+ Critics</SelectItem>
@@ -116,14 +128,14 @@ export default function FilterControls({
 
                 <Select value={selectedUsersRating} onValueChange={onUsersRatingChange}>
                   <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="Users Rating" className="text-white" />
+                    <SelectValue placeholder="Audience Rating" className="text-white" />
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">User Rating</SelectItem>
-                    <SelectItem value="9">9.0+ Users</SelectItem>
-                    <SelectItem value="8">8.0+ Users</SelectItem>
-                    <SelectItem value="7">7.0+ Users</SelectItem>
-                    <SelectItem value="6">6.0+ Users</SelectItem>
+                    <SelectItem value="all">Audience Rating</SelectItem>
+                    <SelectItem value="9">9.0+ Audience</SelectItem>
+                    <SelectItem value="8">8.0+ Audience</SelectItem>
+                    <SelectItem value="7">7.0+ Audience</SelectItem>
+                    <SelectItem value="6">6.0+ Audience</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -134,7 +146,7 @@ export default function FilterControls({
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
                     <SelectItem value="all">All Content</SelectItem>
                     <SelectItem value="movie">Movies</SelectItem>
-                    <SelectItem value="series">TV Series</SelectItem>
+                    <SelectItem value="series">Series</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -147,9 +159,9 @@ export default function FilterControls({
                   <SelectValue placeholder="Sort by" className="text-white" />
                 </SelectTrigger>
                 <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                  <SelectItem value="rating">Rating</SelectItem>
+                  <SelectItem value="average_rating">Average Rating</SelectItem>
                   <SelectItem value="critics_rating">Critics Rating</SelectItem>
-                  <SelectItem value="users_rating">Users Rating</SelectItem>
+                  <SelectItem value="users_rating">Audience Rating</SelectItem>
                   <SelectItem value="year_newest">Newest First</SelectItem>
                   <SelectItem value="year_oldest">Oldest First</SelectItem>
                 </SelectContent>

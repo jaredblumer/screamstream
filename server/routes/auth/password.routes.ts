@@ -4,6 +4,8 @@ import { verifyRecaptcha } from '../../auth';
 import { sendEmail, generatePasswordResetEmail } from '../../email';
 import { randomBytes } from 'crypto';
 import { hashPassword } from '../utils/hash';
+import { ResetPasswordBody } from '@server/validation/auth';
+import { validateBody } from '@server/utils/validate';
 
 export function registerPasswordRoutes(app: Express) {
   app.post('/api/auth/forgot-password', async (req, res) => {
@@ -44,7 +46,6 @@ export function registerPasswordRoutes(app: Express) {
         to: email,
         subject: 'Password Reset - Scream Stream',
         text: emailContent.text,
-        html: emailContent.html,
       });
 
       if (emailSent) {
@@ -59,7 +60,7 @@ export function registerPasswordRoutes(app: Express) {
     }
   });
 
-  app.post('/api/auth/reset-password', async (req, res) => {
+  app.post('/api/auth/reset-password', validateBody(ResetPasswordBody), async (req, res) => {
     try {
       const { token, newPassword } = req.body;
       if (!token || !newPassword) {

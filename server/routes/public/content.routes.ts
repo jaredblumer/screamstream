@@ -5,38 +5,85 @@ import { contentSyncService } from '@server/services/content-sync';
 
 export function registerContentRoutes(app: Express) {
   app.get('/api/content', async (req, res) => {
-    console.log('GET /api/content called');
+    console.log('GET /api/content', req.query);
     try {
-      const {
-        platform,
-        year,
-        minRating,
-        minCriticsRating,
-        minUsersRating,
-        search,
-        type,
-        subgenre,
-        sortBy,
-      } = req.query;
-      const filters: Parameters<typeof storage.getContent>[0] = {};
+      const q = req.query as Record<string, string | string[] | undefined>;
 
-      if (platform && typeof platform === 'string') filters.platform = platform;
-      if (year && typeof year === 'string') {
-        if (year.endsWith('s')) filters.year = year;
-        else if (year.includes('-')) filters.year = parseInt(year.split('-')[1]);
-        else filters.year = parseInt(year);
-      }
-      if (minRating) filters.minRating = parseFloat(minRating as string);
-      if (minCriticsRating) filters.minCriticsRating = parseFloat(minCriticsRating as string);
-      if (minUsersRating) filters.minUsersRating = parseFloat(minUsersRating as string);
-      if (search && typeof search === 'string') filters.search = search;
-      if (type === 'movie' || type === 'series') filters.type = type;
-      if (subgenre && typeof subgenre === 'string') filters.subgenre = subgenre;
-      if (sortBy && typeof sortBy === 'string') filters.sortBy = sortBy as any;
+      // helper: normalize "all" / empty → undefined
+      const norm = (v?: string) => (v && v !== 'all' ? v : undefined);
+      const normNum = (v?: string) => (v && v !== 'all' ? Number(v) : undefined);
 
-      const content = await storage.getContent(filters);
-      res.json(content);
+      // allow platform to be a single string (platformKey) or comma‑separated string (rare)
+      const platform = Array.isArray(q.platform)
+        ? q.platform[0]
+        : (q.platform as string | undefined);
+
+      const filters: Parameters<typeof storage.getContent>[0] = {
+        // platformKey (e.g. "netflix"); storage will match key or name via EXISTS
+        platform: norm(platform),
+
+        // decade ("2010s") or a specific year ("2024"); storage handles both
+        year: (() => {
+          const y = Array.isArray(q.year) ? q.year[0] : (q.year as string | undefined);
+          if (!y || y === 'all') return undefined;
+          if (y.endsWith('s')) return y; // "2010s"
+          const n = Number(y);
+          return Number.isFinite(n) ? n : undefined;
+        })(),
+
+        // ratings: numeric
+        minRating: normNum(
+          Array.isArray(q.minRating) ? q.minRating[0] : (q.minRating as string | undefined)
+        ),
+        minCriticsRating: normNum(
+          Array.isArray(q.minCriticsRating)
+            ? q.minCriticsRating[0]
+            : (q.minCriticsRating as string | undefined)
+        ),
+        minUsersRating: normNum(
+          Array.isArray(q.minUsersRating)
+            ? q.minUsersRating[0]
+            : (q.minUsersRating as string | undefined)
+        ),
+
+        // optional text search
+        search: norm(Array.isArray(q.search) ? q.search[0] : (q.search as string | undefined)),
+
+        // 'movie' | 'series'
+        type: (() => {
+          const t = Array.isArray(q.type) ? q.type[0] : (q.type as string | undefined);
+          return t && t !== 'all' && (t === 'movie' || t === 'series') ? t : undefined;
+        })(),
+
+        // subgenre slug
+        subgenre: norm(
+          Array.isArray(q.subgenre) ? q.subgenre[0] : (q.subgenre as string | undefined)
+        ),
+
+        // sortBy whitelist + default
+        sortBy: (() => {
+          const s = Array.isArray(q.sortBy) ? q.sortBy[0] : (q.sortBy as string | undefined);
+          const allowed = new Set([
+            'average_rating',
+            'critics_rating',
+            'users_rating',
+            'year_newest',
+            'year_oldest',
+          ]);
+          return s && allowed.has(s) ? (s as any) : 'average_rating';
+        })(),
+
+        includeHidden:
+          (Array.isArray(q.includeHidden) ? q.includeHidden[0] : q.includeHidden) === 'true',
+
+        includeInactive:
+          (Array.isArray(q.includeInactive) ? q.includeInactive[0] : q.includeInactive) === 'true',
+      };
+
+      const rows = await storage.getContent(filters);
+      res.json(rows);
     } catch (error) {
+      console.error('GET /api/content failed:', error);
       res.status(500).json({
         message: 'Failed to fetch content',
         error: error instanceof Error ? error.message : 'Unknown error',

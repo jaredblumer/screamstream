@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import MovieCard from './movie-card';
-import type { Movie } from '@shared/schema';
+import type { ContentWithPlatforms } from '@shared/schema';
 
 interface MovieGridProps {
   searchQuery?: string;
@@ -48,7 +48,7 @@ export default function MovieGrid({
     data: fetchedMovies,
     isLoading,
     error,
-  } = useQuery<Movie[]>({
+  } = useQuery<ContentWithPlatforms[]>({
     queryKey: ['/api/content', queryParams.toString()],
     queryFn: async () => {
       const response = await fetch(`/api/content?${queryParams.toString()}`);
@@ -72,7 +72,6 @@ export default function MovieGrid({
     return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-2">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Loading Content...</h2>
           <Skeleton className="h-4 w-48 horror-bg" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -119,7 +118,7 @@ export default function MovieGrid({
   const hasMore = movies.length > displayedMovies.length;
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+    <main className="max-w-7xl mx-auto px-6 py-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {displayedMovies.map((movie) => (
           <MovieCard
@@ -132,7 +131,7 @@ export default function MovieGrid({
       </div>
 
       {hasMore && (
-        <div className="text-center mt-12">
+        <div className="text-center mt-6">
           <Button
             onClick={handleLoadMore}
             className="blood-red-bg hover:crimson-bg text-white px-8 py-3 font-semibold"

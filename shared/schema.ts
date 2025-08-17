@@ -13,63 +13,56 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
+// Content table
 export const content = pgTable('content', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   year: integer('year').notNull(),
-  rating: real('rating').notNull(), // Keep legacy rating field for backward compatibility
-  criticsRating: real('critics_rating').notNull(),
+  averageRating: real('average_rating'),
+  criticsRating: real('critics_rating'),
   usersRating: real('users_rating'),
   description: text('description').notNull(),
   posterUrl: text('poster_url').notNull(),
   subgenre: text('subgenre'),
   subgenres: jsonb('subgenres').$type<string[]>().default([]),
-  platforms: jsonb('platforms').$type<string[]>().notNull().default([]),
-  platformLinks: jsonb('platform_links').$type<string[]>().notNull().default([]),
+  genres: jsonb('genres').$type<number[]>().default([]),
   type: text('type', { enum: ['movie', 'series'] })
     .notNull()
     .default('movie'),
-  seasons: integer('seasons'), // Only for series
-  episodes: integer('episodes'), // Only for series
-  watchmodeId: integer('watchmode_id'), // For Watchmode API integration (1 credit)
-  imdbId: text('imdb_id'), // For Watchmode API integration (2 credits)
-  tmdbId: integer('tmdb_id'), // For Watchmode API integration (2 credits)
-  backdropPath: text('backdrop_path'), // Additional backdrop image path
-  originalTitle: text('original_title'), // Original title (for foreign films)
-  releaseDate: text('release_date'), // Exact release date
-  usRating: text('us_rating'), // Content rating (PG-13, R, etc.)
-  originalLanguage: text('original_language'), // Language code
-  runtimeMinutes: integer('runtime_minutes'), // Runtime in minutes
-  endYear: integer('end_year'), // For series that have ended
-  sourceReleaseDate: text('source_release_date'), // Date when content was added to streaming platform
-  watchmodeData: jsonb('watchmode_data'), // Full Watchmode response for future use
-  hidden: boolean('hidden').default(false), // Hide non-horror content from public display
+  seasons: integer('seasons'),
+  episodes: integer('episodes'),
+  watchmodeId: integer('watchmode_id'),
+  imdbId: text('imdb_id'),
+  tmdbId: integer('tmdb_id'),
+  backdropPath: text('backdrop_path'),
+  originalTitle: text('original_title'),
+  releaseDate: text('release_date'),
+  usRating: text('us_rating'),
+  originalLanguage: text('original_language'),
+  runtimeMinutes: integer('runtime_minutes'),
+  endYear: integer('end_year'),
+  sourceReleaseDate: text('source_release_date'),
+  watchmodeData: jsonb('watchmode_data'),
+  hidden: boolean('hidden').default(false),
+  active: boolean('active').notNull().default(false),
 });
 
-export const insertContentSchema = createInsertSchema(content).omit({
-  id: true,
-});
-
+export const insertContentSchema = createInsertSchema(content).omit({ id: true });
 export type InsertContent = z.infer<typeof insertContentSchema>;
 export type Content = typeof content.$inferSelect;
 
-// Keep legacy movie types for backward compatibility during transition
-export type InsertMovie = InsertContent;
-export type Movie = Content;
+export interface PlatformBadge {
+  platformId: number;
+  platformName: string;
+  imageUrl: string;
+  webUrl?: string;
+}
 
-// Platform enum for type safety
-export const STREAMING_PLATFORMS = {
-  NETFLIX: 'netflix',
-  HULU: 'hulu',
-  AMAZON_PRIME: 'amazon_prime',
-  HBO_MAX: 'hbo_max',
-  DISNEY_PLUS: 'disney_plus',
-  PARAMOUNT_PLUS: 'paramount_plus',
-} as const;
+export interface ContentWithPlatforms extends Content {
+  platformsBadges: PlatformBadge[];
+}
 
-export type StreamingPlatform = (typeof STREAMING_PLATFORMS)[keyof typeof STREAMING_PLATFORMS];
-
-// Session storage table.
+// Sessions table
 export const sessions = pgTable(
   'sessions',
   {
@@ -80,13 +73,69 @@ export const sessions = pgTable(
   (table) => [index('IDX_session_expire').on(table.expire)]
 );
 
-// User storage table for local authentication
+// Platforms table
+export const platforms = pgTable(
+  'platforms',
+  {
+    id: serial('id').primaryKey(),
+    platformKey: varchar('platform_key', { length: 50 }).notNull().unique(),
+    platformName: varchar('platform_name', { length: 100 }).notNull(),
+    watchmodeId: integer('watchmode_id').notNull().unique(),
+    imageUrl: varchar('image_url', { length: 500 }),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [index('idx_platforms_watchmode_id').on(table.watchmodeId)]
+);
+
+export const insertPlatformSchema = createInsertSchema(platforms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPlatform = z.infer<typeof insertPlatformSchema>;
+export type Platform = typeof platforms.$inferSelect;
+
+// Join table between content and platforms
+export const contentPlatforms = pgTable(
+  'content_platforms',
+  {
+    id: serial('id').primaryKey(),
+    contentId: integer('content_id')
+      .notNull()
+      .references(() => content.id, { onDelete: 'cascade' }),
+    platformId: integer('platform_id')
+      .notNull()
+      .references(() => platforms.id, { onDelete: 'cascade' }),
+    webUrl: varchar('web_url', { length: 500 }),
+    format: varchar('format', { length: 20 }),
+    seasons: integer('seasons'),
+    episodes: integer('episodes'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [
+    index('idx_content_platforms_content_id').on(table.contentId),
+    index('idx_content_platforms_platform_id').on(table.platformId),
+  ]
+);
+
+export const insertContentPlatformSchema = createInsertSchema(contentPlatforms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertContentPlatform = z.infer<typeof insertContentPlatformSchema>;
+export type ContentPlatform = typeof contentPlatforms.$inferSelect;
+
+// Users table
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   username: varchar('username', { length: 50 }).notNull(),
   password: varchar('password', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).unique(),
-  role: varchar('role', { length: 20 }).notNull().default('user'), // 'user', 'admin'
+  role: varchar('role', { length: 20 }).notNull().default('user'),
   firstName: varchar('first_name', { length: 100 }),
   lastName: varchar('last_name', { length: 100 }),
   profileImageUrl: varchar('profile_image_url', { length: 500 }),
@@ -103,21 +152,20 @@ export const insertUserSchema = createInsertSchema(users).omit({
   firstName: true,
   lastName: true,
 });
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Feedback system for user reports
+// Feedback table
 export const feedback = pgTable('feedback', {
   id: serial('id').primaryKey(),
-  type: varchar('type', { length: 50 }).notNull(), // 'technical', 'data_error', 'broken_link', 'content_request', 'other'
-  category: varchar('category', { length: 100 }), // More specific categorization
+  type: varchar('type', { length: 50 }).notNull(),
+  category: varchar('category', { length: 100 }),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
-  contentId: integer('content_id'), // Reference to content if applicable
-  userEmail: varchar('user_email', { length: 255 }), // Optional user contact
-  status: varchar('status', { length: 50 }).notNull().default('open'), // 'open', 'in_progress', 'resolved', 'closed'
-  priority: varchar('priority', { length: 20 }).notNull().default('medium'), // 'low', 'medium', 'high', 'critical'
+  contentId: integer('content_id'),
+  userEmail: varchar('user_email', { length: 255 }),
+  status: varchar('status', { length: 50 }).notNull().default('open'),
+  priority: varchar('priority', { length: 20 }).notNull().default('medium'),
   submittedAt: timestamp('submitted_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
   resolvedAt: timestamp('resolved_at'),
@@ -130,11 +178,10 @@ export const insertFeedbackSchema = createInsertSchema(feedback).omit({
   updatedAt: true,
   resolvedAt: true,
 });
-
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type Feedback = typeof feedback.$inferSelect;
 
-// Watchlist table for user-specific movie/series lists
+// Watchlist table
 export const watchlist = pgTable(
   'watchlist',
   {
@@ -145,12 +192,9 @@ export const watchlist = pgTable(
     contentId: integer('content_id')
       .notNull()
       .references(() => content.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
   },
-  (table) => [
-    // Unique constraint to prevent duplicate watchlist entries
-    index('IDX_user_content_unique').on(table.userId, table.contentId),
-  ]
+  (table) => [index('IDX_user_content_unique').on(table.userId, table.contentId)]
 );
 
 export const insertWatchlistSchema = createInsertSchema(watchlist).omit({
@@ -161,7 +205,7 @@ export const insertWatchlistSchema = createInsertSchema(watchlist).omit({
 export type InsertWatchlist = z.infer<typeof insertWatchlistSchema>;
 export type Watchlist = typeof watchlist.$inferSelect;
 
-// Platform images table for admin-managed streaming platform logos
+// Platform images
 export const platformImages = pgTable('platform_images', {
   id: serial('id').primaryKey(),
   platformKey: varchar('platform_key', { length: 50 }).notNull().unique(), // e.g., "netflix", "hulu"
@@ -181,12 +225,12 @@ export const insertPlatformImageSchema = createInsertSchema(platformImages).omit
 export type InsertPlatformImage = z.infer<typeof insertPlatformImageSchema>;
 export type PlatformImage = typeof platformImages.$inferSelect;
 
-// API Usage tracking table for monthly request limits
+// API Usage table
 export const apiUsage = pgTable(
   'api_usage',
   {
     id: serial('id').primaryKey(),
-    month: varchar('month', { length: 7 }).notNull().unique(), // Format: "YYYY-MM" (e.g., "2025-01")
+    month: varchar('month', { length: 7 }).notNull().unique(),
     watchmodeRequests: integer('watchmode_requests').notNull().default(0),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -199,20 +243,19 @@ export const insertApiUsageSchema = createInsertSchema(apiUsage).omit({
   createdAt: true,
   updatedAt: true,
 });
-
 export type InsertApiUsage = z.infer<typeof insertApiUsageSchema>;
 export type ApiUsage = typeof apiUsage.$inferSelect;
 
-// Subgenres table for managing horror subgenres
+// Subgenres table
 export const subgenres = pgTable(
   'subgenres',
   {
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 100 }).notNull().unique(),
-    slug: varchar('slug', { length: 100 }).notNull().unique(), // URL-friendly version
+    slug: varchar('slug', { length: 100 }).notNull().unique(),
     description: text('description'),
     isActive: boolean('is_active').default(true),
-    sortOrder: integer('sort_order').default(0), // For display ordering
+    sortOrder: integer('sort_order').default(0),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -227,6 +270,5 @@ export const insertSubgenreSchema = createInsertSchema(subgenres).omit({
   createdAt: true,
   updatedAt: true,
 });
-
 export type InsertSubgenre = z.infer<typeof insertSubgenreSchema>;
 export type Subgenre = typeof subgenres.$inferSelect;

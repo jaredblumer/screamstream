@@ -1,9 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieGrid from '@/components/movie-grid';
 import { useSearch } from '@/contexts/SearchContext';
-import { query } from 'express';
 
 export default function Search() {
   const { query: searchQuery } = useSearch();
@@ -12,25 +10,25 @@ export default function Search() {
     <div className="min-h-screen horror-bg">
       <Header autoFocusSearch />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8 animate-slide-up">
-          <h1 className="text-4xl font-bold text-white mb-4">
+      <div className="max-w-7xl mx-auto animate-slide-up mt-6">
+        <div className="px-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">
             {searchQuery.trim().length === 0
-              ? 'Search for Horror Titles'
+              ? 'Search for Streaming Horror Titles'
               : `Search Results for "${searchQuery}"`}
           </h1>
-
-          <MovieGrid
-            searchQuery={searchQuery}
-            selectedPlatform="all"
-            selectedYear="all"
-            selectedCriticsRating="all"
-            selectedUsersRating="all"
-            selectedType="all"
-            selectedSubgenre="all"
-            sortBy="rating"
-          />
         </div>
+
+        <MovieGrid
+          searchQuery={searchQuery}
+          selectedPlatform="all"
+          selectedYear="all"
+          selectedCriticsRating="all"
+          selectedUsersRating="all"
+          selectedType="all"
+          selectedSubgenre="all"
+          sortBy="rating"
+        />
       </div>
 
       <Footer />

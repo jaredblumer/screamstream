@@ -1,20 +1,17 @@
 import { InsertContent } from '@shared/schema';
-import { WatchmodeRelease, WatchmodeSource, WatchmodeTitle } from '@server/types/watchmode';
+import { WatchmodeRelease, WatchmodeTitle } from '@server/types/watchmode';
 import { getOptimalPosterUrl } from '@server/utils/watchmode-helpers';
-import { popularStreamingPlatforms } from '@server/constants/platforms';
+import { calculateAverageRating } from '@server/routes/utils/average-rating';
+import { tvdbAPI } from '@server/tvdb';
 
 /**
  * Convert a Watchmode release into InsertContent format
  * Requires title information already loaded or assumes release.title is a WatchmodeTitle
  */
 export async function convertWatchmodeReleaseToContent(
-  release: WatchmodeRelease,
-  platformSources: WatchmodeSource[] = []
+  release: WatchmodeRelease
 ): Promise<InsertContent> {
-  const content = await convertWatchmodeTitleToContent(
-    release as unknown as WatchmodeTitle,
-    platformSources
-  );
+  const content = await convertWatchmodeTitleToContent(release as unknown as WatchmodeTitle);
   content.sourceReleaseDate = release.source_release_date;
   return content;
 }
@@ -23,33 +20,14 @@ export async function convertWatchmodeReleaseToContent(
  * Convert Watchmode title to InsertContent
  */
 export async function convertWatchmodeTitleToContent(
-  title: WatchmodeTitle,
-  platformSources: WatchmodeSource[] = []
+  title: WatchmodeTitle
 ): Promise<InsertContent> {
   const type = title.type === 'tv_series' ? 'series' : 'movie';
-
-  const platforms: string[] = [];
-  const platformLinks: string[] = [];
-
-  if (title.sources?.length) {
-    title.sources.forEach((source) => {
-      const match = platformSources.find((p) => p.id === source.source_id);
-      if (match && !platforms.includes(match.name)) {
-        platforms.push(match.name);
-        platformLinks.push(source.web_url || '');
-      }
-    });
-  } else {
-    // Fallback to random platform name
-    const fallbackPlatforms = Object.keys(popularStreamingPlatforms);
-    platforms.push(fallbackPlatforms[Math.floor(Math.random() * fallbackPlatforms.length)]);
-  }
 
   // Optional: integrate TVDB poster lookup
   let tvdbPosterUrl = '';
   try {
     if (process.env.TVDB_API_KEY) {
-      const { tvdbAPI } = await import('@server/tvdb'); // adjust path as needed
       if (title.imdb_id) {
         const lookup =
           title.type === 'tv_series'
@@ -60,7 +38,6 @@ export async function convertWatchmodeTitleToContent(
         }
       }
 
-      // fallback to TVDB title search
       if (!tvdbPosterUrl) {
         const searchResults = await tvdbAPI.searchContent(title.title, type);
         const match = searchResults.find((result) => {
@@ -89,16 +66,14 @@ export async function convertWatchmodeTitleToContent(
   return {
     title: title.title,
     year: title.year,
-    rating: title.critic_score ? title.critic_score / 10 : title.user_rating || 6.0,
-    criticsRating: title.critic_score ? title.critic_score / 10 : 6.0,
-    usersRating: title.user_rating || 0,
+    averageRating: calculateAverageRating(title.critic_score, title.user_rating),
+    criticsRating: title.critic_score ? title.critic_score / 10 : null,
+    usersRating: title.user_rating || null,
     description: title.plot_overview || `A ${type} from ${title.year}`,
     posterUrl: finalPosterUrl,
-    platforms,
-    platformLinks,
     type,
-    seasons: type === 'series' ? null : null,
-    episodes: type === 'series' ? null : null,
+    seasons: null,
+    episodes: null,
     watchmodeId: title.id,
     imdbId: title.imdb_id,
     tmdbId: title.tmdb_id,
@@ -109,7 +84,8 @@ export async function convertWatchmodeTitleToContent(
     originalLanguage: title.original_language || null,
     runtimeMinutes: title.runtime_minutes || null,
     endYear: title.end_year || null,
-    sourceReleaseDate: null, // set by convertWatchmodeReleaseToContent
-    watchmodeData: title as any,
+    sourceReleaseDate: null,
+    watchmodeData: title,
+    genres: title.genres,
   };
 }

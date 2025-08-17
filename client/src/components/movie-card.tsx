@@ -1,12 +1,12 @@
 import { Star, Heart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getPlatformLogo, getPlatformName, formatSubgenre } from '@/lib/utils';
+import { getPlatformLogo, formatSubgenre } from '@/lib/utils';
 import { useWatchlist } from '@/hooks/use-watchlist';
-import type { Movie } from '@shared/schema';
+import type { ContentWithPlatforms } from '@shared/schema';
 import { useState } from 'react';
 
 interface MovieCardProps {
-  movie: Movie;
+  movie: ContentWithPlatforms;
   onClick: () => void;
   selectedSubgenre?: string;
   onWatchlistToggle?: () => void;
@@ -30,18 +30,14 @@ export default function MovieCard({
 
   // Helper function to determine which subgenre to display
   const getDisplaySubgenre = () => {
-    // If we're filtering by a specific subgenre and the movie has that subgenre, show it
     if (selectedSubgenre && selectedSubgenre !== 'all') {
       const matchingSubgenre = movie.subgenres?.find(
         (subgenre) => subgenre.toLowerCase() === selectedSubgenre.toLowerCase()
       );
-      console.log('Matching subgenre:', formatSubgenre(matchingSubgenre));
       if (matchingSubgenre) {
         return formatSubgenre(matchingSubgenre);
       }
     }
-    // Otherwise, show the primary subgenre
-    console.log('movie.subgenre:', formatSubgenre(movie.subgenre));
     return formatSubgenre(movie.subgenre);
   };
 
@@ -53,7 +49,6 @@ export default function MovieCard({
     }
   };
 
-  const isMovie = movie.type === 'movie';
   const isSeries = movie.type === 'series';
 
   return (
@@ -80,10 +75,12 @@ export default function MovieCard({
         </div>
         {/* Rating Badges */}
         <div className="absolute top-2 right-2 flex flex-col gap-1">
-          <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
-            <Star className="inline w-3 h-3 mr-1 horror-orange fill-current" />
-            {(movie.criticsRating || movie.rating).toFixed(1)}
-          </div>
+          {movie.criticsRating && (
+            <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
+              <Star className="inline w-3 h-3 mr-1 horror-orange fill-current" />
+              {movie.criticsRating.toFixed(1)}
+            </div>
+          )}
           {movie.usersRating && (
             <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
               <User className="inline w-3 h-3 mr-1 text-red-400" />
@@ -92,13 +89,12 @@ export default function MovieCard({
           )}
         </div>
         {/* Watchlist Button */}
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="sm"
-            variant={inWatchlist ? 'default' : 'outline'}
             onClick={handleWatchlistClick}
             className={`${
-              inWatchlist ? 'horror-button-primary' : 'horror-button-outline'
+              inWatchlist ? 'horror-button-primary' : 'horror-button-secondary'
             } backdrop-blur-sm`}
           >
             <Heart className={`h-4 w-4 ${inWatchlist ? 'fill-current' : ''}`} />
@@ -119,37 +115,37 @@ export default function MovieCard({
 
         {/* Streaming Platforms */}
         <div className="flex items-center gap-2">
-          {movie.platforms.map((platform, index) => {
-            const platformLink = movie.platformLinks?.[index];
-            const PlatformElement = (
+          {movie.platformsBadges?.map((badge) => {
+            const { platformId, platformName, imageUrl, webUrl } = badge;
+
+            const logo = (
               <img
-                src={getPlatformLogo(platform)}
-                alt={getPlatformName(platform)}
-                title={`Watch on ${getPlatformName(platform)}`}
+                src={imageUrl || getPlatformLogo(platformId)}
+                alt={platformName}
+                title={`Watch on ${platformName}`}
                 className="w-6 h-6 rounded platform-logo transition-transform hover:scale-110 cursor-pointer"
               />
             );
 
-            // If we have a direct link, make the platform logo clickable
-            if (platformLink && platformLink.trim()) {
-              return (
-                <a
-                  key={platform}
-                  href={platformLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block transition-opacity hover:opacity-80"
-                  title={`Watch "${movie.title}" on ${getPlatformName(platform)}`}
-                >
-                  {PlatformElement}
-                </a>
-              );
-            }
+            // Helper to stop card navigation when clicking a badge
+            const stop = (e: React.MouseEvent) => e.stopPropagation();
 
-            // Fallback to non-clickable logo if no link available
-            return (
-              <div key={platform} className="inline-block">
-                {PlatformElement}
+            return webUrl ? (
+              <a
+                key={platformId}
+                href={webUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-opacity hover:opacity-80"
+                title={`Watch "${movie.title}" on ${platformName}`}
+                onClick={stop}
+                onAuxClick={stop} // middle click
+              >
+                {logo}
+              </a>
+            ) : (
+              <div key={platformId} className="inline-block" onClick={stop} onAuxClick={stop}>
+                {logo}
               </div>
             );
           })}

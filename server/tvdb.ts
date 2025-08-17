@@ -1,5 +1,3 @@
-import { InsertContent } from '../shared/schema.js';
-
 interface TVDBAuth {
   apikey: string;
   pin?: string; // Only for user-supported keys
@@ -174,8 +172,6 @@ class TVDBAPI {
       // Token is valid for 1 month, set expiry to 29 days to be safe
       this.tokenExpiry = new Date();
       this.tokenExpiry.setDate(this.tokenExpiry.getDate() + 29);
-
-      console.log('TVDB authentication successful');
     } catch (error) {
       console.error('TVDB authentication error:', error);
       throw new Error(`TVDB authentication failed: ${error}`);
@@ -259,152 +255,13 @@ class TVDBAPI {
     return `${this.imageBaseUrl}${filename}`;
   }
 
-  getPosterUrl(filename: string, size: 'small' | 'medium' | 'large' = 'medium'): string {
+  getPosterUrl(filename: string): string {
     return this.getImageUrl(filename);
   }
 
   getRequestCount(): number {
     return this.requestCount;
   }
-}
-
-export function convertTVDBMovieToContent(movie: TVDBMovie): InsertContent {
-  // Map TVDB genres to our horror subgenres
-  const horrorGenreMap: Record<string, string> = {
-    Horror: 'supernatural',
-    Thriller: 'psychological',
-    Mystery: 'mystery',
-    'Science Fiction': 'sci-fi',
-    Drama: 'psychological',
-    Action: 'slasher',
-    Supernatural: 'supernatural',
-    Slasher: 'slasher',
-    Zombie: 'zombie',
-    Vampire: 'vampire',
-    Ghost: 'ghost',
-    Monster: 'monster',
-  };
-
-  const subgenres = movie.genres
-    .map((genre) => horrorGenreMap[genre.name] || genre.name.toLowerCase())
-    .filter((subgenre) =>
-      [
-        'slasher',
-        'psychological',
-        'supernatural',
-        'zombie',
-        'vampire',
-        'ghost',
-        'monster',
-        'thriller',
-        'mystery',
-        'sci-fi',
-      ].includes(subgenre)
-    );
-
-  const primarySubgenre = subgenres.length > 0 ? subgenres[0] : 'supernatural';
-
-  // Extract IMDB ID if available
-  const imdbRemoteId = movie.remoteIds?.find((id) => id.sourceName === 'IMDB')?.id;
-
-  return {
-    title: movie.name,
-    year: parseInt(movie.year) || new Date().getFullYear(),
-    rating: movie.score ? movie.score / 10 : 6.0, // Convert TVDB score to 1-10 scale
-    criticsRating: movie.score ? movie.score / 10 : 6.0,
-    usersRating: movie.score ? movie.score / 10 : 0,
-    description: movie.overview || `A movie from ${movie.year}`,
-    posterUrl: tvdbAPI.getPosterUrl(movie.image, 'medium'),
-    subgenre: primarySubgenre,
-    subgenres: subgenres.length > 0 ? subgenres : [primarySubgenre],
-    platforms: [], // TVDB doesn't provide streaming platform info
-    platformLinks: [],
-    type: 'movie' as const,
-    seasons: null,
-    episodes: null,
-    watchmodeId: null, // No longer using Watchmode
-    imdbId: imdbRemoteId || null,
-    tmdbId: null, // Could be extracted from remoteIds if needed
-    backdropPath: null, // Could use artworks for backdrop if needed
-    originalTitle: movie.name, // TVDB doesn't distinguish original vs translated titles clearly
-    releaseDate: movie.releases?.[0]?.date || null,
-    usRating: null, // TVDB doesn't provide content rating in this format
-    originalLanguage: movie.originalLanguage || null,
-    runtimeMinutes: movie.runtime || null,
-    endYear: null,
-    watchmodeData: null, // Store TVDB data instead
-  };
-}
-
-export function convertTVDBSeriesToContent(series: TVDBSeries): InsertContent {
-  // Map TVDB genres to our horror subgenres
-  const horrorGenreMap: Record<string, string> = {
-    Horror: 'supernatural',
-    Thriller: 'psychological',
-    Mystery: 'mystery',
-    'Science Fiction': 'sci-fi',
-    Drama: 'psychological',
-    Action: 'slasher',
-    Supernatural: 'supernatural',
-    Slasher: 'slasher',
-    Zombie: 'zombie',
-    Vampire: 'vampire',
-    Ghost: 'ghost',
-    Monster: 'monster',
-  };
-
-  const subgenres = series.genres
-    .map((genre) => horrorGenreMap[genre.name] || genre.name.toLowerCase())
-    .filter((subgenre) =>
-      [
-        'slasher',
-        'psychological',
-        'supernatural',
-        'zombie',
-        'vampire',
-        'ghost',
-        'monster',
-        'thriller',
-        'mystery',
-        'sci-fi',
-      ].includes(subgenre)
-    );
-
-  const primarySubgenre = subgenres.length > 0 ? subgenres[0] : 'supernatural';
-
-  // Extract IMDB ID if available
-  const imdbRemoteId = series.remoteIds?.find((id) => id.sourceName === 'IMDB')?.id;
-
-  // Calculate end year if series has ended
-  const endYear = series.lastAired ? new Date(series.lastAired).getFullYear() : null;
-
-  return {
-    title: series.name,
-    year: parseInt(series.year) || new Date().getFullYear(),
-    rating: series.score ? series.score / 10 : 6.0, // Convert TVDB score to 1-10 scale
-    criticsRating: series.score ? series.score / 10 : 6.0,
-    usersRating: series.score ? series.score / 10 : 0,
-    description: series.overview || `A series from ${series.year}`,
-    posterUrl: tvdbAPI.getPosterUrl(series.image, 'medium'),
-    subgenre: primarySubgenre,
-    subgenres: subgenres.length > 0 ? subgenres : [primarySubgenre],
-    platforms: [], // TVDB doesn't provide streaming platform info
-    platformLinks: [],
-    type: 'series' as const,
-    seasons: null, // Could be determined from episodes data if needed
-    episodes: null,
-    watchmodeId: null, // No longer using Watchmode
-    imdbId: imdbRemoteId || null,
-    tmdbId: null, // Could be extracted from remoteIds if needed
-    backdropPath: null, // Could use artworks for backdrop if needed
-    originalTitle: series.name, // TVDB doesn't distinguish original vs translated titles clearly
-    releaseDate: series.firstAired || null,
-    usRating: null, // TVDB doesn't provide content rating in this format
-    originalLanguage: series.originalLanguage || null,
-    runtimeMinutes: null, // Series don't have a single runtime
-    endYear: endYear,
-    watchmodeData: null, // Store TVDB data instead
-  };
 }
 
 export const tvdbAPI = new TVDBAPI();
