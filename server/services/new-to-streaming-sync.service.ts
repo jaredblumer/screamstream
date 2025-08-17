@@ -84,7 +84,6 @@ export class NewToStreamingSyncService {
           platformRows.push({
             platformId: platform.id,
             webUrl: src.web_url,
-            format: src.format,
             seasons: src.seasons,
             episodes: src.episodes,
           });
