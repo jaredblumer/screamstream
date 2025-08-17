@@ -1,6 +1,6 @@
 import { Star, Heart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getPlatformLogo, formatSubgenre } from '@/lib/utils';
+import { formatSubgenre } from '@/lib/utils';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import type { ContentWithPlatforms } from '@shared/schema';
 import { useState } from 'react';
@@ -120,7 +120,7 @@ export default function MovieCard({
 
             const logo = (
               <img
-                src={imageUrl || getPlatformLogo(platformId)}
+                src={imageUrl}
                 alt={platformName}
                 title={`Watch on ${platformName}`}
                 className="w-6 h-6 rounded platform-logo transition-transform hover:scale-110 cursor-pointer"
