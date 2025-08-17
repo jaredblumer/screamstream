@@ -7,9 +7,6 @@ import { promisify } from 'util';
 import { storage } from './storage';
 import { RegisterBody } from './validation/auth';
 import { validateBody } from './utils/validate';
-import { User as SelectUser } from '@shared/schema';
-import { sendEmail, generatePasswordResetEmail } from './email';
-import connectPg from 'connect-pg-simple';
 
 const scryptAsync = promisify(scrypt);
 
