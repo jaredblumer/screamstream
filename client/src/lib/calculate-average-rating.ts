@@ -2,7 +2,7 @@ export function calculateAverageRating(
   criticScore: number | null | undefined,
   userRating: number | null | undefined
 ): number | null {
-  const normalizedCritic = typeof criticScore === 'number' ? criticScore / 10 : null;
+  const normalizedCritic = typeof criticScore === 'number' ? criticScore : null;
   const normalizedUser = typeof userRating === 'number' ? userRating : null;
 
   const scores = [normalizedCritic, normalizedUser].filter(

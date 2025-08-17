@@ -14,6 +14,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, X, Database } from 'lucide-react';
 import type { Content, InsertContent, Subgenre } from '@shared/schema';
+import { calculateAverageRating } from '@/lib/calculate-average-rating';
 
 type Props = {
   open: boolean;
@@ -98,6 +99,7 @@ export function ContentFormDialog({
       subgenre:
         formData.primarySubgenre || (formData.subgenres.length > 0 ? formData.subgenres[0] : ''),
       active: formData.active,
+      averageRating: calculateAverageRating(formData.criticsRating, formData.usersRating),
     };
 
     if (editingContent) {

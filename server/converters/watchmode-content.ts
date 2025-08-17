@@ -1,7 +1,7 @@
 import { InsertContent } from '@shared/schema';
 import { WatchmodeRelease, WatchmodeTitle } from '@server/types/watchmode';
 import { getOptimalPosterUrl } from '@server/utils/watchmode-helpers';
-import { calculateAverageRating } from '@server/routes/utils/average-rating';
+import { calculateWatchmodeAverageRating } from '@server/routes/utils/watchmode-average-rating';
 import { tvdbAPI } from '@server/tvdb';
 
 /**
@@ -66,7 +66,7 @@ export async function convertWatchmodeTitleToContent(
   return {
     title: title.title,
     year: title.year,
-    averageRating: calculateAverageRating(title.critic_score, title.user_rating),
+    averageRating: calculateWatchmodeAverageRating(title.critic_score, title.user_rating),
     criticsRating: title.critic_score ? title.critic_score / 10 : null,
     usersRating: title.user_rating || null,
     description: title.plot_overview || `A ${type} from ${title.year}`,
