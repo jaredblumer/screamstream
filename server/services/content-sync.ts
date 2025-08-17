@@ -173,7 +173,6 @@ class ContentSyncService {
             contentPlatforms.push({
               platformId: platform.id,
               webUrl: source.web_url,
-              format: source.format,
               seasons: source.seasons,
               episodes: source.episodes,
             });

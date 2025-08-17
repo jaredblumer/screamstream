@@ -14,7 +14,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, X, Database } from 'lucide-react';
 import type { Content, InsertContent, Subgenre } from '@shared/schema';
-import { useToast } from '@/hooks/use-toast';
 
 type Props = {
   open: boolean;
@@ -30,32 +29,30 @@ type Props = {
 type ContentFormData = {
   title: string;
   year: number;
-  rating: number;
-  criticsRating: number;
-  usersRating: number;
+  criticsRating: number | null;
+  usersRating: number | null;
   description: string;
   posterUrl: string;
   subgenres: string[];
   primarySubgenre?: string;
-  platforms: string[];
-  platformLinks: string[];
   type: 'movie' | 'series';
+  episodes?: number | null;
+  seasons?: number | null;
   active: boolean;
 };
 
 const initialFormData: ContentFormData = {
   title: '',
   year: new Date().getFullYear(),
-  rating: 0,
-  criticsRating: 0,
-  usersRating: 0,
+  criticsRating: null,
+  usersRating: null,
   description: '',
   posterUrl: '',
   subgenres: [],
   primarySubgenre: '',
-  platforms: [],
-  platformLinks: [],
   type: 'movie',
+  episodes: null,
+  seasons: null,
   active: false,
 };
 
@@ -69,7 +66,6 @@ export function ContentFormDialog({
   onCreate,
   onUpdate,
 }: Props) {
-  const { toast } = useToast();
   const [formData, setFormData] = useState<ContentFormData>(initialFormData);
 
   // map available subgenre slugs (used in checkboxes/select)
@@ -77,23 +73,17 @@ export function ContentFormDialog({
 
   useEffect(() => {
     if (editingContent) {
-      const platforms = editingContent.platforms || [];
-      const platformLinks = editingContent.platformLinks || [];
-      const normalizedLinks = [...platformLinks];
-      while (normalizedLinks.length < platforms.length) normalizedLinks.push('');
-
       setFormData({
         title: editingContent.title,
         year: editingContent.year,
-        rating: editingContent.rating,
-        criticsRating: editingContent.criticsRating ?? editingContent.rating,
-        usersRating: editingContent.usersRating ?? 0,
+        seasons: editingContent.seasons || null,
+        episodes: editingContent.episodes || null,
+        criticsRating: editingContent.criticsRating || null,
+        usersRating: editingContent.usersRating || null,
         description: editingContent.description,
         posterUrl: editingContent.posterUrl,
         subgenres: editingContent.subgenres || [],
         primarySubgenre: editingContent.subgenre || '',
-        platforms,
-        platformLinks: normalizedLinks,
         type: editingContent.type,
         active: Boolean(editingContent.active),
       });
@@ -163,6 +153,37 @@ export function ContentFormDialog({
               </Select>
             </div>
           </div>
+
+          {formData.type === 'series' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="seasons" className="text-white">
+                  Seasons
+                </Label>
+                <Input
+                  id="seasons"
+                  value={formData.seasons}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, seasons: parseInt(e.target.value) || null }))
+                  }
+                  className="horror-bg border-gray-700 text-white"
+                />
+              </div>
+              <div>
+                <Label htmlFor="episodes" className="text-white">
+                  Episodes
+                </Label>
+                <Input
+                  id="episodes"
+                  value={formData.episodes}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, episodes: parseInt(e.target.value) || null }))
+                  }
+                  className="horror-bg border-gray-700 text-white"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-4">
             <div>

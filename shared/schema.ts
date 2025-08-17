@@ -109,7 +109,6 @@ export const contentPlatforms = pgTable(
       .notNull()
       .references(() => platforms.id, { onDelete: 'cascade' }),
     webUrl: varchar('web_url', { length: 500 }),
-    format: varchar('format', { length: 20 }),
     seasons: integer('seasons'),
     episodes: integer('episodes'),
     createdAt: timestamp('created_at').defaultNow(),
