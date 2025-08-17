@@ -204,26 +204,6 @@ export const insertWatchlistSchema = createInsertSchema(watchlist).omit({
 export type InsertWatchlist = z.infer<typeof insertWatchlistSchema>;
 export type Watchlist = typeof watchlist.$inferSelect;
 
-// Platform images
-export const platformImages = pgTable('platform_images', {
-  id: serial('id').primaryKey(),
-  platformKey: varchar('platform_key', { length: 50 }).notNull().unique(), // e.g., "netflix", "hulu"
-  platformName: varchar('platform_name', { length: 100 }).notNull(), // e.g., "Netflix", "Hulu"
-  imageUrl: varchar('image_url', { length: 500 }).notNull(),
-  isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const insertPlatformImageSchema = createInsertSchema(platformImages).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertPlatformImage = z.infer<typeof insertPlatformImageSchema>;
-export type PlatformImage = typeof platformImages.$inferSelect;
-
 // API Usage table
 export const apiUsage = pgTable(
   'api_usage',
