@@ -12,7 +12,7 @@ export default function Search() {
 
       <div className="max-w-7xl mx-auto animate-slide-up mt-6">
         <div className="px-6">
-          <h1 className="text-4xl font-bold text-white">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">
             {searchQuery.trim().length === 0
               ? 'Search for Streaming Horror Titles'
               : `Search Results for "${searchQuery}"`}

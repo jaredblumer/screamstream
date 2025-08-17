@@ -67,7 +67,7 @@ export default function AuthPage() {
     <div className="min-h-screen horror-bg flex flex-col">
       <Header />
 
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Hero */}
           <div className="hidden lg:block">
