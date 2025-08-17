@@ -46,7 +46,6 @@ export function registerPasswordRoutes(app: Express) {
         to: email,
         subject: 'Password Reset - Scream Stream',
         text: emailContent.text,
-        html: emailContent.html,
       });
 
       if (emailSent) {
