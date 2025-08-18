@@ -14,7 +14,12 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, X, Database } from 'lucide-react';
 import type { Content, InsertContent, Subgenre } from '@shared/schema';
-import { calculateAverageRating } from '@/lib/calculate-average-rating';
+import {
+  normalizeRating,
+  intOrNull,
+  ensurePrimary,
+  calculateAverageRating,
+} from '@/lib/content-form-utils';
 
 type Props = {
   open: boolean;
@@ -84,7 +89,7 @@ export function ContentFormDialog({
         description: editingContent.description,
         posterUrl: editingContent.posterUrl,
         subgenres: editingContent.subgenres || [],
-        primarySubgenre: editingContent.subgenre || '',
+        primarySubgenre: editingContent.primarySubgenre || '',
         type: editingContent.type,
         active: Boolean(editingContent.active),
       });
@@ -94,12 +99,29 @@ export function ContentFormDialog({
   }, [editingContent, open]);
 
   const handleSubmit = () => {
+    // sanitize/normalize fields at the moment of truth
+    const critics = normalizeRating(formData.criticsRating);
+    const users = normalizeRating(formData.usersRating);
+
+    const seasons = formData.type === 'series' ? intOrNull(formData.seasons) : null;
+    const episodes = formData.type === 'series' ? intOrNull(formData.episodes) : null;
+
+    const primarySubgenre = ensurePrimary(formData.subgenres, formData.primarySubgenre);
+
     const payload: InsertContent = {
       ...formData,
-      subgenre:
-        formData.primarySubgenre || (formData.subgenres.length > 0 ? formData.subgenres[0] : ''),
-      active: formData.active,
-      averageRating: calculateAverageRating(formData.criticsRating, formData.usersRating),
+      // enforced fields
+      criticsRating: critics,
+      usersRating: users,
+      seasons,
+      episodes,
+      primarySubgenre: primarySubgenre,
+      averageRating: calculateAverageRating(critics, users),
+      // optional: trim strings
+      title: formData.title.trim(),
+      posterUrl: formData.posterUrl.trim(),
+      description: formData.description.trim(),
+      active: !!formData.active,
     };
 
     if (editingContent) {
