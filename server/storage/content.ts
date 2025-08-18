@@ -120,12 +120,16 @@ export async function getContent(filters?: {
 
   // Search
   if (filters?.search) {
-    const searchTerm = `%${filters.search.toLowerCase()}%`;
+    const q = `%${filters.search}%`;
     conditions.push(
       or(
-        ilike(content.title, searchTerm),
-        ilike(content.description, searchTerm),
-        ilike(content.subgenre, searchTerm)
+        ilike(content.title, q),
+        ilike(content.description, q),
+        sql`exists (
+        select 1
+        from jsonb_array_elements_text(${content.subgenres}) as sg
+        where sg ilike ${q}
+      )`
       )
     );
   }
@@ -134,7 +138,7 @@ export async function getContent(filters?: {
   if (filters?.subgenre && filters.subgenre !== 'all') {
     conditions.push(
       or(
-        ilike(content.subgenre, `%${filters.subgenre}%`),
+        ilike(content.primarySubgenre, `%${filters.subgenre}%`),
         sql`${content.subgenres} @> ${JSON.stringify([filters.subgenre])}`
       )
     );

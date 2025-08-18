@@ -38,7 +38,7 @@ export default function MovieCard({
         return formatSubgenre(matchingSubgenre);
       }
     }
-    return formatSubgenre(movie.subgenre);
+    return formatSubgenre(movie.primarySubgenre);
   };
 
   const handleWatchlistClick = async (e: React.MouseEvent) => {

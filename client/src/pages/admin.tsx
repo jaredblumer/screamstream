@@ -223,7 +223,6 @@ export default function Admin() {
       return (
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
-        item.subgenre?.toLowerCase().includes(q) ||
         (item.subgenres && item.subgenres.some((sg) => sg.toLowerCase().includes(q))) ||
         item.year.toString().includes(q)
       );
