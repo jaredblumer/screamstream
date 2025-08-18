@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { formatSubgenre } from '@/lib/utils';
-import FeedbackButton from '@/components/feedback-button';
 import { useSearch } from '@/contexts/SearchContext';
 import type { ContentWithPlatforms } from '@shared/schema';
 
@@ -258,14 +257,6 @@ export default function MovieDetail() {
                 <Share className="h-4 w-4 mr-2" />
                 Share
               </Button>
-
-              <FeedbackButton
-                contentId={movieId}
-                initialType="data_error"
-                initialTitle={`Issue with "${movie.title}"`}
-                variant="outline"
-                className="w-full horror-button-outline"
-              />
             </div>
           </div>
 
@@ -427,13 +418,6 @@ export default function MovieDetail() {
                     <Share className="h-4 w-4 mr-2" />
                     Share Movie
                   </Button>
-                  <FeedbackButton
-                    contentId={movieId}
-                    initialType="data_error"
-                    initialTitle={`Issue with "${movie.title}"`}
-                    variant="outline"
-                    className="horror-button-outline"
-                  />
                 </div>
               </div>
             </div>

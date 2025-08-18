@@ -52,13 +52,12 @@ export default function Footer() {
             <h4 className="text-lg font-semibold text-white mb-4">Support</h4>
             <ul className="space-y-2">
               <li>
-                <FeedbackButton
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white transition-colors p-0 h-auto font-normal"
+                <a
+                  href="/report-issue"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   Report Issue
-                </FeedbackButton>
+                </a>
               </li>
             </ul>
           </div>
