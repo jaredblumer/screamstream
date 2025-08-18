@@ -23,7 +23,7 @@ export const content = pgTable('content', {
   usersRating: real('users_rating'),
   description: text('description').notNull(),
   posterUrl: text('poster_url').notNull(),
-  subgenre: text('subgenre'),
+  primarySubgenre: text('primary_subgenre'),
   subgenres: jsonb('subgenres').$type<string[]>().default([]),
   genres: jsonb('genres').$type<number[]>().default([]),
   type: text('type', { enum: ['movie', 'series'] })
