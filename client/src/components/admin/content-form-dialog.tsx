@@ -99,7 +99,6 @@ export function ContentFormDialog({
   }, [editingContent, open]);
 
   const handleSubmit = () => {
-    // sanitize/normalize fields at the moment of truth
     const critics = normalizeRating(formData.criticsRating);
     const users = normalizeRating(formData.usersRating);
 
@@ -110,14 +109,12 @@ export function ContentFormDialog({
 
     const payload: InsertContent = {
       ...formData,
-      // enforced fields
       criticsRating: critics,
       usersRating: users,
       seasons,
       episodes,
       primarySubgenre: primarySubgenre,
       averageRating: calculateAverageRating(critics, users),
-      // optional: trim strings
       title: formData.title.trim(),
       posterUrl: formData.posterUrl.trim(),
       description: formData.description.trim(),
