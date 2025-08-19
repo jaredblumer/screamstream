@@ -99,19 +99,16 @@ export function setupAuth(app: Express) {
         recaptchaToken?: string;
       };
 
-      // reCAPTCHA (your existing logic)
-      if (process.env.RECAPTCHA_SECRET_KEY && process.env.NODE_ENV !== 'development') {
-        if (!recaptchaToken) {
-          return res.status(400).json({
-            message: 'reCAPTCHA verification is required. Please complete the challenge.',
-          });
-        }
-        const recaptchaValid = await verifyRecaptcha(recaptchaToken);
-        if (!recaptchaValid) {
-          return res
-            .status(400)
-            .json({ message: 'reCAPTCHA verification failed. Please try again.' });
-        }
+      if (!recaptchaToken) {
+        return res.status(400).json({
+          message: 'reCAPTCHA verification is required. Please complete the challenge.',
+        });
+      }
+      const recaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!recaptchaValid) {
+        return res
+          .status(400)
+          .json({ message: 'reCAPTCHA verification failed. Please try again.' });
       }
 
       // Uniqueness checks (your existing logic)
@@ -139,24 +136,16 @@ export function setupAuth(app: Express) {
     try {
       const { recaptchaToken } = req.body;
 
-      // Verify reCAPTCHA if key is configured and not in development (required when configured)
-      if (process.env.RECAPTCHA_SECRET_KEY && process.env.NODE_ENV !== 'development') {
-        console.log('reCAPTCHA check: SECRET_KEY is configured, checking token...');
-        if (!recaptchaToken) {
-          console.log('reCAPTCHA check: NO TOKEN PROVIDED');
-          return res.status(400).json({
-            message: 'reCAPTCHA verification is required. Please complete the challenge.',
-          });
-        }
-        console.log('reCAPTCHA check: Token provided, verifying...');
-        const recaptchaValid = await verifyRecaptcha(recaptchaToken);
-        if (!recaptchaValid) {
-          console.log('reCAPTCHA check: VERIFICATION FAILED');
-          return res
-            .status(400)
-            .json({ message: 'reCAPTCHA verification failed. Please try again.' });
-        }
-        console.log('reCAPTCHA check: VERIFICATION SUCCESSFUL');
+      if (!recaptchaToken) {
+        return res.status(400).json({
+          message: 'reCAPTCHA verification is required. Please complete the challenge.',
+        });
+      }
+      const recaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!recaptchaValid) {
+        return res
+          .status(400)
+          .json({ message: 'reCAPTCHA verification failed. Please try again.' });
       }
 
       // Proceed with passport authentication

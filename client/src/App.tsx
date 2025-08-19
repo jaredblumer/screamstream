@@ -18,6 +18,7 @@ import MovieDetail from '@/pages/movie-detail';
 import Admin from '@/pages/admin';
 import AuthPage from '@/pages/auth-page';
 import NotFound from '@/pages/not-found';
+import ReportIssue from './pages/report-issue';
 
 function Router() {
   const [location] = useLocation();
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/search" component={Search} />
       <Route path="/title/:id" component={MovieDetail} />
       <Route path="/watchlist" component={Watchlist} />
+      <Route path="/report-issue" component={ReportIssue} />
       <ProtectedRoute path="/admin" component={Admin} requiredRole="admin" />
       <Route component={NotFound} />
     </Switch>

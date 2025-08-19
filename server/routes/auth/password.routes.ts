@@ -13,18 +13,16 @@ export function registerPasswordRoutes(app: Express) {
       const { email, recaptchaToken } = req.body;
       if (!email) return res.status(400).json({ message: 'Email is required' });
 
-      if (process.env.RECAPTCHA_SECRET_KEY && process.env.NODE_ENV !== 'development') {
-        if (!recaptchaToken) {
-          return res.status(400).json({
-            message: 'reCAPTCHA verification is required. Please complete the challenge.',
-          });
-        }
-        const recaptchaValid = await verifyRecaptcha(recaptchaToken);
-        if (!recaptchaValid) {
-          return res
-            .status(400)
-            .json({ message: 'reCAPTCHA verification failed. Please try again.' });
-        }
+      if (!recaptchaToken) {
+        return res.status(400).json({
+          message: 'reCAPTCHA verification is required. Please complete the challenge.',
+        });
+      }
+      const recaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!recaptchaValid) {
+        return res
+          .status(400)
+          .json({ message: 'reCAPTCHA verification failed. Please try again.' });
       }
 
       const user = await storage.getUserByEmail(email);
