@@ -1,8 +1,10 @@
-import { Button } from '@/components/ui/button';
+import { useState, useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Bug, AlertTriangle, Link, Plus, MessageSquare } from 'lucide-react';
+
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -13,13 +15,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Bug, AlertTriangle, Link, Plus, MessageSquare } from 'lucide-react';
+import { useConfig } from '@/hooks/use-config';
 import { apiRequest } from '@/lib/queryClient';
+import RecaptchaField from '@/components/auth/RecaptchaField';
+import ReCAPTCHA from 'react-google-recaptcha';
+
 import type { InsertIssue } from '@shared/schema';
+
+type InsertIssueWithCaptcha = InsertIssue & { recaptchaToken: string };
 
 export default function ReportIssue() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { config } = useConfig(); // expects { recaptchaSiteKey?: string }
+
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const [formData, setFormData] = useState({
     type: '',
@@ -28,10 +38,12 @@ export default function ReportIssue() {
     description: '',
     userEmail: '',
     priority: 'medium',
+    recaptchaToken: '',
   });
 
   const submitIssue = useMutation({
-    mutationFn: async (data: InsertIssue) => {
+    mutationFn: async (data: InsertIssueWithCaptcha) => {
+      // Your apiRequest signature is (method, url, body)
       return await apiRequest('POST', '/api/report-issue', data);
     },
     onSuccess: () => {
@@ -39,6 +51,7 @@ export default function ReportIssue() {
         title: 'Issue submitted',
         description: "Thank you for your report. We'll review it and take appropriate action.",
       });
+      recaptchaRef.current?.reset();
       resetForm();
       queryClient.invalidateQueries({ queryKey: ['/api/report-issues'] });
     },
@@ -49,6 +62,8 @@ export default function ReportIssue() {
         description: 'Unable to submit issue. Please try again.',
         variant: 'destructive',
       });
+      recaptchaRef.current?.reset();
+      setFormData((p) => ({ ...p, recaptchaToken: '' }));
     },
   });
 
@@ -60,12 +75,12 @@ export default function ReportIssue() {
       description: '',
       userEmail: '',
       priority: 'medium',
+      recaptchaToken: '',
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[report-issue] submit clicked', formData);
     if (!formData.type || !formData.title || !formData.description) {
       toast({
         title: 'Missing information',
@@ -74,7 +89,25 @@ export default function ReportIssue() {
       });
       return;
     }
-    submitIssue.mutate(formData);
+    if (!formData.recaptchaToken) {
+      toast({
+        title: 'Verification required',
+        description: 'Please complete the reCAPTCHA.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    // Send only what the server needs (token + issue data)
+    const payload: InsertIssueWithCaptcha = {
+      type: formData.type,
+      category: formData.category || undefined,
+      title: formData.title,
+      description: formData.description,
+      userEmail: formData.userEmail || undefined,
+      priority: formData.priority as InsertIssue['priority'],
+      recaptchaToken: formData.recaptchaToken,
+    };
+    submitIssue.mutate(payload);
   };
 
   const issueTypes = [
@@ -163,7 +196,7 @@ export default function ReportIssue() {
                         setFormData((prev) => ({
                           ...prev,
                           type: type.value,
-                          category: '', // Reset category when type changes
+                          category: '',
                         }))
                       }
                       className={`p-4 rounded-lg border text-left transition-colors ${
@@ -265,11 +298,20 @@ export default function ReportIssue() {
               </p>
             </div>
 
+            {/* reCAPTCHA */}
+            <div className="space-y-2">
+              <RecaptchaField
+                siteKey={config?.recaptchaSiteKey}
+                recaptchaRef={recaptchaRef}
+                onToken={(t) => setFormData((prev) => ({ ...prev, recaptchaToken: t || '' }))}
+              />
+            </div>
+
             {/* Submit Button */}
             <div className="flex gap-3 pb-6">
               <Button
                 type="submit"
-                disabled={submitIssue.isPending}
+                disabled={submitIssue.isPending || !formData.recaptchaToken}
                 className="bg-red-900 hover:bg-red-800 flex-1"
               >
                 {submitIssue.isPending ? 'Submitting...' : 'Submit Report'}
