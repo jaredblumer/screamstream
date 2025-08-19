@@ -1,5 +1,4 @@
 import { Skull } from 'lucide-react';
-import FeedbackButton from './feedback-button';
 
 export default function Footer() {
   return (

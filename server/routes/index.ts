@@ -6,7 +6,7 @@ import { registerConfigRoutes } from './public/config.routes';
 import { registerContentRoutes } from './public/content.routes';
 import { registerNewToStreamingRoutes } from './public/newToStreaming.routes';
 import { registerWatchlistRoutes } from './public/watchlist.routes';
-import { registerFeedbackRoutes } from './public/feedback.routes';
+import { registerReportIssueRoute } from './public/reportIssue';
 import { registerPublicSubgenreRoutes } from './public/subgenres.routes';
 import { registerPlatformRoutes } from './public/platforms.routes';
 
@@ -24,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerContentRoutes(app);
   registerNewToStreamingRoutes(app);
   registerWatchlistRoutes(app);
-  registerFeedbackRoutes(app);
+  registerReportIssueRoute(app);
   registerPublicSubgenreRoutes(app);
   registerPasswordRoutes(app);
   registerPlatformRoutes(app);

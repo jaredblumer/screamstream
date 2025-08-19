@@ -154,8 +154,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Feedback table
-export const feedback = pgTable('feedback', {
+// Issues table
+export const issues = pgTable('issues', {
   id: serial('id').primaryKey(),
   type: varchar('type', { length: 50 }).notNull(),
   category: varchar('category', { length: 100 }),
@@ -171,14 +171,14 @@ export const feedback = pgTable('feedback', {
   adminNotes: text('admin_notes'),
 });
 
-export const insertFeedbackSchema = createInsertSchema(feedback).omit({
+export const insertIssueSchema = createInsertSchema(issues).omit({
   id: true,
   submittedAt: true,
   updatedAt: true,
   resolvedAt: true,
 });
-export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
-export type Feedback = typeof feedback.$inferSelect;
+export type InsertIssue = z.infer<typeof insertIssueSchema>;
+export type Issue = typeof issues.$inferSelect;
 
 // Watchlist table
 export const watchlist = pgTable(

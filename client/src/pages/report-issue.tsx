@@ -15,7 +15,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Bug, AlertTriangle, Link, Plus, MessageSquare } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import type { InsertFeedback } from '@shared/schema';
+import type { InsertIssue } from '@shared/schema';
 
 export default function ReportIssue() {
   const { toast } = useToast();
@@ -30,26 +30,23 @@ export default function ReportIssue() {
     priority: 'medium',
   });
 
-  const submitFeedback = useMutation({
-    mutationFn: async (data: InsertFeedback) => {
-      return await apiRequest('/api/feedback', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+  const submitIssue = useMutation({
+    mutationFn: async (data: InsertIssue) => {
+      return await apiRequest('POST', '/api/report-issue', data);
     },
     onSuccess: () => {
       toast({
-        title: 'Feedback submitted',
+        title: 'Issue submitted',
         description: "Thank you for your report. We'll review it and take appropriate action.",
       });
-      onClose();
       resetForm();
-      queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/report-issues'] });
     },
     onError: (error) => {
+      console.error('[report-issue] submit error:', error);
       toast({
         title: 'Submission failed',
-        description: 'Unable to submit feedback. Please try again.',
+        description: 'Unable to submit issue. Please try again.',
         variant: 'destructive',
       });
     },
@@ -68,6 +65,7 @@ export default function ReportIssue() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[report-issue] submit clicked', formData);
     if (!formData.type || !formData.title || !formData.description) {
       toast({
         title: 'Missing information',
@@ -76,10 +74,10 @@ export default function ReportIssue() {
       });
       return;
     }
-    submitFeedback.mutate(formData);
+    submitIssue.mutate(formData);
   };
 
-  const feedbackTypes = [
+  const issueTypes = [
     {
       value: 'technical',
       label: 'Technical Issue',
@@ -155,7 +153,7 @@ export default function ReportIssue() {
             <div className="space-y-3">
               <label className="text-sm font-medium text-white">Issue Type *</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {feedbackTypes.map((type) => {
+                {issueTypes.map((type) => {
                   const Icon = type.icon;
                   return (
                     <button
@@ -271,10 +269,10 @@ export default function ReportIssue() {
             <div className="flex gap-3 pb-6">
               <Button
                 type="submit"
-                disabled={submitFeedback.isPending}
+                disabled={submitIssue.isPending}
                 className="bg-red-900 hover:bg-red-800 flex-1"
               >
-                {submitFeedback.isPending ? 'Submitting...' : 'Submit Report'}
+                {submitIssue.isPending ? 'Submitting...' : 'Submit Report'}
               </Button>
             </div>
           </form>
