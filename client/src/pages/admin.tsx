@@ -12,6 +12,7 @@ import type { Content, InsertContent, Subgenre } from '@shared/schema';
 import WatchmodeSync from '@/components/watchmode-sync';
 import { SubgenresManagement } from '@/components/subgenres-management';
 import { ContentFormDialog } from '@/components/admin/content-form-dialog';
+import ContentPlatformsDialog from '@/components/admin/content-platforms-dialog';
 import { ContentTable } from '@/components/admin/content-table';
 
 export default function Admin() {
@@ -24,6 +25,16 @@ export default function Admin() {
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContentId, setDialogContentId] = useState<number>(0);
+  const [dialogContentTitle, setDialogContentTitle] = useState<string | undefined>(undefined);
+
+  const onEditPlatforms = (item: Content) => {
+    setDialogContentId(item.id);
+    setDialogContentTitle(item.title);
+    setDialogOpen(true);
+  };
 
   // Fetch subgenres (for the ContentFormDialog)
   const { data: subgenres = [], isLoading: subgenresLoading } = useQuery<Subgenre[]>({
@@ -277,6 +288,13 @@ export default function Admin() {
           isSaving={createMutation.isPending || updateMutation.isPending}
         />
 
+        <ContentPlatformsDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          contentId={dialogContentId}
+          contentTitle={dialogContentTitle}
+        />
+
         <Tabs
           defaultValue="all"
           value={activeTab}
@@ -375,6 +393,7 @@ export default function Admin() {
               onHide={(id) => hideContentMutation.mutate(id)}
               onShow={(id) => showContentMutation.mutate(id)}
               onToggleActive={setActive}
+              onEditPlatforms={onEditPlatforms}
               isDeleting={deleteMutation.isPending}
               isHiding={hideContentMutation.isPending}
               isShowing={showContentMutation.isPending}
@@ -394,6 +413,7 @@ export default function Admin() {
               onHide={(id) => hideContentMutation.mutate(id)}
               onShow={(id) => showContentMutation.mutate(id)}
               onToggleActive={setActive}
+              onEditPlatforms={onEditPlatforms}
               isDeleting={deleteMutation.isPending}
               isHiding={hideContentMutation.isPending}
               isShowing={showContentMutation.isPending}
@@ -413,6 +433,7 @@ export default function Admin() {
               onHide={(id) => hideContentMutation.mutate(id)}
               onShow={(id) => showContentMutation.mutate(id)}
               onToggleActive={setActive}
+              onEditPlatforms={onEditPlatforms}
               isDeleting={deleteMutation.isPending}
               isHiding={hideContentMutation.isPending}
               isShowing={showContentMutation.isPending}
@@ -437,6 +458,7 @@ export default function Admin() {
                   onHide={(id) => hideContentMutation.mutate(id)}
                   onShow={(id) => showContentMutation.mutate(id)}
                   onToggleActive={setActive}
+                  onEditPlatforms={onEditPlatforms}
                   isDeleting={deleteMutation.isPending}
                   isHiding={hideContentMutation.isPending}
                   isShowing={showContentMutation.isPending}
@@ -463,6 +485,7 @@ export default function Admin() {
                   onHide={(id) => hideContentMutation.mutate(id)}
                   onShow={(id) => showContentMutation.mutate(id)}
                   onToggleActive={setActive}
+                  onEditPlatforms={onEditPlatforms}
                   isDeleting={deleteMutation.isPending}
                   isHiding={hideContentMutation.isPending}
                   isShowing={showContentMutation.isPending}

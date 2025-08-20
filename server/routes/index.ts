@@ -16,6 +16,7 @@ import { registerAdminContentRoutes } from './admin/content.routes';
 import { registerAdminSyncRoutes } from './admin/sync.routes';
 import { registerWatchmodeRoutes } from './admin/watchmode.routes';
 import { registerAdminSubgenreRoutes } from './admin/subgenres.routes';
+import { registerAdminContentPlatformRoutes } from './admin/content-platform.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -33,6 +34,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAdminSyncRoutes(app);
   registerWatchmodeRoutes(app);
   registerAdminSubgenreRoutes(app);
+  registerAdminContentPlatformRoutes(app);
 
   return createServer(app);
 }
