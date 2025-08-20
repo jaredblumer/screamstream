@@ -1,35 +1,11 @@
-// server/routes/public/platforms.routes.ts
 import type { Express, Request, Response } from 'express';
-import { Router } from 'express';
 import { db } from '@server/db';
 import { platforms } from '@shared/schema';
-import { and, asc, eq, ilike, or } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 export function registerPlatformRoutes(app: Express) {
-  const router = Router();
-
-  /**
-   * GET /api/platforms
-   * Query params:
-   *  - includeInactive=true | false (default false -> only active)
-   *  - q=searchTerm (matches platformName or platformKey, case-insensitive)
-   */
-  router.get('/platforms', async (req: Request, res: Response) => {
+  app.get('/platforms', async (req: Request, res: Response) => {
     try {
-      const includeInactive = String(req.query.includeInactive ?? '').toLowerCase() === 'true';
-      const q = (req.query.q as string | undefined)?.trim();
-
-      const where = [];
-
-      if (!includeInactive) {
-        where.push(eq(platforms.isActive, true));
-      }
-
-      if (q && q.length > 0) {
-        const term = `%${q.toLowerCase()}%`;
-        where.push(or(ilike(platforms.platformName, term), ilike(platforms.platformKey, term)));
-      }
-
       const rows = await db
         .select({
           id: platforms.id,
@@ -37,10 +13,8 @@ export function registerPlatformRoutes(app: Express) {
           platformName: platforms.platformName,
           watchmodeId: platforms.watchmodeId,
           imageUrl: platforms.imageUrl,
-          isActive: platforms.isActive,
         })
         .from(platforms)
-        .where(where.length ? and(...where) : undefined)
         .orderBy(asc(platforms.platformName));
 
       res.json(rows);
@@ -50,10 +24,7 @@ export function registerPlatformRoutes(app: Express) {
     }
   });
 
-  /**
-   * GET /api/platforms/:id
-   */
-  router.get('/platforms/:id', async (req: Request, res: Response) => {
+  app.get('/platforms/:id', async (req: Request, res: Response) => {
     try {
       const id = Number(req.params.id);
       if (Number.isNaN(id)) {
@@ -67,7 +38,6 @@ export function registerPlatformRoutes(app: Express) {
           platformName: platforms.platformName,
           watchmodeId: platforms.watchmodeId,
           imageUrl: platforms.imageUrl,
-          isActive: platforms.isActive,
         })
         .from(platforms)
         .where(eq(platforms.id, id))
@@ -81,10 +51,7 @@ export function registerPlatformRoutes(app: Express) {
     }
   });
 
-  /**
-   * GET /api/platforms/by-key/:platformKey
-   */
-  router.get('/platforms/by-key/:platformKey', async (req: Request, res: Response) => {
+  app.get('/platforms/by-key/:platformKey', async (req: Request, res: Response) => {
     try {
       const key = req.params.platformKey;
       if (!key) return res.status(400).json({ message: 'platformKey is required' });
@@ -96,7 +63,6 @@ export function registerPlatformRoutes(app: Express) {
           platformName: platforms.platformName,
           watchmodeId: platforms.watchmodeId,
           imageUrl: platforms.imageUrl,
-          isActive: platforms.isActive,
         })
         .from(platforms)
         .where(eq(platforms.platformKey, key))
@@ -109,7 +75,4 @@ export function registerPlatformRoutes(app: Express) {
       res.status(500).json({ message: 'Failed to load platform' });
     }
   });
-
-  // Mount under /api
-  app.use('/api', router);
 }
