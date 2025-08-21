@@ -4,7 +4,7 @@ import { platforms } from '@shared/schema';
 import { asc, eq } from 'drizzle-orm';
 
 export function registerPlatformRoutes(app: Express) {
-  app.get('/platforms', async (req: Request, res: Response) => {
+  app.get('/api/platforms', async (req: Request, res: Response) => {
     try {
       const rows = await db
         .select({
