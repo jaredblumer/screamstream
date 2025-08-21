@@ -310,9 +310,6 @@ export default function ContentPlatformsDialog({
               + Add
             </Button>
           </div>
-          <p className="text-xs text-gray-400">
-            Tip: You usually only need <code>webUrl</code>. Leave it blank to store none.
-          </p>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
