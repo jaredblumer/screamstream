@@ -82,7 +82,6 @@ export const platforms = pgTable(
     platformName: varchar('platform_name', { length: 100 }).notNull(),
     watchmodeId: integer('watchmode_id').notNull().unique(),
     imageUrl: varchar('image_url', { length: 500 }),
-    isActive: boolean('is_active').default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },

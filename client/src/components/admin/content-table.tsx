@@ -22,6 +22,7 @@ type Props = {
   onHide?: (id: number) => void;
   onShow?: (id: number) => void;
   onToggleActive?: (id: number, next: boolean) => void;
+  onEditPlatforms: (item: Content) => void;
   isDeleting: boolean;
   isHiding?: boolean;
   isShowing?: boolean;
@@ -37,6 +38,7 @@ export function ContentTable({
   onHide,
   onShow,
   onToggleActive,
+  onEditPlatforms,
   isDeleting,
   isHiding,
   isShowing,
@@ -131,6 +133,14 @@ export function ContentTable({
                   className="horror-button-outline"
                 >
                   <Edit className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  onClick={() => onEditPlatforms(item)}
+                  variant="outline"
+                  className="horror-button-outline"
+                >
+                  Edit Platforms
                 </Button>
 
                 {/* Active toggle as black bg / white text button */}
