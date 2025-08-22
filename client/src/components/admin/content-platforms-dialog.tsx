@@ -57,10 +57,10 @@ export default function ContentPlatformsDialog({
 
   // All platforms for dropdown (public route)
   const { data: allPlatforms = [], isLoading: isLoadingPlatforms } = useQuery<PlatformListItem[]>({
-    queryKey: ['/platforms'],
+    queryKey: ['/api/platforms'],
     enabled: open,
     queryFn: async () => {
-      const res = await fetch('/platforms');
+      const res = await fetch('/api/platforms');
       if (!res.ok) throw new Error('Failed to load platforms');
       return res.json();
     },
