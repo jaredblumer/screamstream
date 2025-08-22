@@ -24,7 +24,7 @@ export function registerPlatformRoutes(app: Express) {
     }
   });
 
-  app.get('/platforms/:id', async (req: Request, res: Response) => {
+  app.get('/api/platforms/:id', async (req: Request, res: Response) => {
     try {
       const id = Number(req.params.id);
       if (Number.isNaN(id)) {
@@ -51,7 +51,7 @@ export function registerPlatformRoutes(app: Express) {
     }
   });
 
-  app.get('/platforms/by-key/:platformKey', async (req: Request, res: Response) => {
+  app.get('/api/platforms/by-key/:platformKey', async (req: Request, res: Response) => {
     try {
       const key = req.params.platformKey;
       if (!key) return res.status(400).json({ message: 'platformKey is required' });
