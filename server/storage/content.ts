@@ -231,5 +231,8 @@ export async function getHiddenContent(): Promise<Content[]> {
 }
 
 export async function getInactiveContent(): Promise<Content[]> {
-  return await db.select().from(content).where(eq(content.active, false));
+  return await db
+    .select()
+    .from(content)
+    .where(and(eq(content.active, false), eq(content.hidden, false)));
 }
