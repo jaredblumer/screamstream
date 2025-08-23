@@ -45,6 +45,7 @@ type ContentFormData = {
   episodes?: number | null;
   seasons?: number | null;
   active: boolean;
+  hidden: boolean;
 };
 
 const initialFormData: ContentFormData = {
@@ -60,6 +61,7 @@ const initialFormData: ContentFormData = {
   episodes: null,
   seasons: null,
   active: false,
+  hidden: true,
 };
 
 export function ContentFormDialog({
@@ -92,6 +94,7 @@ export function ContentFormDialog({
         primarySubgenre: editingContent.primarySubgenre || '',
         type: editingContent.type,
         active: Boolean(editingContent.active),
+        hidden: Boolean(editingContent.hidden),
       });
     } else {
       setFormData(initialFormData);
@@ -416,28 +419,50 @@ export function ContentFormDialog({
             />
           </div>
 
-          <div>
-            <Label htmlFor="active" className="text-white">
-              Status
-            </Label>
-            <Select
-              value={formData.active ? 'true' : 'false'}
-              onValueChange={(v) => setFormData((p) => ({ ...p, active: v === 'true' }))}
-            >
-              <SelectTrigger className="horror-bg border-gray-700 text-white horror-select-trigger">
-                <SelectValue placeholder="Select status" className="text-white" />
-              </SelectTrigger>
-              <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                <SelectItem value="false" className="horror-select-item">
-                  Inactive
-                </SelectItem>
-                <SelectItem value="true" className="horror-select-item">
-                  Active
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="active" className="text-white">
+                Status
+              </Label>
+              <Select
+                value={formData.active ? 'true' : 'false'}
+                onValueChange={(v) => setFormData((p) => ({ ...p, active: v === 'true' }))}
+              >
+                <SelectTrigger className="horror-bg border-gray-700 text-white horror-select-trigger">
+                  <SelectValue placeholder="Select status" className="text-white" />
+                </SelectTrigger>
+                <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                  <SelectItem value="false" className="horror-select-item">
+                    Inactive
+                  </SelectItem>
+                  <SelectItem value="true" className="horror-select-item">
+                    Active
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="hidden" className="text-white">
+                Hidden
+              </Label>
+              <Select
+                value={formData.hidden ? 'true' : 'false'}
+                onValueChange={(v) => setFormData((p) => ({ ...p, hidden: v === 'true' }))}
+              >
+                <SelectTrigger className="horror-bg border-gray-700 text-white horror-select-trigger">
+                  <SelectValue placeholder="Select status" className="text-white" />
+                </SelectTrigger>
+                <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                  <SelectItem value="false" className="horror-select-item">
+                    Not Hidden
+                  </SelectItem>
+                  <SelectItem value="true" className="horror-select-item">
+                    Hidden
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-
           <div className="flex justify-end space-x-2 pt-4">
             <Button
               variant="outline"
