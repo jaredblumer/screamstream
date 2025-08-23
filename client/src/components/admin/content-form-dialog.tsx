@@ -14,12 +14,8 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, X, Database } from 'lucide-react';
 import type { Content, InsertContent, Subgenre } from '@shared/schema';
-import {
-  normalizeRating,
-  intOrNull,
-  ensurePrimary,
-  calculateAverageRating,
-} from '@/lib/content-form-utils';
+import { normalizeRating, intOrNull, calculateAverageRating } from '@/lib/content-form-utils';
+import { apiRequest } from '@/lib/queryClient';
 
 type Props = {
   open: boolean;
@@ -28,8 +24,8 @@ type Props = {
   isSubgenresLoading?: boolean;
   editingContent: Content | null;
   isSaving?: boolean;
-  onCreate: (payload: InsertContent) => void;
-  onUpdate: (id: number, payload: InsertContent) => void;
+  onCreate: (payload: InsertContent) => unknown | Promise<unknown>;
+  onUpdate: (id: number, payload: Partial<InsertContent>) => unknown | Promise<unknown>;
 };
 
 type ContentFormData = {
@@ -39,8 +35,9 @@ type ContentFormData = {
   usersRating: number | null;
   description: string;
   posterUrl: string;
-  subgenres: string[];
-  primarySubgenre?: string;
+  // normalized UI state
+  selectedSubgenreIds: number[];
+  primarySubgenreId?: number | null;
   type: 'movie' | 'series';
   episodes?: number | null;
   seasons?: number | null;
@@ -55,14 +52,64 @@ const initialFormData: ContentFormData = {
   usersRating: null,
   description: '',
   posterUrl: '',
-  subgenres: [],
-  primarySubgenre: '',
+  selectedSubgenreIds: [],
+  primarySubgenreId: null,
   type: 'movie',
   episodes: null,
   seasons: null,
   active: false,
   hidden: true,
 };
+
+// --- helpers to normalize API shapes into subgenre IDs ---
+function idsFromContentField(editingContent: any, subgenresById: Map<number, Subgenre>) {
+  const out = new Set<number>();
+
+  // If editingContent.subgenres exists, it may be strings (slugs) or objects
+  const list = Array.isArray(editingContent?.subgenres) ? editingContent.subgenres : [];
+
+  for (const item of list) {
+    if (typeof item === 'number') {
+      out.add(item);
+    } else if (typeof item === 'string') {
+      // map slug -> id
+      const sg = [...subgenresById.values()].find((s) => s.slug === item);
+      if (sg) out.add(sg.id);
+    } else if (item && typeof item === 'object') {
+      if (typeof item.id === 'number') out.add(item.id);
+      else if (item.slug) {
+        const sg = [...subgenresById.values()].find((s) => s.slug === item.slug);
+        if (sg) out.add(sg.id);
+      }
+    }
+  }
+  return Array.from(out);
+}
+
+function idsFromEndpointPayload(payload: any, subgenresById: Map<number, Subgenre>) {
+  const out = new Set<number>();
+  const list = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === 'object' && 'subgenres' in payload
+      ? (payload as any).subgenres
+      : [];
+
+  for (const item of list ?? []) {
+    if (typeof item === 'number') {
+      out.add(item);
+    } else if (typeof item === 'string') {
+      const sg = [...subgenresById.values()].find((s) => s.slug === item);
+      if (sg) out.add(sg.id);
+    } else if (item && typeof item === 'object') {
+      if (typeof item.id === 'number') out.add(item.id);
+      else if (item.slug) {
+        const sg = [...subgenresById.values()].find((s) => s.slug === item.slug);
+        if (sg) out.add(sg.id);
+      }
+    }
+  }
+  return Array.from(out);
+}
 
 export function ContentFormDialog({
   open,
@@ -75,59 +122,171 @@ export function ContentFormDialog({
   onUpdate,
 }: Props) {
   const [formData, setFormData] = useState<ContentFormData>(initialFormData);
+  const [loadingContentSubs, setLoadingContentSubs] = useState(false);
 
-  // map available subgenre slugs (used in checkboxes/select)
-  const availableSlugs = useMemo(() => subgenres.map((s: any) => s.slug), [subgenres]);
+  const subgenresById = useMemo(
+    () => new Map(subgenres.map((s) => [s.id, s] as const)),
+    [subgenres]
+  );
 
+  // Populate when editing: pull subgenres from editingContent if present; otherwise GET endpoint
   useEffect(() => {
-    if (editingContent) {
+    let cancelled = false;
+
+    const load = async () => {
+      if (!editingContent) {
+        setFormData(initialFormData);
+        return;
+      }
+
+      // Seed core fields from content row
+      const basePrimary: number | null =
+        (editingContent as any).primarySubgenreId ??
+        (editingContent as any).primarySubgenre?.id ??
+        null;
+
+      // Try to get selected IDs from the editingContent itself first
+      let selectedIds = idsFromContentField(editingContent, subgenresById);
+
+      // If none found, fall back to the endpoint
+      if (!selectedIds.length) {
+        try {
+          setLoadingContentSubs(true);
+          const res = await apiRequest('GET', `/api/admin/content/${editingContent.id}/subgenres`);
+          selectedIds = idsFromEndpointPayload(res, subgenresById);
+        } catch {
+          // ignore; keep as []
+        } finally {
+          setLoadingContentSubs(false);
+        }
+      }
+
+      // Ensure uniqueness
+      selectedIds = Array.from(new Set(selectedIds));
+
+      // Primary must be one of the selected IDs.
+      // If we have a primary that isn't selected, add it to the selection (so it's available).
+      let nextPrimary = basePrimary;
+      if (nextPrimary != null && !selectedIds.includes(nextPrimary)) {
+        selectedIds.push(nextPrimary);
+      }
+
+      // If still no primary: pick the first selected or null if none.
+      if (nextPrimary == null) {
+        nextPrimary = selectedIds[0] ?? null;
+      }
+
+      if (cancelled) return;
+
       setFormData({
         title: editingContent.title,
         year: editingContent.year,
-        seasons: editingContent.seasons || null,
-        episodes: editingContent.episodes || null,
-        criticsRating: editingContent.criticsRating || null,
-        usersRating: editingContent.usersRating || null,
+        seasons: editingContent.seasons ?? null,
+        episodes: editingContent.episodes ?? null,
+        criticsRating: editingContent.criticsRating ?? null,
+        usersRating: editingContent.usersRating ?? null,
         description: editingContent.description,
         posterUrl: editingContent.posterUrl,
-        subgenres: editingContent.subgenres || [],
-        primarySubgenre: editingContent.primarySubgenre || '',
         type: editingContent.type,
-        active: Boolean(editingContent.active),
-        hidden: Boolean(editingContent.hidden),
+        active: !!editingContent.active,
+        hidden: !!editingContent.hidden,
+        selectedSubgenreIds: selectedIds,
+        primarySubgenreId: nextPrimary,
       });
-    } else {
-      setFormData(initialFormData);
-    }
-  }, [editingContent, open]);
+    };
 
-  const handleSubmit = () => {
+    // Only initialize when dialog opens or the item changes
+    if (open) load();
+  }, [editingContent?.id, open, subgenresById]); // depend on map so slug->id mapping is ready
+
+  // Toggle a subgenre checkbox
+  const toggleSubgenre = (id: number, checked: boolean) => {
+    setFormData((prev) => {
+      const set = new Set(prev.selectedSubgenreIds);
+      if (checked) set.add(id);
+      else set.delete(id);
+      const ids = Array.from(set);
+
+      let primary = prev.primarySubgenreId ?? null;
+      // Keep primary valid: ensure it's always in ids
+      if (ids.length === 0) {
+        primary = null;
+      } else if (primary == null || !ids.includes(primary)) {
+        primary = ids[0];
+      }
+
+      return { ...prev, selectedSubgenreIds: ids, primarySubgenreId: primary };
+    });
+  };
+
+  // Manually set the primary via the select (value comes in as string)
+  const setPrimary = (value: string) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return;
+    setFormData((prev) => {
+      // If somehow not selected, add it (keeps invariant: primary ∈ selected)
+      const set = new Set(prev.selectedSubgenreIds);
+      if (!set.has(numeric)) set.add(numeric);
+      return {
+        ...prev,
+        selectedSubgenreIds: Array.from(set),
+        primarySubgenreId: numeric,
+      };
+    });
+  };
+
+  // Save
+  const handleSubmit = async () => {
     const critics = normalizeRating(formData.criticsRating);
     const users = normalizeRating(formData.usersRating);
-
     const seasons = formData.type === 'series' ? intOrNull(formData.seasons) : null;
     const episodes = formData.type === 'series' ? intOrNull(formData.episodes) : null;
 
-    const primarySubgenre = ensurePrimary(formData.subgenres, formData.primarySubgenre);
+    // Safety: keep primary in sync with selection before submit
+    let selected = Array.from(new Set(formData.selectedSubgenreIds));
+    let primary = formData.primarySubgenreId ?? null;
+    if (selected.length === 0) {
+      primary = null;
+    } else if (primary == null || !selected.includes(primary)) {
+      primary = selected[0];
+    }
 
     const payload: InsertContent = {
-      ...formData,
+      title: formData.title.trim(),
+      year: formData.year,
       criticsRating: critics,
       usersRating: users,
+      averageRating: calculateAverageRating(critics, users),
+      description: formData.description.trim(),
+      posterUrl: formData.posterUrl.trim(),
+      type: formData.type,
       seasons,
       episodes,
-      primarySubgenre: primarySubgenre,
-      averageRating: calculateAverageRating(critics, users),
-      title: formData.title.trim(),
-      posterUrl: formData.posterUrl.trim(),
-      description: formData.description.trim(),
       active: !!formData.active,
-    };
+      hidden: !!formData.hidden,
+      primarySubgenreId: primary,
+    } as InsertContent;
 
     if (editingContent) {
-      onUpdate(editingContent.id, payload);
+      await Promise.resolve(onUpdate(editingContent.id, payload));
+      try {
+        await apiRequest('PUT', `/api/admin/content/${editingContent.id}/subgenres`, {
+          subgenreIds: selected,
+          primarySubgenreId: primary,
+        });
+      } catch {
+        // ignore; parent can refetch or show toast
+      }
     } else {
-      onCreate(payload);
+      const created: any = await Promise.resolve(onCreate(payload));
+      if (created && typeof created === 'object' && typeof created.id === 'number') {
+        try {
+          await apiRequest('PUT', `/api/admin/content/${created.id}/subgenres`, {
+            subgenreIds: selected,
+            primarySubgenreId: primary,
+          });
+        } catch {}
+      }
     }
   };
 
@@ -141,6 +300,7 @@ export function ContentFormDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Title / Type */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="title" className="text-white">
@@ -178,6 +338,7 @@ export function ContentFormDialog({
             </div>
           </div>
 
+          {/* Series fields */}
           {formData.type === 'series' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -186,7 +347,7 @@ export function ContentFormDialog({
                 </Label>
                 <Input
                   id="seasons"
-                  value={formData.seasons}
+                  value={formData.seasons ?? ''}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, seasons: parseInt(e.target.value) || null }))
                   }
@@ -199,7 +360,7 @@ export function ContentFormDialog({
                 </Label>
                 <Input
                   id="episodes"
-                  value={formData.episodes}
+                  value={formData.episodes ?? ''}
                   onChange={(e) =>
                     setFormData((p) => ({ ...p, episodes: parseInt(e.target.value) || null }))
                   }
@@ -209,6 +370,7 @@ export function ContentFormDialog({
             </div>
           )}
 
+          {/* Year + ratings */}
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="year" className="text-white">
@@ -234,11 +396,14 @@ export function ContentFormDialog({
                 step="0.1"
                 min="0"
                 max="10"
-                value={formData.criticsRating?.toFixed(1)}
+                value={formData.criticsRating ?? ''}
                 onChange={(e) =>
                   setFormData((p) => ({
                     ...p,
-                    criticsRating: Math.round((parseFloat(e.target.value) || 0) * 10) / 10,
+                    criticsRating:
+                      e.target.value === ''
+                        ? null
+                        : Math.min(10, Math.max(0, parseFloat(e.target.value))),
                   }))
                 }
                 className="horror-bg border-gray-700 text-white"
@@ -254,11 +419,14 @@ export function ContentFormDialog({
                 step="0.1"
                 min="0"
                 max="10"
-                value={formData.usersRating?.toFixed(1)}
+                value={formData.usersRating ?? ''}
                 onChange={(e) =>
                   setFormData((p) => ({
                     ...p,
-                    usersRating: Math.round((parseFloat(e.target.value) || 0) * 10) / 10,
+                    usersRating:
+                      e.target.value === ''
+                        ? null
+                        : Math.min(10, Math.max(0, parseFloat(e.target.value))),
                   }))
                 }
                 className="horror-bg border-gray-700 text-white"
@@ -266,68 +434,46 @@ export function ContentFormDialog({
             </div>
           </div>
 
+          {/* Subgenres (IDs) */}
           <div>
             <Label className="text-white">Subgenres (Select Multiple)</Label>
             <div className="grid grid-cols-2 gap-3 mt-2 p-4 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
-              {isSubgenresLoading ? (
+              {isSubgenresLoading || loadingContentSubs ? (
                 <div className="text-gray-400">Loading subgenres…</div>
               ) : (
-                availableSlugs.map((slug) => (
-                  <div key={slug} className="flex items-center space-x-2">
+                subgenres.map((sg) => (
+                  <div key={sg.id} className="flex items-center space-x-2">
                     <Checkbox
-                      id={`subgenre-${slug}`}
-                      checked={formData.subgenres.includes(slug)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setFormData((prev) => {
-                            const newSubgenres = [...prev.subgenres, slug];
-                            return {
-                              ...prev,
-                              subgenres: newSubgenres,
-                              primarySubgenre:
-                                newSubgenres.length === 1 ? newSubgenres[0] : prev.primarySubgenre,
-                            };
-                          });
-                        } else {
-                          setFormData((prev) => {
-                            const newSubgenres = prev.subgenres.filter((s) => s !== slug);
-                            return {
-                              ...prev,
-                              subgenres: newSubgenres,
-                              primarySubgenre:
-                                newSubgenres.length === 1
-                                  ? newSubgenres[0]
-                                  : prev.primarySubgenre === slug
-                                    ? ''
-                                    : prev.primarySubgenre,
-                            };
-                          });
-                        }
-                      }}
+                      id={`subgenre-${sg.id}`}
+                      checked={formData.selectedSubgenreIds.includes(sg.id)}
+                      onCheckedChange={(checked) => toggleSubgenre(sg.id, !!checked)}
                       className="border-gray-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                     />
                     <Label
-                      htmlFor={`subgenre-${slug}`}
+                      htmlFor={`subgenre-${sg.id}`}
                       className="text-white text-sm cursor-pointer"
                     >
-                      {slug}
+                      {sg.name}
                     </Label>
                   </div>
                 ))
               )}
             </div>
-            <p className="text-xs text-gray-400 mt-1">
-              Selected: {formData.subgenres.length > 0 ? formData.subgenres.join(', ') : 'None'}
-            </p>
           </div>
 
+          {/* Primary (ID) */}
           <div>
             <Label htmlFor="primarySubgenre" className="text-white">
               Primary Subgenre (Browse Display)
             </Label>
             <Select
-              value={formData.primarySubgenre || ''}
-              onValueChange={(value) => setFormData((p) => ({ ...p, primarySubgenre: value }))}
+              value={
+                formData.primarySubgenreId &&
+                formData.selectedSubgenreIds.includes(formData.primarySubgenreId)
+                  ? String(formData.primarySubgenreId)
+                  : ''
+              }
+              onValueChange={setPrimary}
             >
               <SelectTrigger className="horror-bg border-gray-700 text-white horror-select-trigger">
                 <SelectValue
@@ -336,19 +482,22 @@ export function ContentFormDialog({
                 />
               </SelectTrigger>
               <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                {formData.subgenres.map((slug) => (
-                  <SelectItem key={slug} value={slug} className="horror-select-item">
-                    {slug}
-                  </SelectItem>
-                ))}
+                {formData.selectedSubgenreIds.map((id) => {
+                  const s = subgenresById.get(id);
+                  return (
+                    <SelectItem key={id} value={String(id)} className="horror-select-item">
+                      {s?.name ?? id}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <p className="text-xs text-gray-400 mt-1">
-              This subgenre will be displayed on browse pages. All selected subgenres appear on the
-              details page.
+              Primary must be one of the selected subgenres. It appears on browse pages.
             </p>
           </div>
 
+          {/* Poster */}
           <div>
             <Label htmlFor="posterUrl" className="text-white">
               Poster URL
@@ -392,9 +541,7 @@ export function ContentFormDialog({
                       } else {
                         throw new Error();
                       }
-                    } catch {
-                      // Surface a friendly toast; avoid noisy console logs
-                    }
+                    } catch {}
                   }}
                   className="text-xs horror-button-outline"
                   title="Attempt to find a better poster from TVDB"
@@ -406,6 +553,7 @@ export function ContentFormDialog({
             </div>
           </div>
 
+          {/* Description */}
           <div>
             <Label htmlFor="description" className="text-white">
               Description
@@ -419,6 +567,7 @@ export function ContentFormDialog({
             />
           </div>
 
+          {/* Status / Hidden */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="active" className="text-white">
@@ -463,6 +612,8 @@ export function ContentFormDialog({
               </Select>
             </div>
           </div>
+
+          {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4">
             <Button
               variant="outline"

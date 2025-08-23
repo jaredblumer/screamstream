@@ -8,56 +8,72 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowRight, Film, Star, User, Calendar } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { Subgenre } from '@shared/schema';
-import type { Content } from '@shared/schema';
+import type { Subgenre } from '@shared/schema';
+
+// Shape returned by /api/content list (normalized + with names)
+type SubLite = { id: number; name: string; slug: string };
+type MovieRow = {
+  id: number;
+  title: string;
+  year: number;
+  description: string;
+  type: 'movie' | 'series';
+  criticsRating?: number | null;
+  usersRating?: number | null;
+  averageRating?: number | null;
+  subgenres?: SubLite[];
+  primarySubgenre?: SubLite | null;
+};
 
 interface SubgenreData {
   name: string;
   slug: string;
-  description: string;
+  description: string | null;
   count: number;
-  topMovies: Content[];
+  topMovies: MovieRow[];
 }
 
 export default function Subgenres() {
-  const { data: movies = [], isLoading: moviesLoading } = useQuery<Content[]>({
+  // Movies list (must include subgenre objects from the API)
+  const { data: movies = [], isLoading: moviesLoading } = useQuery<MovieRow[]>({
     queryKey: ['/api/content'],
   });
 
-  console.log('Movies loaded:', movies);
-
+  // Subgenres catalog (public list)
   const { data: subgenres = [], isLoading: subgenresLoading } = useQuery<Subgenre[]>({
     queryKey: ['/api/subgenres'],
   });
 
-  console.log('Subgenres loaded:', subgenres);
-
   const isLoading = moviesLoading || subgenresLoading;
 
   const genreData: SubgenreData[] = React.useMemo(() => {
-    if (!movies || !subgenres || movies.length === 0 || subgenres.length === 0) return [];
-    console.log(subgenres);
+    if (!movies.length || !subgenres.length) return [];
+
+    // Helper: pick a score for sorting “top” titles
+    const score = (m: MovieRow) =>
+      m.averageRating ?? undefined ?? m.criticsRating ?? undefined ?? m.usersRating ?? 0;
+
     return subgenres
-      .filter((subgenre) => subgenre.isActive)
-      .map((subgenre) => {
-        const matchingMovies = movies.filter((movie) =>
-          movie.subgenres?.some((s) => s.toLowerCase() === subgenre.slug)
+      .filter((sg) => sg.isActive) // only active subgenres
+      .map((sg) => {
+        const matchingMovies = movies.filter((mv) =>
+          (mv.subgenres ?? []).some((s) => s.slug === sg.slug)
         );
 
-        const topMovies = matchingMovies.sort((a, b) => b.rating - a.rating).slice(0, 3);
+        const topMovies = [...matchingMovies]
+          .sort((a, b) => Number(score(b)) - Number(score(a)))
+          .slice(0, 3);
 
         return {
-          name: subgenre.name,
-          slug: subgenre.slug,
-          description: subgenre.description,
+          name: sg.name,
+          slug: sg.slug,
+          description: sg.description ?? null,
           count: matchingMovies.length,
           topMovies,
         };
       })
-      .filter((genre) => genre.count > 0);
+      .filter((g) => g.count > 0);
   }, [movies, subgenres]);
-
-  console.log('Processed genre data:', genreData);
 
   if (isLoading) {
     return (
@@ -96,17 +112,19 @@ export default function Subgenres() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-slide stagger-1 px-6">
           {genreData.map((genre) => (
             <Card
-              key={genre.name}
+              key={genre.slug}
               className="dark-gray-bg border-gray-700 hover:border-red-500 transition-all duration-300 group"
             >
               <CardHeader>
                 <CardTitle className="text-white flex items-center justify-between">
                   {genre.name}
                   <Badge variant="secondary" className="bg-red-900 text-red-100">
-                    {genre.count} titles
+                    {genre.count} {genre.count === 1 ? 'title' : 'titles'}
                   </Badge>
                 </CardTitle>
-                <CardDescription className="text-gray-400">{genre.description}</CardDescription>
+                {genre.description && (
+                  <CardDescription className="text-gray-400">{genre.description}</CardDescription>
+                )}
               </CardHeader>
 
               <CardContent className="space-y-6">
@@ -130,7 +148,8 @@ export default function Subgenres() {
                                 {movie.year}
                               </div>
                             </div>
-                            {movie.criticsRating && (
+
+                            {typeof movie.criticsRating === 'number' && (
                               <div className="flex items-center horror-orange ml-2">
                                 <Star className="h-3 w-3 mr-1 fill-current" />
                                 <span className="text-xs font-medium text-white">
@@ -138,7 +157,7 @@ export default function Subgenres() {
                                 </span>
                               </div>
                             )}
-                            {movie.usersRating && (
+                            {typeof movie.usersRating === 'number' && (
                               <div className="flex items-center text-red-400 ml-2">
                                 <User className="h-3 w-3 mr-1 fill-current" />
                                 <span className="text-xs font-medium text-white">

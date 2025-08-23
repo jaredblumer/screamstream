@@ -1,8 +1,9 @@
-import { pgTable, text, serial, integer, real, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, real, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { subgenres } from './subgenres';
 
-// Content table
 export const content = pgTable('content', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
@@ -12,8 +13,10 @@ export const content = pgTable('content', {
   usersRating: real('users_rating'),
   description: text('description').notNull(),
   posterUrl: text('poster_url').notNull(),
-  primarySubgenre: text('primary_subgenre'),
-  subgenres: jsonb('subgenres').$type<string[]>().default([]),
+  primarySubgenreId: integer('primary_subgenre_id').references(() => subgenres.id, {
+    onDelete: 'set null',
+    onUpdate: 'cascade',
+  }),
   genres: jsonb('genres').$type<number[]>().default([]),
   type: text('type', { enum: ['movie', 'series'] })
     .notNull()
@@ -23,7 +26,6 @@ export const content = pgTable('content', {
   watchmodeId: integer('watchmode_id'),
   imdbId: text('imdb_id'),
   tmdbId: integer('tmdb_id'),
-  backdropPath: text('backdrop_path'),
   originalTitle: text('original_title'),
   releaseDate: text('release_date'),
   usRating: text('us_rating'),
@@ -36,11 +38,15 @@ export const content = pgTable('content', {
   active: boolean('active').notNull().default(false),
 });
 
-export const insertContentSchema = createInsertSchema(content).omit({ id: true });
-export type InsertContent = z.infer<typeof insertContentSchema>;
-export type Content = typeof content.$inferSelect;
+export type Content = InferSelectModel<typeof content>;
+export type InsertContent = InferInsertModel<typeof content>;
 
-// Local interfaces used by your app code (not DB)
+export const insertContentSchema = createInsertSchema(content, {
+  title: z.string().min(1),
+  year: z.coerce.number().int().min(1888).max(3000),
+  primarySubgenreId: z.number().int().positive().nullable().optional(),
+}).omit({ id: true });
+
 export interface PlatformBadge {
   platformId: number;
   platformName: string;

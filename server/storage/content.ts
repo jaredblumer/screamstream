@@ -1,8 +1,47 @@
 import { db } from '@server/db';
-import { eq, sql, ilike, desc, asc, and, or } from 'drizzle-orm';
+import { eq, sql, ilike, desc, asc, and, or, inArray } from 'drizzle-orm';
 import { getPlatformsForContentId, getPlatformsForContentIds } from './content-platforms';
-import { content, platforms, contentPlatforms } from '@shared/schema';
-import type { InsertContent, Content, ContentWithPlatforms } from '@shared/schema';
+import { content, platforms, contentPlatforms, contentSubgenres, subgenres } from '@shared/schema';
+import type { InsertContent, Content, ContentWithPlatforms, PlatformBadge } from '@shared/schema';
+
+type SubLite = { id: number; name: string; slug: string };
+
+export async function getContentItemWithSubgenres(id: number) {
+  const [row] = await db.select().from(content).where(eq(content.id, id));
+  if (!row) return undefined;
+
+  const subs = await db
+    .select({
+      id: subgenres.id,
+      name: subgenres.name,
+      slug: subgenres.slug,
+    })
+    .from(contentSubgenres)
+    .innerJoin(subgenres, eq(contentSubgenres.subgenreId, subgenres.id))
+    .where(eq(contentSubgenres.contentId, id));
+
+  let primary: SubLite | null = null;
+  if (row.primarySubgenreId) {
+    const match = subs.find((s) => s.id === row.primarySubgenreId);
+    if (match) primary = match;
+    else {
+      const [p] = await db
+        .select({ id: subgenres.id, name: subgenres.name, slug: subgenres.slug })
+        .from(subgenres)
+        .where(eq(subgenres.id, row.primarySubgenreId));
+      primary = p ?? null;
+    }
+  }
+
+  const platformsBadges = await getPlatformsForContentId(id);
+
+  return {
+    ...row,
+    subgenres: subs as SubLite[],
+    primarySubgenre: primary,
+    platformsBadges,
+  };
+}
 
 function getDecadeYearRange(decade: string): { min: number; max: number } | null {
   switch (decade) {
@@ -25,27 +64,32 @@ function getDecadeYearRange(decade: string): { min: number; max: number } | null
   }
 }
 
-export async function getContent(filters?: {
-  // platform filter accepts platform key/name (string or string[])
-  platform?: string | string[];
-  // optional: filter by platform ids directly
-  platformIds?: number[];
-  // mode for multi-platform filtering: any (default) or all
-  platformsMode?: 'any' | 'all';
-
-  year?: number | string;
-  minRating?: number; // interpreted as averageRating
-  minCriticsRating?: number;
-  minUsersRating?: number;
-  search?: string;
-  type?: 'movie' | 'series' | 'all';
-  subgenre?: string;
-  sortBy?: 'average_rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
-  includeHidden?: boolean;
-  includeInactive?: boolean;
-}): Promise<(Content & { platformsBadges: any[] })[]> {
-  let query = db.select().from(content);
-  const conditions = [];
+export async function getContent(
+  filters?: {
+    platform?: string | string[];
+    platformIds?: number[];
+    platformsMode?: 'any' | 'all';
+    year?: number | string;
+    minRating?: number;
+    minCriticsRating?: number;
+    minUsersRating?: number;
+    search?: string;
+    type?: 'movie' | 'series' | 'all';
+    subgenre?: string;
+    sortBy?: 'average_rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
+    includeHidden?: boolean;
+    includeInactive?: boolean;
+  },
+  opts: { includeSubgenres?: boolean; includePrimary?: boolean } = {}
+): Promise<
+  (Content & {
+    platformsBadges: PlatformBadge[];
+    subgenres?: SubLite[];
+    primarySubgenre?: SubLite | null;
+  })[]
+> {
+  let query = db.select().from(content).$dynamic();
+  const conditions: any[] = [];
 
   // Hide by default
   if (!filters?.includeHidden) {
@@ -62,21 +106,21 @@ export async function getContent(filters?: {
   // helper: EXISTS for a single platform match by key/name
   const existsForKeyOrName = (value: string) =>
     sql`EXISTS (
-    SELECT 1
-    FROM ${contentPlatforms} cp
-    JOIN ${platforms} p ON p.id = cp.platform_id
-    WHERE cp.content_id = ${content.id}
-      AND (p.platform_key = ${value} OR p.platform_name = ${value})
-  )`;
+      SELECT 1
+      FROM ${contentPlatforms} cp
+      JOIN ${platforms} p ON p.id = cp.platform_id
+      WHERE cp.content_id = ${content.id}
+        AND (p.platform_key = ${value} OR p.platform_name = ${value})
+    )`;
 
   // helper: EXISTS for a single platform match by id
   const existsForId = (id: number) =>
     sql`EXISTS (
-    SELECT 1
-    FROM ${contentPlatforms} cp
-    WHERE cp.content_id = ${content.id}
-      AND cp.platform_id = ${id}
-  )`;
+      SELECT 1
+      FROM ${contentPlatforms} cp
+      WHERE cp.content_id = ${content.id}
+        AND cp.platform_id = ${id}
+    )`;
 
   if (filters?.platformIds && filters.platformIds.length > 0) {
     const idConds = filters.platformIds.map((id) => existsForId(id));
@@ -86,7 +130,6 @@ export async function getContent(filters?: {
     const keyConds = values.map((v) => existsForKeyOrName(v));
     conditions.push(mode === 'all' ? and(...keyConds) : or(...keyConds));
   }
-  // ---------------------------------------------
 
   // Year or decade
   if (filters?.year) {
@@ -102,7 +145,7 @@ export async function getContent(filters?: {
     }
   }
 
-  // Ratings (note: minRating maps to averageRating)
+  // Ratings
   if (filters?.minRating !== undefined) {
     conditions.push(sql`${content.averageRating} >= ${filters.minRating}`);
   }
@@ -125,23 +168,42 @@ export async function getContent(filters?: {
       or(
         ilike(content.title, q),
         ilike(content.description, q),
-        sql`exists (
-        select 1
-        from jsonb_array_elements_text(${content.subgenres}) as sg
-        where sg ilike ${q}
-      )`
+        // any associated subgenre name matches
+        sql`EXISTS (
+          SELECT 1
+          FROM ${contentSubgenres} cs
+          JOIN ${subgenres} s ON s.id = cs.subgenre_id
+          WHERE cs.content_id = ${content.id}
+            AND (s.name ILIKE ${q} OR s.slug ILIKE ${q})
+        )`,
+        // primary subgenre name matches (extra safety)
+        sql`EXISTS (
+          SELECT 1
+          FROM ${subgenres} s
+          WHERE s.id = ${content.primarySubgenreId}
+            AND (s.name ILIKE ${q} OR s.slug ILIKE ${q})
+        )`
       )
     );
   }
 
-  // Subgenre: matches primary subgenre or in `subgenres` array
+  // Subgenre filter
   if (filters?.subgenre && filters.subgenre !== 'all') {
-    conditions.push(
-      or(
-        ilike(content.primarySubgenre, `%${filters.subgenre}%`),
-        sql`${content.subgenres} @> ${JSON.stringify([filters.subgenre])}`
+    const val = filters.subgenre;
+    conditions.push(sql`
+      EXISTS (
+        SELECT 1
+        FROM ${subgenres} s
+        WHERE (s.slug = ${val} OR s.name ILIKE ${'%' + val + '%'})
+          AND (
+            s.id = ${content.primarySubgenreId}
+            OR EXISTS (
+              SELECT 1 FROM ${contentSubgenres} cs
+              WHERE cs.content_id = ${content.id} AND cs.subgenre_id = s.id
+            )
+          )
       )
-    );
+    `);
   }
 
   if (conditions.length > 0) {
@@ -172,13 +234,55 @@ export async function getContent(filters?: {
 
   const rows = await query;
 
-  // Attach platform badges
-  const contentIds = rows.map((item) => item.id);
+  // Platforms
+  const contentIds = rows.map((r) => r.id);
   const platformMap = contentIds.length ? await getPlatformsForContentIds(contentIds) : new Map();
+
+  // Optional: subgenres
+  let subsMap = new Map<number, SubLite[]>();
+  if (opts.includeSubgenres && contentIds.length) {
+    const subs = await db
+      .select({
+        contentId: contentSubgenres.contentId,
+        id: subgenres.id,
+        name: subgenres.name,
+        slug: subgenres.slug,
+      })
+      .from(contentSubgenres)
+      .innerJoin(subgenres, eq(contentSubgenres.subgenreId, subgenres.id))
+      .where(inArray(contentSubgenres.contentId, contentIds));
+
+    for (const r of subs) {
+      const arr = subsMap.get(r.contentId) ?? [];
+      arr.push({ id: r.id, name: r.name, slug: r.slug });
+      subsMap.set(r.contentId, arr);
+    }
+  }
+
+  // Optional: primary subgenre
+  let primaryMap = new Map<number, SubLite | null>();
+  if (opts.includePrimary && rows.length) {
+    const primaryIds = Array.from(
+      new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
+    );
+    const byId = new Map<number, SubLite>();
+    if (primaryIds.length) {
+      const primaries = await db
+        .select({ id: subgenres.id, name: subgenres.name, slug: subgenres.slug })
+        .from(subgenres)
+        .where(inArray(subgenres.id, primaryIds));
+      for (const p of primaries) byId.set(p.id, p);
+    }
+    for (const r of rows) {
+      primaryMap.set(r.id, r.primarySubgenreId ? (byId.get(r.primarySubgenreId) ?? null) : null);
+    }
+  }
 
   return rows.map((item) => ({
     ...item,
     platformsBadges: platformMap.get(item.id) || [],
+    ...(opts.includeSubgenres ? { subgenres: subsMap.get(item.id) || [] } : {}),
+    ...(opts.includePrimary ? { primarySubgenre: primaryMap.get(item.id) ?? null } : {}),
   }));
 }
 

@@ -1,38 +1,29 @@
-import {
-  pgTable,
-  serial,
-  varchar,
-  text,
-  boolean,
-  integer,
-  timestamp,
-  index,
-} from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
+import { pgTable, serial, text, boolean, integer } from 'drizzle-orm/pg-core';
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { z } from 'zod';
+import { createInsertSchema } from 'drizzle-zod';
 
-export const subgenres = pgTable(
-  'subgenres',
-  {
-    id: serial('id').primaryKey(),
-    name: varchar('name', { length: 100 }).notNull().unique(),
-    slug: varchar('slug', { length: 100 }).notNull().unique(),
-    description: text('description'),
-    isActive: boolean('is_active').default(true),
-    sortOrder: integer('sort_order').default(0),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
-  },
-  (table) => [
-    index('idx_subgenres_active').on(table.isActive),
-    index('idx_subgenres_sort').on(table.sortOrder),
-  ]
-);
-
-export const insertSubgenreSchema = createInsertSchema(subgenres).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const subgenres = pgTable('subgenres', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+  description: text('description'),
+  isActive: boolean('is_active').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
 });
-export type InsertSubgenre = z.infer<typeof insertSubgenreSchema>;
-export type Subgenre = typeof subgenres.$inferSelect;
+
+export type Subgenre = InferSelectModel<typeof subgenres>;
+export type InsertSubgenre = InferInsertModel<typeof subgenres>;
+
+export const insertSubgenreSchema = createInsertSchema(subgenres, {
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  description: z.string().max(1000).optional().nullable(),
+  isActive: z.coerce.boolean().default(true),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+}).omit({ id: true });
+
+export type InsertSubgenreInput = z.infer<typeof insertSubgenreSchema>;
+
+export const updateSubgenreSchema = insertSubgenreSchema.partial();
+export type UpdateSubgenreInput = z.infer<typeof updateSubgenreSchema>;

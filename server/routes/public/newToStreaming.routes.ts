@@ -10,7 +10,10 @@ export function registerNewToStreamingRoutes(app: Express) {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split('T')[0];
-      const allContent = await storage.getContent();
+      const allContent = await storage.getContent(
+        { includeHidden: false, includeInactive: false },
+        { includeSubgenres: true, includePrimary: true }
+      );
 
       const recentReleases = allContent
         .filter(

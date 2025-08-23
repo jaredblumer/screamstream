@@ -1,13 +1,23 @@
 import type { Express } from 'express';
+import { z } from 'zod';
 import { storage } from '../../storage';
 import { requireAdmin } from '../../auth';
+import { insertSubgenreSchema, updateSubgenreSchema } from '@shared/schema';
+
+const listQuerySchema = z.object({
+  activeOnly: z.coerce.boolean().optional().default(false),
+});
+
+const reorderBodySchema = z.object({
+  orderedIds: z.array(z.number().int().positive()).min(1),
+});
 
 export function registerAdminSubgenreRoutes(app: Express) {
   app.get('/api/admin/subgenres', requireAdmin, async (req, res) => {
     try {
-      const activeOnly = req.query.activeOnly === 'true';
-      const subgenres = await storage.getSubgenres(activeOnly);
-      res.json(subgenres);
+      const { activeOnly } = listQuerySchema.parse(req.query);
+      const rows = await storage.getSubgenres(activeOnly);
+      res.json(rows);
     } catch (error) {
       res.status(500).json({
         message: 'Failed to fetch subgenres',
@@ -18,13 +28,13 @@ export function registerAdminSubgenreRoutes(app: Express) {
 
   app.get('/api/admin/subgenres/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) return res.status(400).json({ message: 'Invalid subgenre ID' });
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid subgenre ID' });
 
-      const subgenre = await storage.getSubgenre(id);
-      if (!subgenre) return res.status(404).json({ message: 'Subgenre not found' });
+      const row = await storage.getSubgenre(id);
+      if (!row) return res.status(404).json({ message: 'Subgenre not found' });
 
-      res.json(subgenre);
+      res.json(row);
     } catch (error) {
       res.status(500).json({
         message: 'Failed to fetch subgenre',
@@ -35,12 +45,17 @@ export function registerAdminSubgenreRoutes(app: Express) {
 
   app.post('/api/admin/subgenres', requireAdmin, async (req, res) => {
     try {
-      const { insertSubgenreSchema } = await import('@shared/schema');
-      const validatedData = insertSubgenreSchema.parse(req.body);
-      const newSubgenre = await storage.createSubgenre(validatedData);
-      res.status(201).json(newSubgenre);
-    } catch (error) {
-      res.status(400).json({
+      const data = insertSubgenreSchema.parse(req.body);
+      const created = await storage.createSubgenre(data);
+      res.status(201).json(created);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid payload', issues: error.issues });
+      }
+      if (error?.code === '23505' || /unique/i.test(String(error?.message))) {
+        return res.status(409).json({ message: 'Name or slug already exists' });
+      }
+      res.status(500).json({
         message: 'Failed to create subgenre',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -49,14 +64,21 @@ export function registerAdminSubgenreRoutes(app: Express) {
 
   app.patch('/api/admin/subgenres/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) return res.status(400).json({ message: 'Invalid subgenre ID' });
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid subgenre ID' });
 
-      const updated = await storage.updateSubgenre(id, req.body);
+      const updates = updateSubgenreSchema.parse(req.body); // partial + strict
+      const updated = await storage.updateSubgenre(id, updates);
       if (!updated) return res.status(404).json({ message: 'Subgenre not found' });
 
       res.json(updated);
-    } catch (error) {
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid payload', issues: error.issues });
+      }
+      if (error?.code === '23505' || /unique/i.test(String(error?.message))) {
+        return res.status(409).json({ message: 'Name or slug already exists' });
+      }
       res.status(500).json({
         message: 'Failed to update subgenre',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -66,8 +88,8 @@ export function registerAdminSubgenreRoutes(app: Express) {
 
   app.delete('/api/admin/subgenres/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) return res.status(400).json({ message: 'Invalid subgenre ID' });
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid subgenre ID' });
 
       const deleted = await storage.deleteSubgenre(id);
       if (!deleted) return res.status(404).json({ message: 'Subgenre not found' });
@@ -83,16 +105,14 @@ export function registerAdminSubgenreRoutes(app: Express) {
 
   app.put('/api/admin/subgenres/reorder', requireAdmin, async (req, res) => {
     try {
-      const { orderedIds } = req.body;
-      if (!Array.isArray(orderedIds) || orderedIds.some((id) => typeof id !== 'number')) {
-        return res.status(400).json({ message: 'orderedIds must be an array of numbers' });
-      }
-
-      const success = await storage.reorderSubgenres(orderedIds);
-      if (!success) return res.status(500).json({ message: 'Failed to reorder subgenres' });
-
+      const { orderedIds } = reorderBodySchema.parse(req.body);
+      const ok = await storage.reorderSubgenres(orderedIds);
+      if (!ok) return res.status(500).json({ message: 'Failed to reorder subgenres' });
       res.json({ message: 'Subgenres reordered successfully' });
-    } catch (error) {
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid payload', issues: error.issues });
+      }
       res.status(500).json({
         message: 'Failed to reorder subgenres',
         error: error instanceof Error ? error.message : 'Unknown error',

@@ -7,3 +7,4 @@ export * from './issues';
 export * from './watchlist';
 export * from './api-usage';
 export * from './subgenres';
+export * from './content-subgenres';

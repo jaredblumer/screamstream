@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -29,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, GripVertical, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import {
   DndContext,
@@ -49,172 +48,144 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-// Define the subgenre schema for form validation
-const subgenreFormSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
-  slug: z
-    .string()
-    .min(1, 'Slug is required')
-    .max(50, 'Slug must be less than 50 characters')
-    .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
-  description: z.string().optional(),
-  isActive: z.boolean().default(true),
-});
-
-type SubgenreFormData = z.infer<typeof subgenreFormSchema>;
-
+// ----- Types that mirror the /api/admin/subgenres responses -----
 interface Subgenre {
   id: number;
   name: string;
   slug: string;
   description: string | null;
-  isActive: boolean | null;
-  sortOrder: number | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  isActive: boolean;
+  sortOrder: number;
 }
 
+// ----- Form schema (client-side) matches server expectations -----
+const subgenreFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(50, 'Max 50 characters'),
+  slug: z
+    .string()
+    .trim()
+    .min(1, 'Slug is required')
+    .max(50, 'Max 50 characters')
+    .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
+  description: z.string().trim().max(1000, 'Max 1000 characters').optional().nullable(),
+  isActive: z.boolean().default(true),
+});
+type SubgenreFormData = z.infer<typeof subgenreFormSchema>;
+
+// ----- Component -----
 export function SubgenresManagement() {
   const { toast } = useToast();
   const [editingSubgenre, setEditingSubgenre] = useState<Subgenre | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
-  // Fetch subgenres
-  const { data: subgenres, isLoading } = useQuery({
+  // Track whether the user manually typed the slug (to stop auto-fill)
+  const userEditedCreateSlug = useRef(false);
+  const userEditedEditSlug = useRef(false);
+
+  // Fetch subgenres (normalize result to an array to avoid "map is not a function")
+  const { data: subgenres = [], isLoading } = useQuery<Subgenre[]>({
     queryKey: ['/api/admin/subgenres'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/subgenres');
+      // Normalize: handle Response, {data: [...]}, or raw array
+      let data: unknown = res;
+      if (res && typeof res === 'object') {
+        if ('json' in (res as any) && typeof (res as any).json === 'function') {
+          data = await (res as any).json();
+        } else if ('data' in (res as any)) {
+          data = (res as any).data;
+        }
+      }
+      return Array.isArray(data) ? (data as Subgenre[]) : [];
+    },
+    staleTime: 30_000,
   });
 
-  // Drag and drop sensors
+  // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Create sorted subgenres array for drag and drop
+  // Sort by sortOrder for display
   const sortedSubgenres = useMemo(() => {
-    if (!subgenres) return [];
-    return [...subgenres].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+    const arr = Array.isArray(subgenres) ? subgenres : [];
+    return [...arr].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }, [subgenres]);
 
-  // Create items array for DndContext
-  const items = useMemo(() => {
-    return sortedSubgenres.map((subgenre) => subgenre.id);
-  }, [sortedSubgenres]);
+  const items = useMemo(() => sortedSubgenres.map((s) => s.id), [sortedSubgenres]);
 
-  // Handle drag end - reorder subgenres
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = items.indexOf(active.id as number);
-      const newIndex = items.indexOf(over.id as number);
-
-      const newOrder = arrayMove(sortedSubgenres, oldIndex, newIndex);
-
-      // Extract ordered IDs for the API call
-      const orderedIds = newOrder.map((subgenre) => subgenre.id);
-
-      // Call API to update sort orders
-      reorderSubgenresMutation.mutate(orderedIds);
-    }
-  };
-
-  // Reorder subgenres mutation
+  // Optimistic reorder
   const reorderSubgenresMutation = useMutation({
-    mutationFn: async (orderedIds: number[]) => {
-      try {
-        console.log('Attempting to reorder subgenres:', orderedIds);
-        const response = await apiRequest('PUT', '/api/admin/subgenres/reorder', { orderedIds });
-        console.log('Reorder successful');
-        return response;
-      } catch (error) {
-        console.error('Reorder failed:', error);
-        throw error;
-      }
-    },
-    onMutate: async (orderedIds: number[]) => {
-      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+    mutationFn: async (orderedIds: number[]) =>
+      apiRequest('PUT', '/api/admin/subgenres/reorder', { orderedIds }),
+    onMutate: async (orderedIds) => {
       await queryClient.cancelQueries({ queryKey: ['/api/admin/subgenres'] });
+      const previous = queryClient.getQueryData(['/api/admin/subgenres']);
+      const prevArray: Subgenre[] = Array.isArray(previous) ? (previous as Subgenre[]) : [];
 
-      // Snapshot the previous value
-      const previousSubgenres = queryClient.getQueryData(['/api/admin/subgenres']);
-
-      // Optimistically update the cache with new order
-      if (subgenres) {
-        const optimisticSubgenres = orderedIds
-          .map((id, index) => {
-            const subgenre = subgenres.find((s) => s.id === id);
-            if (!subgenre) return null;
-            return { ...subgenre, sortOrder: index + 1 };
+      if (prevArray.length) {
+        const lookup = new Map(prevArray.map((s) => [s.id, s]));
+        const optimistic = orderedIds
+          .map((id, i) => {
+            const s = lookup.get(id);
+            return s ? { ...s, sortOrder: i + 1 } : null;
           })
-          .filter((item): item is NonNullable<typeof item> => item !== null);
-
-        queryClient.setQueryData(['/api/admin/subgenres'], optimisticSubgenres);
+          .filter(Boolean) as Subgenre[];
+        queryClient.setQueryData(['/api/admin/subgenres'], optimistic);
       }
 
-      // Return a context object with the snapshotted value
-      return { previousSubgenres };
+      return { previous };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
+    onError: (err: any, _newData, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(['/api/admin/subgenres'], ctx.previous);
       toast({
-        title: 'Success',
-        description: 'Subgenres reordered successfully',
+        title: 'Error',
+        description: err?.message || 'Failed to reorder subgenres. Please try again.',
+        variant: 'destructive',
       });
     },
-    onError: (error: any, newData, context) => {
-      console.error('Failed to reorder subgenres:', error);
-
-      // Revert to previous state on error
-      if (context?.previousSubgenres) {
-        queryClient.setQueryData(['/api/admin/subgenres'], context.previousSubgenres);
-      }
-
-      // Check if it's an authentication error
-      if (error?.status === 401 || error?.message?.includes('401')) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Your session has expired. Please refresh the page and log in again.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to reorder subgenres',
-          variant: 'destructive',
-        });
-      }
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Subgenres reordered successfully' });
     },
     onSettled: () => {
-      // Always refetch after error or success to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
     },
   });
 
-  // Create subgenre mutation
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.indexOf(active.id as number);
+    const newIndex = items.indexOf(over.id as number);
+    const newOrder = arrayMove(sortedSubgenres, oldIndex, newIndex);
+    const orderedIds = newOrder.map((s) => s.id);
+    reorderSubgenresMutation.mutate(orderedIds);
+  };
+
+  // Create
   const createSubgenreMutation = useMutation({
     mutationFn: (data: SubgenreFormData) => apiRequest('POST', '/api/admin/subgenres', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
       setShowCreateDialog(false);
-      toast({
-        title: 'Success',
-        description: 'Subgenre created successfully',
-      });
+      userEditedCreateSlug.current = false;
+      toast({ title: 'Success', description: 'Subgenre created successfully' });
     },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create subgenre',
-        variant: 'destructive',
-      });
+    onError: (err: any) => {
+      const msg =
+        err?.status === 409
+          ? 'Name or slug already exists'
+          : err?.issues
+            ? (err.issues as Array<{ message: string }>).map((i) => i.message).join(', ')
+            : err?.message || 'Failed to create subgenre';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     },
   });
 
-  // Update subgenre mutation
+  // Update
   const updateSubgenreMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<SubgenreFormData> }) =>
       apiRequest('PATCH', `/api/admin/subgenres/${id}`, data),
@@ -222,79 +193,65 @@ export function SubgenresManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
       setShowEditDialog(false);
       setEditingSubgenre(null);
-      toast({
-        title: 'Success',
-        description: 'Subgenre updated successfully',
-      });
+      userEditedEditSlug.current = false;
+      toast({ title: 'Success', description: 'Subgenre updated successfully' });
     },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update subgenre',
-        variant: 'destructive',
-      });
+    onError: (err: any) => {
+      const msg =
+        err?.status === 409
+          ? 'Name or slug already exists'
+          : err?.issues
+            ? (err.issues as Array<{ message: string }>).map((i) => i.message).join(', ')
+            : err?.message || 'Failed to update subgenre';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     },
   });
 
-  // Delete subgenre mutation
+  // Delete
   const deleteSubgenreMutation = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/subgenres/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
-      toast({
-        title: 'Success',
-        description: 'Subgenre deleted successfully',
-      });
+      toast({ title: 'Success', description: 'Subgenre deleted successfully' });
     },
-    onError: (error: any) => {
+    onError: (err: any) => {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to delete subgenre',
+        description: err?.message || 'Failed to delete subgenre',
         variant: 'destructive',
       });
     },
   });
 
-  // Form for creating subgenres
+  // Forms
   const createForm = useForm<SubgenreFormData>({
     resolver: zodResolver(subgenreFormSchema),
-    defaultValues: {
-      name: '',
-      slug: '',
-      description: '',
-      isActive: true,
-    },
+    defaultValues: { name: '', slug: '', description: '', isActive: true },
   });
 
-  // Form for editing subgenres
   const editForm = useForm<SubgenreFormData>({
     resolver: zodResolver(subgenreFormSchema),
-    defaultValues: {
-      name: '',
-      slug: '',
-      description: '',
-      isActive: true,
-    },
+    defaultValues: { name: '', slug: '', description: '', isActive: true },
   });
 
-  // Auto-generate slug from name
-  const generateSlug = (name: string) => {
-    return name
+  // Slug helper
+  const generateSlug = (name: string) =>
+    name
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
-  };
 
   const handleCreateSubmit = (data: SubgenreFormData) => {
-    createSubgenreMutation.mutate(data);
+    const payload = { ...data, description: data.description?.trim() || null };
+    createSubgenreMutation.mutate(payload);
   };
 
   const handleEditSubmit = (data: SubgenreFormData) => {
-    if (editingSubgenre) {
-      updateSubgenreMutation.mutate({ id: editingSubgenre.id, data });
-    }
+    if (!editingSubgenre) return;
+    const payload = { ...data, description: data.description?.trim() || null };
+    updateSubgenreMutation.mutate({ id: editingSubgenre.id, data: payload });
   };
 
   const handleEdit = (subgenre: Subgenre) => {
@@ -302,14 +259,15 @@ export function SubgenresManagement() {
     editForm.reset({
       name: subgenre.name,
       slug: subgenre.slug,
-      description: subgenre.description || '',
-      isActive: subgenre.isActive || false,
+      description: subgenre.description ?? '',
+      isActive: subgenre.isActive,
     });
+    userEditedEditSlug.current = false;
     setShowEditDialog(true);
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this subgenre? This action cannot be undone.')) {
+    if (confirm('Delete this subgenre? This cannot be undone.')) {
       deleteSubgenreMutation.mutate(id);
     }
   };
@@ -326,12 +284,22 @@ export function SubgenresManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Header + Create */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-white">Subgenres Management</h2>
           <p className="text-gray-400">Manage horror subgenres for content categorization</p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <Dialog
+          open={showCreateDialog}
+          onOpenChange={(o) => {
+            setShowCreateDialog(o);
+            if (!o) {
+              userEditedCreateSlug.current = false;
+              createForm.reset();
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="bg-red-600 hover:bg-red-700 text-white">
               <Plus className="w-4 h-4 mr-2" />
@@ -341,9 +309,7 @@ export function SubgenresManagement() {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Create New Subgenre</DialogTitle>
-              <DialogDescription>
-                Add a new horror subgenre for categorizing content.
-              </DialogDescription>
+              <DialogDescription>Add a new horror subgenre.</DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
               <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-4">
@@ -359,9 +325,11 @@ export function SubgenresManagement() {
                           placeholder="e.g., Psychological Horror"
                           onChange={(e) => {
                             field.onChange(e);
-                            // Auto-generate slug
-                            const slug = generateSlug(e.target.value);
-                            createForm.setValue('slug', slug);
+                            if (!userEditedCreateSlug.current) {
+                              createForm.setValue('slug', generateSlug(e.target.value), {
+                                shouldValidate: true,
+                              });
+                            }
                           }}
                         />
                       </FormControl>
@@ -369,7 +337,6 @@ export function SubgenresManagement() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={createForm.control}
                   name="slug"
@@ -377,16 +344,20 @@ export function SubgenresManagement() {
                     <FormItem>
                       <FormLabel>Slug</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g., psychological-horror" />
+                        <Input
+                          {...field}
+                          placeholder="e.g., psychological-horror"
+                          onChange={(e) => {
+                            userEditedCreateSlug.current = true;
+                            field.onChange(e);
+                          }}
+                        />
                       </FormControl>
-                      <FormDescription>
-                        URL-friendly identifier (auto-generated from name)
-                      </FormDescription>
+                      <FormDescription>URL-friendly identifier</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={createForm.control}
                   name="description"
@@ -400,7 +371,6 @@ export function SubgenresManagement() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={createForm.control}
                   name="isActive"
@@ -408,9 +378,7 @@ export function SubgenresManagement() {
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                       <div className="space-y-0.5">
                         <FormLabel>Active</FormLabel>
-                        <FormDescription>
-                          Whether this subgenre is available for use
-                        </FormDescription>
+                        <FormDescription>Whether this subgenre is available</FormDescription>
                       </div>
                       <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -418,7 +386,6 @@ export function SubgenresManagement() {
                     </FormItem>
                   )}
                 />
-
                 <DialogFooter>
                   <Button type="submit" disabled={createSubgenreMutation.isPending}>
                     {createSubgenreMutation.isPending ? 'Creating...' : 'Create Subgenre'}
@@ -430,25 +397,23 @@ export function SubgenresManagement() {
         </Dialog>
       </div>
 
-      {/* Drag and Drop Subgenres List */}
+      {/* List with Drag and Drop */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={items} strategy={verticalListSortingStrategy}>
           <div className="grid gap-4">
-            {sortedSubgenres?.map((subgenre: Subgenre) => (
+            {sortedSubgenres.map((sg) => (
               <SortableSubgenreCard
-                key={subgenre.id}
-                subgenre={subgenre}
+                key={sg.id}
+                subgenre={sg}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                isDeleting={deleteSubgenreMutation.isPending}
               />
             ))}
-
-            {sortedSubgenres?.length === 0 && (
+            {sortedSubgenres.length === 0 && (
               <Card className="bg-gray-800 border-gray-700">
                 <CardContent className="text-center py-8">
-                  <p className="text-gray-400">
-                    No subgenres found. Create your first subgenre to get started.
-                  </p>
+                  <p className="text-gray-400">No subgenres yet. Create your first one!</p>
                 </CardContent>
               </Card>
             )}
@@ -457,7 +422,13 @@ export function SubgenresManagement() {
       </DndContext>
 
       {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <Dialog
+        open={showEditDialog}
+        onOpenChange={(o) => {
+          setShowEditDialog(o);
+          if (!o) setEditingSubgenre(null);
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Subgenre</DialogTitle>
@@ -477,9 +448,11 @@ export function SubgenresManagement() {
                         placeholder="e.g., Psychological Horror"
                         onChange={(e) => {
                           field.onChange(e);
-                          // Auto-generate slug
-                          const slug = generateSlug(e.target.value);
-                          editForm.setValue('slug', slug);
+                          if (!userEditedEditSlug.current) {
+                            editForm.setValue('slug', generateSlug(e.target.value), {
+                              shouldValidate: true,
+                            });
+                          }
                         }}
                       />
                     </FormControl>
@@ -487,7 +460,6 @@ export function SubgenresManagement() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={editForm.control}
                 name="slug"
@@ -495,14 +467,20 @@ export function SubgenresManagement() {
                   <FormItem>
                     <FormLabel>Slug</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., psychological-horror" />
+                      <Input
+                        {...field}
+                        placeholder="e.g., psychological-horror"
+                        onChange={(e) => {
+                          userEditedEditSlug.current = true;
+                          field.onChange(e);
+                        }}
+                      />
                     </FormControl>
                     <FormDescription>URL-friendly identifier</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={editForm.control}
                 name="description"
@@ -510,13 +488,12 @@ export function SubgenresManagement() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Brief description of this subgenre..." />
+                      <Textarea {...field} placeholder="Brief description..." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={editForm.control}
                 name="isActive"
@@ -524,7 +501,7 @@ export function SubgenresManagement() {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
                       <FormLabel>Active</FormLabel>
-                      <FormDescription>Whether this subgenre is available for use</FormDescription>
+                      <FormDescription>Whether this subgenre is available</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -532,7 +509,6 @@ export function SubgenresManagement() {
                   </FormItem>
                 )}
               />
-
               <DialogFooter>
                 <Button type="submit" disabled={updateSubgenreMutation.isPending}>
                   {updateSubgenreMutation.isPending ? 'Updating...' : 'Update Subgenre'}
@@ -546,7 +522,7 @@ export function SubgenresManagement() {
   );
 }
 
-// SortableSubgenreCard component for drag and drop
+// ----- Sortable card -----
 interface SortableSubgenreCardProps {
   subgenre: Subgenre;
   onEdit: (subgenre: Subgenre) => void;
@@ -564,10 +540,7 @@ function SortableSubgenreCard({
     id: subgenre.id,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <Card
@@ -586,7 +559,7 @@ function SortableSubgenreCard({
             <GripVertical className="h-4 w-4" />
           </div>
 
-          {/* Subgenre Info */}
+          {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-sm font-medium text-white truncate">{subgenre.name}</h3>
