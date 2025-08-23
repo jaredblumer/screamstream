@@ -77,7 +77,6 @@ export async function convertWatchmodeTitleToContent(
     watchmodeId: title.id,
     imdbId: title.imdb_id,
     tmdbId: title.tmdb_id,
-    backdropPath: null,
     originalTitle: title.original_title !== title.title ? title.original_title : null,
     releaseDate: title.release_date || null,
     usRating: title.us_rating || null,

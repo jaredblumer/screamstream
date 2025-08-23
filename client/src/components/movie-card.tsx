@@ -1,12 +1,19 @@
+import { useState } from 'react';
 import { Star, Heart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatSubgenre } from '@/lib/utils';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import type { ContentWithPlatforms } from '@shared/schema';
-import { useState } from 'react';
+import { getDisplaySubgenreName } from '@/lib/subgenres';
+
+type SubLite = { id: number; name: string; slug: string };
+type MovieForCard = ContentWithPlatforms & {
+  subgenres?: SubLite[];
+  primarySubgenre?: SubLite | null;
+  primarySubgenreId?: number | null;
+};
 
 interface MovieCardProps {
-  movie: ContentWithPlatforms;
+  movie: MovieForCard;
   onClick: () => void;
   selectedSubgenre?: string;
   onWatchlistToggle?: () => void;
@@ -22,31 +29,17 @@ export default function MovieCard({
   const inWatchlist = isInWatchlist(movie.id);
   const [posterError, setPosterError] = useState(false);
 
-  // Use placeholder if poster URL is missing or failed to load
   const displayPosterUrl =
     posterError || !movie.posterUrl || movie.posterUrl.trim() === ''
       ? '/posters/default_poster.svg'
       : movie.posterUrl;
 
-  // Helper function to determine which subgenre to display
-  const getDisplaySubgenre = () => {
-    if (selectedSubgenre && selectedSubgenre !== 'all') {
-      const matchingSubgenre = movie.subgenres?.find(
-        (subgenre) => subgenre.toLowerCase() === selectedSubgenre.toLowerCase()
-      );
-      if (matchingSubgenre) {
-        return formatSubgenre(matchingSubgenre);
-      }
-    }
-    return formatSubgenre(movie.primarySubgenre);
-  };
+  const displaySubgenreName = getDisplaySubgenreName(movie, selectedSubgenre);
 
   const handleWatchlistClick = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the card click
+    e.stopPropagation();
     const success = await toggleWatchlist(movie.id);
-    if (success) {
-      onWatchlistToggle?.();
-    }
+    if (success) onWatchlistToggle?.();
   };
 
   const isSeries = movie.type === 'series';
@@ -63,7 +56,7 @@ export default function MovieCard({
           className="w-full h-80 object-cover"
           onError={() => setPosterError(true)}
         />
-        {/* Content Type Badge */}
+
         <div className="absolute top-2 left-2">
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -73,38 +66,37 @@ export default function MovieCard({
             {isSeries ? 'SERIES' : 'MOVIE'}
           </span>
         </div>
-        {/* Rating Badges */}
+
         <div className="absolute top-2 right-2 flex flex-col gap-1">
-          {movie.criticsRating && (
-            <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
+          {movie.criticsRating != null && (
+            <div className="bg-black/80 text-white rounded px-2 py-1 text-xs flex items-center">
               <Star className="inline w-3 h-3 mr-1 horror-orange fill-current" />
-              {movie.criticsRating.toFixed(1)}
+              {Number(movie.criticsRating).toFixed(1)}
             </div>
           )}
-          {movie.usersRating && (
-            <div className="bg-black bg-opacity-80 text-white rounded px-2 py-1 text-xs flex items-center">
+          {movie.usersRating != null && (
+            <div className="bg-black/80 text-white rounded px-2 py-1 text-xs flex items-center">
               <User className="inline w-3 h-3 mr-1 text-red-400" />
-              {movie.usersRating.toFixed(1)}
+              {Number(movie.usersRating).toFixed(1)}
             </div>
           )}
         </div>
-        {/* Watchlist Button */}
+
         <div className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="sm"
             onClick={handleWatchlistClick}
-            className={`${
-              inWatchlist ? 'horror-button-primary' : 'horror-button-secondary'
-            } backdrop-blur-sm`}
+            className={`${inWatchlist ? 'horror-button-primary' : 'horror-button-secondary'} backdrop-blur-sm`}
           >
             <Heart className={`h-4 w-4 ${inWatchlist ? 'fill-current' : ''}`} />
           </Button>
         </div>
       </div>
+
       <div className="p-4">
         <h3 className="font-semibold text-white mb-1 truncate">{movie.title}</h3>
         <p className="text-gray-400 text-sm mb-2">
-          {movie.year} • {getDisplaySubgenre()}
+          {movie.year} • {displaySubgenreName || '—'}
           {isSeries && movie.seasons && movie.episodes && (
             <span className="ml-2 text-red-400">
               • {movie.seasons} Season{movie.seasons > 1 ? 's' : ''} • {movie.episodes} Episodes
@@ -113,11 +105,9 @@ export default function MovieCard({
         </p>
         <p className="text-gray-300 text-sm line-clamp-2 mb-3">{movie.description}</p>
 
-        {/* Streaming Platforms */}
         <div className="flex items-center gap-2">
           {movie.platformsBadges?.map((badge) => {
             const { platformId, platformName, imageUrl, webUrl } = badge;
-
             const logo = (
               <img
                 src={imageUrl}
@@ -126,10 +116,7 @@ export default function MovieCard({
                 className="w-6 h-6 rounded platform-logo transition-transform hover:scale-110 cursor-pointer"
               />
             );
-
-            // Helper to stop card navigation when clicking a badge
             const stop = (e: React.MouseEvent) => e.stopPropagation();
-
             return webUrl ? (
               <a
                 key={platformId}
@@ -139,7 +126,7 @@ export default function MovieCard({
                 className="inline-block transition-opacity hover:opacity-80"
                 title={`Watch "${movie.title}" on ${platformName}`}
                 onClick={stop}
-                onAuxClick={stop} // middle click
+                onAuxClick={stop}
               >
                 {logo}
               </a>

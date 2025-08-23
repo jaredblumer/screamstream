@@ -80,7 +80,10 @@ export function registerContentRoutes(app: Express) {
           (Array.isArray(q.includeInactive) ? q.includeInactive[0] : q.includeInactive) === 'true',
       };
 
-      const rows = await storage.getContent(filters);
+      const rows = await storage.getContent(filters, {
+        includeSubgenres: true,
+        includePrimary: true,
+      });
       res.json(rows);
     } catch (error) {
       console.error('GET /api/content failed:', error);
@@ -92,20 +95,18 @@ export function registerContentRoutes(app: Express) {
   });
 
   app.get('/api/content/:id', async (req, res) => {
-    console.log('GET /api/content/:id called with params:', req.params);
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) return res.status(400).json({ message: 'Invalid content ID' });
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) return res.status(400).json({ message: 'Invalid content ID' });
 
-      const content = await storage.getContentItem(id);
-      if (!content) return res.status(404).json({ message: 'Content not found' });
+      const item = await storage.getContentItemWithSubgenres(id);
+      if (!item) return res.status(404).json({ message: 'Not found' });
 
-      res.json(content);
-    } catch (error) {
-      res.status(500).json({
-        message: 'Failed to fetch content',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      res.json(item);
+    } catch (err: any) {
+      res
+        .status(500)
+        .json({ message: 'Failed to fetch content item', error: err?.message ?? 'Unknown' });
     }
   });
 

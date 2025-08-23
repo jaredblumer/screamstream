@@ -10,9 +10,16 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { formatSubgenre } from '@/lib/utils';
 import { useSearch } from '@/contexts/SearchContext';
 import type { ContentWithPlatforms } from '@shared/schema';
+import { getPrimarySubgenre, getSubgenreNames } from '@/lib/subgenres';
+
+type SubLite = { id: number; name: string; slug: string };
+type DetailMovie = ContentWithPlatforms & {
+  subgenres?: SubLite[];
+  primarySubgenre?: SubLite | null;
+  primarySubgenreId?: number | null;
+};
 
 export default function MovieDetail() {
   const [, setLocation] = useLocation();
@@ -31,7 +38,7 @@ export default function MovieDetail() {
     data: movie,
     isLoading,
     error,
-  } = useQuery<ContentWithPlatforms>({
+  } = useQuery<DetailMovie>({
     queryKey: ['/api/content', movieId],
     queryFn: async () => {
       const response = await fetch(`/api/content/${movieId}`);
@@ -93,6 +100,15 @@ export default function MovieDetail() {
     );
   }
 
+  // Common subgenre chips (always names)
+  const subgenreNames = getSubgenreNames(movie);
+  const chipNames =
+    subgenreNames.length > 0
+      ? subgenreNames
+      : getPrimarySubgenre(movie)
+        ? [getPrimarySubgenre(movie)!.name]
+        : [];
+
   return (
     <>
       <Header />
@@ -115,7 +131,6 @@ export default function MovieDetail() {
         <div className="max-w-6xl mx-auto px-6 sm:px-6 pt-0 md:pt-8 pb-6">
           {/* MOBILE layout */}
           <div className="md:hidden">
-            {/* Media + meta in two columns: larger poster left, text right */}
             <div className="pt-4 rounded-lg">
               <div className="grid grid-cols-[auto,1fr] gap-4 items-start">
                 <img
@@ -130,12 +145,12 @@ export default function MovieDetail() {
                 />
 
                 <div className="min-w-0">
-                  {/* Larger title */}
+                  {/* Title */}
                   <h1 className="text-3xl font-bold text-white mb-2 leading-tight">
                     {movie.title}
                   </h1>
 
-                  {/* Line 1: year / type / seasons */}
+                  {/* Meta */}
                   <div className="flex flex-wrap items-center gap-3 text-gray-200 text-sm">
                     <span className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
@@ -155,7 +170,7 @@ export default function MovieDetail() {
                     )}
                   </div>
 
-                  {/* Line 2: ratings (to the right, beneath meta) */}
+                  {/* Ratings */}
                   <div className="mt-2 flex flex-wrap items-center gap-4 text-gray-200 text-sm">
                     {typeof movie.criticsRating === 'number' && (
                       <span className="flex items-center">
@@ -171,18 +186,16 @@ export default function MovieDetail() {
                     )}
                   </div>
 
-                  {/* Line 3: subgenres (right column) */}
+                  {/* Subgenres (names) */}
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {(movie.subgenres?.length ? movie.subgenres : [movie.subgenre])
-                      .filter(Boolean)
-                      .map((sg, i) => (
-                        <span
-                          key={i}
-                          className="blood-red-bg text-white px-3 py-1 rounded-full text-xs font-medium"
-                        >
-                          {formatSubgenre(sg)}
-                        </span>
-                      ))}
+                    {chipNames.map((name, i) => (
+                      <span
+                        key={`${name}-${i}`}
+                        className="blood-red-bg text-white px-3 py-1 rounded-full text-xs font-medium"
+                      >
+                        {name}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -192,10 +205,8 @@ export default function MovieDetail() {
             <div className="mt-4 mb-6">
               <h3 className="text-base font-semibold text-white mb-2">Available On</h3>
               <div className="flex flex-wrap gap-3">
-                {movie.platformsBadges.map((badge) => {
+                {movie.platformsBadges?.map((badge) => {
                   const { platformId, platformName, imageUrl, webUrl } = badge;
-                  const name = platformName;
-                  const logo = imageUrl;
                   const Comp: any = webUrl ? 'a' : 'div';
                   return (
                     <Comp
@@ -206,10 +217,10 @@ export default function MovieDetail() {
                       className={`flex items-center dark-gray-bg rounded-xl px-3 py-2 border border-gray-700 ${
                         webUrl ? 'hover:bg-gray-700 transition-colors cursor-pointer' : ''
                       }`}
-                      title={webUrl ? `Watch on ${name}` : name}
+                      title={webUrl ? `Watch on ${platformName}` : platformName}
                     >
-                      <img src={logo} alt={name} className="w-6 h-6 rounded mr-2" />
-                      <span className="text-white text-sm font-medium">{name}</span>
+                      <img src={imageUrl} alt={platformName} className="w-6 h-6 rounded mr-2" />
+                      <span className="text-white text-sm font-medium">{platformName}</span>
                       {webUrl && <span className="ml-2 text-xs text-gray-400">↗</span>}
                     </Comp>
                   );
@@ -223,7 +234,7 @@ export default function MovieDetail() {
               <p className="text-gray-300 leading-relaxed">{movie.description}</p>
             </div>
 
-            {/* Mobile action buttons */}
+            {/* Mobile actions */}
             <div className="flex flex-wrap gap-3">
               <Button
                 className={`flex-1 min-w-[48%] ${
@@ -260,7 +271,7 @@ export default function MovieDetail() {
             </div>
           </div>
 
-          {/* DESKTOP layout (original content) */}
+          {/* DESKTOP layout */}
           <div className="hidden md:block py-6">
             {/* Back Button */}
             <Button
@@ -274,7 +285,7 @@ export default function MovieDetail() {
 
             {/* Header with Image and Title */}
             <div className="flex flex-col md:flex-row gap-6 mb-8">
-              {/* Movie Poster */}
+              {/* Poster */}
               <div className="flex-shrink-0">
                 <div className="relative">
                   <img
@@ -290,7 +301,7 @@ export default function MovieDetail() {
                 </div>
               </div>
 
-              {/* Movie Title and Basic Info */}
+              {/* Title + meta */}
               <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{movie.title}</h1>
 
@@ -318,7 +329,7 @@ export default function MovieDetail() {
                   )}
                 </div>
 
-                {/* Ratings block (desktop) */}
+                {/* Ratings */}
                 <div className="flex items-center gap-4 mb-4 text-gray-300">
                   {typeof movie.criticsRating === 'number' && (
                     <div className="flex items-center">
@@ -334,22 +345,17 @@ export default function MovieDetail() {
                   )}
                 </div>
 
+                {/* Subgenres (names only) */}
                 <div className="mb-4">
                   <div className="flex flex-wrap gap-2">
-                    {movie.subgenres && movie.subgenres.length > 0 ? (
-                      movie.subgenres.map((subgenre, index) => (
-                        <span
-                          key={index}
-                          className="inline-block blood-red-bg text-white px-3 py-1 rounded-full text-sm font-medium"
-                        >
-                          {formatSubgenre(subgenre)}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="inline-block blood-red-bg text-white px-3 py-1 rounded-full text-sm font-medium">
-                        {formatSubgenre(movie.subgenre)}
+                    {chipNames.map((name, i) => (
+                      <span
+                        key={`${name}-${i}`}
+                        className="inline-block blood-red-bg text-white px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {name}
                       </span>
-                    )}
+                    ))}
                   </div>
                 </div>
 
@@ -357,7 +363,7 @@ export default function MovieDetail() {
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold text-white mb-3">Available On</h3>
                   <div className="flex flex-wrap gap-3">
-                    {movie.platformsBadges.map((badge) => {
+                    {movie.platformsBadges?.map((badge) => {
                       const { platformId, platformName, imageUrl, webUrl } = badge;
                       const PlatformComponent = webUrl ? 'a' : 'div';
                       return (
@@ -380,7 +386,7 @@ export default function MovieDetail() {
                   </div>
                 </div>
 
-                {/* Action Buttons (desktop stays here) */}
+                {/* Actions */}
                 <div className="flex flex-wrap gap-3">
                   <Button
                     className={`px-4 py-2 ${
@@ -422,7 +428,7 @@ export default function MovieDetail() {
               </div>
             </div>
 
-            {/* Synopsis Section (desktop) */}
+            {/* Synopsis */}
             <div className="mb-0">
               <h2 className="text-xl font-semibold text-white mb-3">Synopsis</h2>
               <p className="text-gray-300 leading-relaxed text-lg">{movie.description}</p>
