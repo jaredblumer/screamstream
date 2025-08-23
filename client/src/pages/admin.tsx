@@ -3,10 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EyeOff, Database, Search, X } from 'lucide-react';
+import { EyeOff, Database } from 'lucide-react';
 import { isUnauthorizedError } from '@/lib/authUtils';
 import type { Content, InsertContent, Subgenre } from '@shared/schema';
 import WatchmodeSync from '@/components/watchmode-sync';
@@ -23,7 +22,6 @@ export default function Admin() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
   const [dialogOpen, setDialogOpen] = useState(false);
