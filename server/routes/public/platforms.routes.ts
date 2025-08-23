@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from 'express';
 import { db } from '@server/db';
-import { platforms } from '@shared/schema';
+import { platforms, content, contentPlatforms } from '@shared/schema';
 import { asc, eq } from 'drizzle-orm';
 
 export function registerPlatformRoutes(app: Express) {
@@ -21,6 +21,36 @@ export function registerPlatformRoutes(app: Express) {
     } catch (err) {
       console.error('GET /api/platforms failed:', err);
       res.status(500).json({ message: 'Failed to load platforms' });
+    }
+  });
+
+  app.get('/api/platforms/with-active-content', async (req: Request, res: Response) => {
+    try {
+      const rows = await db
+        .select({
+          id: platforms.id,
+          platformKey: platforms.platformKey,
+          platformName: platforms.platformName,
+          watchmodeId: platforms.watchmodeId,
+          imageUrl: platforms.imageUrl,
+        })
+        .from(platforms)
+        .innerJoin(contentPlatforms, eq(contentPlatforms.platformId, platforms.id))
+        .innerJoin(content, eq(contentPlatforms.contentId, content.id))
+        .where(eq(content.active, true as unknown as boolean))
+        .groupBy(
+          platforms.id,
+          platforms.platformKey,
+          platforms.platformName,
+          platforms.watchmodeId,
+          platforms.imageUrl
+        )
+        .orderBy(asc(platforms.platformName));
+
+      res.json(rows);
+    } catch (err) {
+      console.error('GET /api/platforms/with-active-content failed:', err);
+      res.status(500).json({ message: 'Failed to load platforms with active content' });
     }
   });
 

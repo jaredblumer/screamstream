@@ -51,9 +51,9 @@ export default function FilterControls({
   });
 
   const { data: platforms = [] } = useQuery<Platform[]>({
-    queryKey: ['/api/platforms'],
+    queryKey: ['/api/platforms/with-active-content'],
     queryFn: async () => {
-      const res = await fetch('/api/platforms');
+      const res = await fetch('/api/platforms/with-active-content');
       if (!res.ok) throw new Error('Failed to load platforms');
       return res.json();
     },
