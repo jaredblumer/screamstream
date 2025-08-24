@@ -151,6 +151,7 @@ export default function WatchmodeSync() {
     'Peacock',
     'Shudder',
     'Tubi',
+    'Pluto TV',
   ];
 
   const handlePlatformChange = (platform: string, checked: boolean) => {
