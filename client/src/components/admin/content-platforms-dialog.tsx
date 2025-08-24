@@ -50,7 +50,6 @@ export default function ContentPlatformsDialog({
     return true;
   };
 
-  // Existing platform links for this content
   const {
     data: badges = [],
     isLoading: isLoadingBadges,
@@ -65,7 +64,6 @@ export default function ContentPlatformsDialog({
     },
   });
 
-  // All platforms for dropdown (public route)
   const { data: allPlatforms = [], isLoading: isLoadingPlatforms } = useQuery<PlatformListItem[]>({
     queryKey: ['/api/platforms'],
     enabled: open,
@@ -79,7 +77,6 @@ export default function ContentPlatformsDialog({
   const [editUrls, setEditUrls] = useState<Record<number, string>>({});
   const [originalUrls, setOriginalUrls] = useState<Record<number, string>>({});
 
-  // Only update local state if derived records actually differ
   useEffect(() => {
     if (!badges) return;
     const next: Record<number, string> = {};
@@ -98,7 +95,6 @@ export default function ContentPlatformsDialog({
   const isDirty = (platformId: number) =>
     (editUrls[platformId] ?? '') !== (originalUrls[platformId] ?? '');
 
-  // ---- mutations ----
   const updateMutation = useMutation({
     mutationFn: async (payload: { platformId: number; webUrl: string }) => {
       const res = await fetch(`/api/admin/content/${contentId}/platforms/${payload.platformId}`, {
@@ -168,13 +164,11 @@ export default function ContentPlatformsDialog({
     },
   });
 
-  // Add row state
   const [addPlatformId, setAddPlatformId] = useState<number | undefined>(undefined);
   const [addUrl, setAddUrl] = useState('');
 
   const saveRow = (platformId: number) => {
     const raw = editUrls[platformId] ?? '';
-    // local update for immediate UI reflection (no normalization)
     setEditUrls((prev) => ({ ...prev, [platformId]: raw }));
     updateMutation.mutate({ platformId, webUrl: raw });
   };
