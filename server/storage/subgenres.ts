@@ -10,7 +10,7 @@ export async function getSubgenres(activeOnly = false): Promise<Subgenre[]> {
     query = query.where(eq(subgenres.isActive, true));
   }
 
-  return await query.orderBy(subgenres.sortOrder, subgenres.name);
+  return await query.orderBy(subgenres.name);
 }
 
 export async function getSubgenre(id: number): Promise<Subgenre | undefined> {
@@ -39,19 +39,4 @@ export async function updateSubgenre(
 export async function deleteSubgenre(id: number): Promise<boolean> {
   const result = await db.delete(subgenres).where(eq(subgenres.id, id));
   return result.rowCount !== null && result.rowCount > 0;
-}
-
-export async function reorderSubgenres(orderedIds: number[]): Promise<boolean> {
-  try {
-    for (let i = 0; i < orderedIds.length; i++) {
-      await db
-        .update(subgenres)
-        .set({ sortOrder: i + 1 })
-        .where(eq(subgenres.id, orderedIds[i]));
-    }
-    return true;
-  } catch (error) {
-    console.error('Error reordering subgenres:', error);
-    return false;
-  }
 }
