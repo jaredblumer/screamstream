@@ -8,10 +8,6 @@ const listQuerySchema = z.object({
   activeOnly: z.coerce.boolean().optional().default(false),
 });
 
-const reorderBodySchema = z.object({
-  orderedIds: z.array(z.number().int().positive()).min(1),
-});
-
 export function registerAdminSubgenreRoutes(app: Express) {
   app.get('/api/admin/subgenres', requireAdmin, async (req, res) => {
     try {
@@ -98,23 +94,6 @@ export function registerAdminSubgenreRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({
         message: 'Failed to delete subgenre',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
-  });
-
-  app.put('/api/admin/subgenres/reorder', requireAdmin, async (req, res) => {
-    try {
-      const { orderedIds } = reorderBodySchema.parse(req.body);
-      const ok = await storage.reorderSubgenres(orderedIds);
-      if (!ok) return res.status(500).json({ message: 'Failed to reorder subgenres' });
-      res.json({ message: 'Subgenres reordered successfully' });
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid payload', issues: error.issues });
-      }
-      res.status(500).json({
-        message: 'Failed to reorder subgenres',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

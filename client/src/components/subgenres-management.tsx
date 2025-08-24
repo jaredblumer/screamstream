@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,25 +28,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash2, GripVertical, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { z } from 'zod';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 // ----- Types that mirror the /api/admin/subgenres responses -----
 interface Subgenre {
@@ -55,7 +38,6 @@ interface Subgenre {
   slug: string;
   description: string | null;
   isActive: boolean;
-  sortOrder: number;
 }
 
 // ----- Form schema (client-side) matches server expectations -----
@@ -88,7 +70,6 @@ export function SubgenresManagement() {
     queryKey: ['/api/admin/subgenres'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/admin/subgenres');
-      // Normalize: handle Response, {data: [...]}, or raw array
       let data: unknown = res;
       if (res && typeof res === 'object') {
         if ('json' in (res as any) && typeof (res as any).json === 'function') {
@@ -101,69 +82,6 @@ export function SubgenresManagement() {
     },
     staleTime: 30_000,
   });
-
-  // DnD sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  // Sort by sortOrder for display
-  const sortedSubgenres = useMemo(() => {
-    const arr = Array.isArray(subgenres) ? subgenres : [];
-    return [...arr].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-  }, [subgenres]);
-
-  const items = useMemo(() => sortedSubgenres.map((s) => s.id), [sortedSubgenres]);
-
-  // Optimistic reorder
-  const reorderSubgenresMutation = useMutation({
-    mutationFn: async (orderedIds: number[]) =>
-      apiRequest('PUT', '/api/admin/subgenres/reorder', { orderedIds }),
-    onMutate: async (orderedIds) => {
-      await queryClient.cancelQueries({ queryKey: ['/api/admin/subgenres'] });
-      const previous = queryClient.getQueryData(['/api/admin/subgenres']);
-      const prevArray: Subgenre[] = Array.isArray(previous) ? (previous as Subgenre[]) : [];
-
-      if (prevArray.length) {
-        const lookup = new Map(prevArray.map((s) => [s.id, s]));
-        const optimistic = orderedIds
-          .map((id, i) => {
-            const s = lookup.get(id);
-            return s ? { ...s, sortOrder: i + 1 } : null;
-          })
-          .filter(Boolean) as Subgenre[];
-        queryClient.setQueryData(['/api/admin/subgenres'], optimistic);
-      }
-
-      return { previous };
-    },
-    onError: (err: any, _newData, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(['/api/admin/subgenres'], ctx.previous);
-      toast({
-        title: 'Error',
-        description: err?.message || 'Failed to reorder subgenres. Please try again.',
-        variant: 'destructive',
-      });
-    },
-    onSuccess: () => {
-      toast({ title: 'Success', description: 'Subgenres reordered successfully' });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/subgenres'] });
-    },
-  });
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = items.indexOf(active.id as number);
-    const newIndex = items.indexOf(over.id as number);
-    const newOrder = arrayMove(sortedSubgenres, oldIndex, newIndex);
-    const orderedIds = newOrder.map((s) => s.id);
-    reorderSubgenresMutation.mutate(orderedIds);
-  };
 
   // Create
   const createSubgenreMutation = useMutation({
@@ -397,29 +315,24 @@ export function SubgenresManagement() {
         </Dialog>
       </div>
 
-      {/* List with Drag and Drop */}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={items} strategy={verticalListSortingStrategy}>
-          <div className="grid gap-4">
-            {sortedSubgenres.map((sg) => (
-              <SortableSubgenreCard
-                key={sg.id}
-                subgenre={sg}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                isDeleting={deleteSubgenreMutation.isPending}
-              />
-            ))}
-            {sortedSubgenres.length === 0 && (
-              <Card className="bg-gray-800 border-gray-700">
-                <CardContent className="text-center py-8">
-                  <p className="text-gray-400">No subgenres yet. Create your first one!</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </SortableContext>
-      </DndContext>
+      <div className="grid gap-4">
+        {subgenres.map((sg) => (
+          <SubgenreCard
+            key={sg.id}
+            subgenre={sg}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isDeleting={deleteSubgenreMutation.isPending}
+          />
+        ))}
+        {subgenres.length === 0 && (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="text-center py-8">
+              <p className="text-gray-400">No subgenres yet. Create your first one!</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Edit Dialog */}
       <Dialog
@@ -522,43 +435,18 @@ export function SubgenresManagement() {
   );
 }
 
-// ----- Sortable card -----
-interface SortableSubgenreCardProps {
+interface SubgenreCardProps {
   subgenre: Subgenre;
   onEdit: (subgenre: Subgenre) => void;
   onDelete: (id: number) => void;
   isDeleting?: boolean;
 }
 
-function SortableSubgenreCard({
-  subgenre,
-  onEdit,
-  onDelete,
-  isDeleting,
-}: SortableSubgenreCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: subgenre.id,
-  });
-
-  const style = { transform: CSS.Transform.toString(transform), transition };
-
+function SubgenreCard({ subgenre, onEdit, onDelete, isDeleting }: SubgenreCardProps) {
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className={`bg-gray-800 border-gray-700 ${isDragging ? 'opacity-50' : ''}`}
-    >
+    <Card className="bg-gray-800 border-gray-700">
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
-          {/* Drag Handle */}
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab hover:cursor-grabbing text-gray-500 hover:text-gray-300"
-          >
-            <GripVertical className="h-4 w-4" />
-          </div>
-
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
