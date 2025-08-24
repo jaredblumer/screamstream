@@ -11,7 +11,7 @@ import Footer from '@/components/footer';
 import type { Subgenre } from '@shared/schema';
 
 // Shape returned by /api/content list (normalized + with names)
-type SubLite = { id: number; name: string; slug: string };
+type SubgenreLite = { id: number; name: string; slug: string };
 type MovieRow = {
   id: number;
   title: string;
@@ -21,8 +21,8 @@ type MovieRow = {
   criticsRating?: number | null;
   usersRating?: number | null;
   averageRating?: number | null;
-  subgenres?: SubLite[];
-  primarySubgenre?: SubLite | null;
+  subgenres?: SubgenreLite[];
+  primarySubgenre?: SubgenreLite | null;
 };
 
 interface SubgenreData {
