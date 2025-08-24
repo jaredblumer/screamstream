@@ -4,7 +4,7 @@ import { getPlatformsForContentId, getPlatformsForContentIds } from './content-p
 import { content, platforms, contentPlatforms, contentSubgenres, subgenres } from '@shared/schema';
 import type { InsertContent, Content, ContentWithPlatforms, PlatformBadge } from '@shared/schema';
 
-type SubLite = { id: number; name: string; slug: string };
+type SubgenreLite = { id: number; name: string; slug: string };
 
 export async function getContentItemWithSubgenres(id: number) {
   const [row] = await db.select().from(content).where(eq(content.id, id));
@@ -20,7 +20,7 @@ export async function getContentItemWithSubgenres(id: number) {
     .innerJoin(subgenres, eq(contentSubgenres.subgenreId, subgenres.id))
     .where(eq(contentSubgenres.contentId, id));
 
-  let primary: SubLite | null = null;
+  let primary: SubgenreLite | null = null;
   if (row.primarySubgenreId) {
     const match = subs.find((s) => s.id === row.primarySubgenreId);
     if (match) primary = match;
@@ -37,7 +37,7 @@ export async function getContentItemWithSubgenres(id: number) {
 
   return {
     ...row,
-    subgenres: subs as SubLite[],
+    subgenres: subs as SubgenreLite[],
     primarySubgenre: primary,
     platformsBadges,
   };
@@ -84,8 +84,8 @@ export async function getContent(
 ): Promise<
   (Content & {
     platformsBadges: PlatformBadge[];
-    subgenres?: SubLite[];
-    primarySubgenre?: SubLite | null;
+    subgenres?: SubgenreLite[];
+    primarySubgenre?: SubgenreLite | null;
   })[]
 > {
   let query = db.select().from(content).$dynamic();
@@ -239,7 +239,7 @@ export async function getContent(
   const platformMap = contentIds.length ? await getPlatformsForContentIds(contentIds) : new Map();
 
   // Optional: subgenres
-  let subsMap = new Map<number, SubLite[]>();
+  let subsMap = new Map<number, SubgenreLite[]>();
   if (opts.includeSubgenres && contentIds.length) {
     const subs = await db
       .select({
@@ -260,12 +260,12 @@ export async function getContent(
   }
 
   // Optional: primary subgenre
-  let primaryMap = new Map<number, SubLite | null>();
+  let primaryMap = new Map<number, SubgenreLite | null>();
   if (opts.includePrimary && rows.length) {
     const primaryIds = Array.from(
       new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
     );
-    const byId = new Map<number, SubLite>();
+    const byId = new Map<number, SubgenreLite>();
     if (primaryIds.length) {
       const primaries = await db
         .select({ id: subgenres.id, name: subgenres.name, slug: subgenres.slug })
@@ -330,13 +330,118 @@ export async function showContent(id: number): Promise<boolean> {
   return !!updated;
 }
 
-export async function getHiddenContent(): Promise<Content[]> {
-  return await db.select().from(content).where(eq(content.hidden, true));
+// Returns HIDDEN content + subgenres + primary + platforms
+export async function getHiddenContent(): Promise<
+  (Content & {
+    platformsBadges: PlatformBadge[];
+    subgenres: SubgenreLite[];
+    primarySubgenre: SubgenreLite | null;
+  })[]
+> {
+  const rows = await db.select().from(content).where(eq(content.hidden, true));
+  if (!rows.length) return [];
+
+  const contentIds = rows.map((r) => r.id);
+
+  // platforms
+  const platformMap = await getPlatformsForContentIds(contentIds);
+
+  // attached subgenres
+  const subs = await db
+    .select({
+      contentId: contentSubgenres.contentId,
+      id: subgenres.id,
+      name: subgenres.name,
+      slug: subgenres.slug,
+    })
+    .from(contentSubgenres)
+    .innerJoin(subgenres, eq(contentSubgenres.subgenreId, subgenres.id))
+    .where(inArray(contentSubgenres.contentId, contentIds));
+
+  const subsMap = new Map<number, SubgenreLite[]>();
+  for (const r of subs) {
+    const arr = subsMap.get(r.contentId) ?? [];
+    arr.push({ id: r.id, name: r.name, slug: r.slug });
+    subsMap.set(r.contentId, arr);
+  }
+
+  // primary subgenres
+  const primaryIds = Array.from(
+    new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
+  );
+  const byId = new Map<number, SubgenreLite>();
+  if (primaryIds.length) {
+    const primaries = await db
+      .select({ id: subgenres.id, name: subgenres.name, slug: subgenres.slug })
+      .from(subgenres)
+      .where(inArray(subgenres.id, primaryIds));
+    for (const p of primaries) byId.set(p.id, p);
+  }
+
+  return rows.map((item) => ({
+    ...item,
+    platformsBadges: platformMap.get(item.id) || [],
+    subgenres: subsMap.get(item.id) || [],
+    primarySubgenre: item.primarySubgenreId ? (byId.get(item.primarySubgenreId) ?? null) : null,
+  }));
 }
 
-export async function getInactiveContent(): Promise<Content[]> {
-  return await db
+// Returns INACTIVE (but not hidden) content + subgenres + primary + platforms
+export async function getInactiveContent(): Promise<
+  (Content & {
+    platformsBadges: PlatformBadge[];
+    subgenres: SubgenreLite[];
+    primarySubgenre: SubgenreLite | null;
+  })[]
+> {
+  const rows = await db
     .select()
     .from(content)
     .where(and(eq(content.active, false), eq(content.hidden, false)));
+
+  if (!rows.length) return [];
+
+  const contentIds = rows.map((r) => r.id);
+
+  // platforms
+  const platformMap = await getPlatformsForContentIds(contentIds);
+
+  // attached subgenres
+  const subs = await db
+    .select({
+      contentId: contentSubgenres.contentId,
+      id: subgenres.id,
+      name: subgenres.name,
+      slug: subgenres.slug,
+    })
+    .from(contentSubgenres)
+    .innerJoin(subgenres, eq(contentSubgenres.subgenreId, subgenres.id))
+    .where(inArray(contentSubgenres.contentId, contentIds));
+
+  const subsMap = new Map<number, SubgenreLite[]>();
+  for (const r of subs) {
+    const arr = subsMap.get(r.contentId) ?? [];
+    arr.push({ id: r.id, name: r.name, slug: r.slug });
+    subsMap.set(r.contentId, arr);
+  }
+
+  // primary subgenres
+  const primaryIds = Array.from(
+    new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
+  );
+  const byId = new Map<number, SubgenreLite>();
+  if (primaryIds.length) {
+    const primaries = await db
+      .select({ id: subgenres.id, name: subgenres.name, slug: subgenres.slug })
+      .from(subgenres)
+      .where(inArray(subgenres.id, primaryIds));
+    for (const p of primaries) byId.set(p.id, p);
+  }
+
+  return rows.map((item) => ({
+    ...item,
+    platformsBadges: platformMap.get(item.id) || [],
+    subgenres: subsMap.get(item.id) || [],
+    primarySubgenre: item.primarySubgenreId ? (byId.get(item.primarySubgenreId) ?? null) : null,
+  }));
 }

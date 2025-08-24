@@ -5,10 +5,10 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import type { ContentWithPlatforms } from '@shared/schema';
 import { getDisplaySubgenreName } from '@/lib/subgenres';
 
-type SubLite = { id: number; name: string; slug: string };
+type SubgenreLite = { id: number; name: string; slug: string };
 type MovieForCard = ContentWithPlatforms & {
-  subgenres?: SubLite[];
-  primarySubgenre?: SubLite | null;
+  subgenres?: SubgenreLite[];
+  primarySubgenre?: SubgenreLite | null;
   primarySubgenreId?: number | null;
 };
 

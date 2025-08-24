@@ -1,22 +1,22 @@
-export type SubLite = { id: number; name: string; slug: string };
+export type SubgenreLite = { id: number; name: string; slug: string };
 
 export type HasSubgenres = {
-  subgenres?: SubLite[];
-  primarySubgenre?: SubLite | null;
+  subgenres?: SubgenreLite[];
+  primarySubgenre?: SubgenreLite | null;
   primarySubgenreId?: number | null;
 };
 
 /** Find a subgenre by slug from a list. */
 export function findSubgenreBySlug(
-  subs: SubLite[] | undefined,
+  subs: SubgenreLite[] | undefined,
   slug?: string | null
-): SubLite | undefined {
+): SubgenreLite | undefined {
   if (!subs || !slug || slug === 'all') return undefined;
   return subs.find((s) => s.slug === slug);
 }
 
 /** Resolve the primary subgenre, preferring the object, then ID lookup, then first item. */
-export function getPrimarySubgenre(item: HasSubgenres): SubLite | undefined {
+export function getPrimarySubgenre(item: HasSubgenres): SubgenreLite | undefined {
   if (item.primarySubgenre) return item.primarySubgenre ?? undefined;
   if (item.primarySubgenreId && item.subgenres?.length) {
     return item.subgenres.find((s) => s.id === item.primarySubgenreId);
@@ -38,7 +38,7 @@ export function getSubgenreNames(item: HasSubgenres): string[] {
 }
 
 /** Whether a given subgenre is the primary for an item. */
-export function isPrimarySubgenre(s: SubLite, item: HasSubgenres): boolean {
+export function isPrimarySubgenre(s: SubgenreLite, item: HasSubgenres): boolean {
   if (item.primarySubgenre?.id != null) return item.primarySubgenre.id === s.id;
   if (item.primarySubgenreId != null) return item.primarySubgenreId === s.id;
   // Fallback: if no primary defined, treat first in list as primary

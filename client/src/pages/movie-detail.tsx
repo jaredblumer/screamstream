@@ -14,10 +14,10 @@ import { useSearch } from '@/contexts/SearchContext';
 import type { ContentWithPlatforms } from '@shared/schema';
 import { getPrimarySubgenre, getSubgenreNames } from '@/lib/subgenres';
 
-type SubLite = { id: number; name: string; slug: string };
+type SubgenreLite = { id: number; name: string; slug: string };
 type DetailMovie = ContentWithPlatforms & {
-  subgenres?: SubLite[];
-  primarySubgenre?: SubLite | null;
+  subgenres?: SubgenreLite[];
+  primarySubgenre?: SubgenreLite | null;
   primarySubgenreId?: number | null;
 };
 
