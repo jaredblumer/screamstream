@@ -40,7 +40,16 @@ export default function ContentPlatformsDialog({
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  // Existing platform links for this content
+  const recordsEqual = (a: Record<number, string>, b: Record<number, string>) => {
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) return false;
+    for (const k of aKeys) {
+      if (a[Number(k)] !== b[Number(k)]) return false;
+    }
+    return true;
+  };
+
   const {
     data: badges = [],
     isLoading: isLoadingBadges,
@@ -55,7 +64,6 @@ export default function ContentPlatformsDialog({
     },
   });
 
-  // All platforms for dropdown (public route)
   const { data: allPlatforms = [], isLoading: isLoadingPlatforms } = useQuery<PlatformListItem[]>({
     queryKey: ['/api/platforms'],
     enabled: open,
@@ -66,41 +74,27 @@ export default function ContentPlatformsDialog({
     },
   });
 
-  // Row edit state
-  const [editUrls, setEditUrls] = useState<Record<number, string>>({}); // key: platformId (string URL)
-  const [originalUrls, setOriginalUrls] = useState<Record<number, string>>({}); // to detect dirty
+  const [editUrls, setEditUrls] = useState<Record<number, string>>({});
+  const [originalUrls, setOriginalUrls] = useState<Record<number, string>>({});
 
   useEffect(() => {
-    if (badges) {
-      const next: Record<number, string> = {};
-      const orig: Record<number, string> = {};
-      for (const b of badges) {
-        const val = b.webUrl ?? '';
-        next[b.platformId] = val;
-        orig[b.platformId] = val;
-      }
-      setEditUrls(next);
-      setOriginalUrls(orig);
+    if (!badges) return;
+    const next: Record<number, string> = {};
+    const orig: Record<number, string> = {};
+    for (const b of badges) {
+      const val = b.webUrl ?? '';
+      next[b.platformId] = val;
+      orig[b.platformId] = val;
     }
+    setEditUrls((prev) => (recordsEqual(prev, next) ? prev : next));
+    setOriginalUrls((prev) => (recordsEqual(prev, orig) ? prev : orig));
   }, [badges]);
 
   const existingPlatformIds = useMemo(() => new Set(badges.map((b) => b.platformId)), [badges]);
 
-  // Helpers
-  const normalizeUrl = (url: string) => {
-    const t = url.trim();
-    if (!t) return '';
-    // prepend https if missing scheme and looks like a domain/path
-    if (!/^https?:\/\//i.test(t)) {
-      return `https://${t}`;
-    }
-    return t;
-  };
-
   const isDirty = (platformId: number) =>
     (editUrls[platformId] ?? '') !== (originalUrls[platformId] ?? '');
 
-  // Mutations
   const updateMutation = useMutation({
     mutationFn: async (payload: { platformId: number; webUrl: string }) => {
       const res = await fetch(`/api/admin/content/${contentId}/platforms/${payload.platformId}`, {
@@ -170,14 +164,13 @@ export default function ContentPlatformsDialog({
     },
   });
 
-  // Add row state
   const [addPlatformId, setAddPlatformId] = useState<number | undefined>(undefined);
   const [addUrl, setAddUrl] = useState('');
 
   const saveRow = (platformId: number) => {
-    const normalized = normalizeUrl(editUrls[platformId] ?? '');
-    setEditUrls((prev) => ({ ...prev, [platformId]: normalized }));
-    updateMutation.mutate({ platformId, webUrl: normalized });
+    const raw = editUrls[platformId] ?? '';
+    setEditUrls((prev) => ({ ...prev, [platformId]: raw }));
+    updateMutation.mutate({ platformId, webUrl: raw });
   };
 
   const removeRow = (platformId: number) => {
@@ -190,8 +183,7 @@ export default function ContentPlatformsDialog({
       toast({ title: 'Pick a platform', description: 'Select a platform to add.' });
       return;
     }
-    const normalized = normalizeUrl(addUrl);
-    addMutation.mutate({ platformId: addPlatformId, webUrl: normalized });
+    addMutation.mutate({ platformId: addPlatformId, webUrl: addUrl });
   };
 
   const anyLoading = isLoadingBadges || isLoadingPlatforms || isFetchingBadges;
@@ -234,7 +226,7 @@ export default function ContentPlatformsDialog({
                     />
                     {url ? (
                       <a
-                        href={normalizeUrl(url)}
+                        href={url}
                         target="_blank"
                         rel="noreferrer"
                         title="Open link"
