@@ -9,4 +9,5 @@ export const popularStreamingPlatforms: Record<string, number> = {
   Peacock: 388,
   Shudder: 252,
   Tubi: 296,
+  'Pluto TV': 391,
 };
