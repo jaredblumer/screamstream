@@ -9,6 +9,7 @@ import { registerWatchlistRoutes } from './public/watchlist.routes';
 import { registerReportIssueRoute } from './public/reportIssue';
 import { registerPublicSubgenreRoutes } from './public/subgenres.routes';
 import { registerPlatformRoutes } from './public/platforms.routes';
+import { registerDecadeRoutes } from './public/decades.routes';
 
 import { registerPasswordRoutes } from './auth/password.routes';
 
@@ -29,6 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerPublicSubgenreRoutes(app);
   registerPasswordRoutes(app);
   registerPlatformRoutes(app);
+  registerDecadeRoutes(app);
 
   registerAdminContentRoutes(app);
   registerAdminSyncRoutes(app);

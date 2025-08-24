@@ -59,6 +59,29 @@ export default function FilterControls({
     },
   });
 
+  type DecadeRow = { decade: number; count: number };
+
+  const { data: decades = [] } = useQuery<DecadeRow[]>({
+    queryKey: [
+      '/api/decades',
+      { platform: selectedPlatform, type: selectedType, subgenre: selectedSubgenre },
+    ],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedPlatform && selectedPlatform !== 'all')
+        params.set('platformKey', selectedPlatform);
+      if (selectedType && selectedType !== 'all') params.set('type', selectedType);
+      if (selectedSubgenre && selectedSubgenre !== 'all') params.set('subgenre', selectedSubgenre);
+      const res = await fetch(`/api/decades?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to load decades');
+      return res.json();
+    },
+  });
+
+  function decadeLabel(d: number) {
+    return `${d}s`;
+  }
+
   const handleSubgenreChange = onSubgenreChange ?? (() => {});
 
   return (
@@ -103,13 +126,14 @@ export default function FilterControls({
                   </SelectTrigger>
                   <SelectContent className="horror-bg border-gray-700 horror-select-content">
                     <SelectItem value="all">All Decades</SelectItem>
-                    <SelectItem value="2020s">2020s</SelectItem>
-                    <SelectItem value="2010s">2010s</SelectItem>
-                    <SelectItem value="2000s">2000s</SelectItem>
-                    <SelectItem value="1990s">1990s</SelectItem>
-                    <SelectItem value="1980s">1980s</SelectItem>
-                    <SelectItem value="1970s">1970s</SelectItem>
-                    <SelectItem value="1960s">1960s</SelectItem>
+                    {decades.map(({ decade }) => {
+                      const label = decadeLabel(decade);
+                      return (
+                        <SelectItem key={decade} value={label}>
+                          {label}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
 

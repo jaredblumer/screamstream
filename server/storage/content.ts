@@ -1,8 +1,9 @@
 import { db } from '@server/db';
-import { eq, sql, ilike, desc, asc, and, or, inArray } from 'drizzle-orm';
+import { eq, sql, ilike, desc, asc, and, or, inArray, gte, lt } from 'drizzle-orm';
 import { getPlatformsForContentId, getPlatformsForContentIds } from './content-platforms';
 import { content, platforms, contentPlatforms, contentSubgenres, subgenres } from '@shared/schema';
 import type { InsertContent, Content, ContentWithPlatforms, PlatformBadge } from '@shared/schema';
+import { decadeToRange } from '@server/utils/decades';
 
 type SubgenreLite = { id: number; name: string; slug: string };
 
@@ -41,27 +42,6 @@ export async function getContentItemWithSubgenres(id: number) {
     primarySubgenre: primary,
     platformsBadges,
   };
-}
-
-function getDecadeYearRange(decade: string): { min: number; max: number } | null {
-  switch (decade) {
-    case '2020s':
-      return { min: 2020, max: 2029 };
-    case '2010s':
-      return { min: 2010, max: 2019 };
-    case '2000s':
-      return { min: 2000, max: 2009 };
-    case '1990s':
-      return { min: 1990, max: 1999 };
-    case '1980s':
-      return { min: 1980, max: 1989 };
-    case '1970s':
-      return { min: 1970, max: 1979 };
-    case '1960s':
-      return { min: 1960, max: 1969 };
-    default:
-      return null;
-  }
 }
 
 export async function getContent(
@@ -134,11 +114,10 @@ export async function getContent(
   // Year or decade
   if (filters?.year) {
     if (typeof filters.year === 'string') {
-      const range = getDecadeYearRange(filters.year);
-      if (range) {
-        conditions.push(
-          and(sql`${content.year} >= ${range.min}`, sql`${content.year} <= ${range.max}`)
-        );
+      const r = decadeToRange(filters.year); // "1960s" -> { min: 1960, maxExclusive: 1970 }
+      if (r) {
+        conditions.push(gte(content.year, r.min));
+        conditions.push(lt(content.year, r.maxExclusive)); // excludes 1970
       }
     } else {
       conditions.push(eq(content.year, filters.year));
