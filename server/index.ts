@@ -1,70 +1,101 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+function apiLogger() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.path.startsWith('/api')) return next();
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+    const start = Date.now();
+    let captured: unknown;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+    const originalJson = res.json.bind(res);
+    res.json = ((body: any, ...args: any[]) => {
+      captured = body;
+      return originalJson(body, ...args);
+    }) as Response['json'];
+
+    res.on('finish', () => {
+      const ms = Date.now() - start;
+      let line = `${req.method} ${req.path} ${res.statusCode} in ${ms}ms`;
+      if (captured !== undefined) {
+        try {
+          const snip = JSON.stringify(captured);
+          line += ` :: ${snip.length > 80 ? snip.slice(0, 79) + '…' : snip}`;
+        } catch {
+          // ignore stringify errors
+        }
+      }
+      log(line);
+    });
+
+    next();
   };
+}
 
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    if (path.startsWith('/api')) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+export async function createApp() {
+  const app = express();
+
+  // basics
+  app.set('trust proxy', true);
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
+
+  // api-only logger
+  app.use(apiLogger());
+
+  // routes (register returns the underlying http.Server if you need websockets)
+  const server = await registerRoutes(app);
+
+  // error handler (no throw after sending the response)
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = Number(err?.status || err?.statusCode) || 500;
+    const message = err?.message || 'Internal Server Error';
+    try {
+      log(`ERROR ${status}: ${message}`);
+      if (process.env.NODE_ENV !== 'production' && err?.stack) {
+        log(err.stack);
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + '…';
-      }
-
-      log(logLine);
+    } catch {}
+    if (!res.headersSent) {
+      res.status(status).json({ message });
     }
   });
 
-  next();
-});
-
-(async () => {
-  const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || 'Internal Server Error';
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // dev vs prod assets
   if (app.get('env') === 'development') {
-    await setupVite(app, server);
+    await setupVite(app, server); // Vite middleware in dev only
   } else {
-    serveStatic(app);
+    serveStatic(app); // serve /dist in prod
   }
 
-  const port = 3000;
-  const host = '0.0.0.0';
-  const reusePort = process.env.REUSE_PORT === 'true';
+  return { app, server };
+}
 
-  const listenOptions: any = { port, host };
-  if (reusePort) listenOptions.reusePort = true;
+// Only start the listener when executed directly (not when imported by tests)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  (async () => {
+    const { server } = await createApp();
 
-  server.listen(listenOptions, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+    const port = Number(process.env.PORT) || 3000;
+    const host = process.env.HOST || '0.0.0.0';
+
+    server.listen({ port, host }, () => {
+      log(`serving on http://${host}:${port}`);
+    });
+
+    // graceful shutdown
+    const shutdown = (signal: string) => () => {
+      log(`received ${signal}, shutting down…`);
+      server.close(() => {
+        log('server closed');
+        process.exit(0);
+      });
+      // force-exit if something hangs
+      setTimeout(() => process.exit(1), 10_000).unref();
+    };
+    process.on('SIGINT', shutdown('SIGINT'));
+    process.on('SIGTERM', shutdown('SIGTERM'));
+  })();
+}
