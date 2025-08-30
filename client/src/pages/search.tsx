@@ -1,4 +1,3 @@
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieGrid from '@/components/movie-grid';
 import { useSearch } from '@/contexts/SearchContext';
@@ -8,8 +7,6 @@ export default function Search() {
 
   return (
     <div className="min-h-screen horror-bg">
-      <Header autoFocusSearch />
-
       <div className="max-w-7xl mx-auto animate-slide-up mt-6">
         <div className="px-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-white">

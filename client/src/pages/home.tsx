@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import HeroSection from '@/components/hero-section';
 import FilterControls from '@/components/filter-controls';
@@ -49,8 +48,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen horror-bg">
-      <Header />
-
       <div className="mx-auto">
         <div className="transition-all duration-700 ease-in-out overflow-hidden max-h-none opacity-100 transform translate-y-0">
           <div className="transition-opacity duration-300">

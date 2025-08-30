@@ -24,7 +24,6 @@ import {
   Save,
   Camera,
 } from 'lucide-react';
-import Header from '@/components/header';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
 import { Movie } from '@shared/schema';

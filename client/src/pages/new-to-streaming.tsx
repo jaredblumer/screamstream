@@ -1,15 +1,21 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, Clock } from 'lucide-react';
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieCard from '@/components/movie-card';
 import { Content } from '@shared/schema';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { useSearch } from '@/contexts/SearchContext';
 
 export default function NewToStreaming() {
   const [, setLocation] = useLocation();
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, [setQuery]);
 
   // Fetch new to streaming content
   const {
@@ -27,7 +33,6 @@ export default function NewToStreaming() {
   if (isLoading) {
     return (
       <>
-        <Header />
         <div className="min-h-screen horror-bg">
           <div className="max-w-7xl mx-auto px-6 py-12">
             <div className="text-center mb-12">
@@ -43,8 +48,6 @@ export default function NewToStreaming() {
   if (error) {
     return (
       <>
-        <Header />
-
         <div className="min-h-screen horror-bg">
           <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-12">
             <div className="text-center">
@@ -66,8 +69,6 @@ export default function NewToStreaming() {
 
   return (
     <>
-      <Header />
-
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">

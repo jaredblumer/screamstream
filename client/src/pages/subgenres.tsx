@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowRight, Film, Star, User, Calendar } from 'lucide-react';
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import type { Subgenre } from '@shared/schema';
+import { useSearch } from '@/contexts/SearchContext';
 
 // Shape returned by /api/content list (normalized + with names)
 type SubgenreLite = { id: number; name: string; slug: string };
@@ -44,6 +44,12 @@ export default function Subgenres() {
     queryKey: ['/api/subgenres'],
   });
 
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, [setQuery]);
+
   const isLoading = moviesLoading || subgenresLoading;
 
   const genreData: SubgenreData[] = React.useMemo(() => {
@@ -78,7 +84,6 @@ export default function Subgenres() {
   if (isLoading) {
     return (
       <>
-        <Header />
         <div className="horror-bg">
           <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-8">
             <div className="text-center mb-12">
@@ -93,8 +98,6 @@ export default function Subgenres() {
 
   return (
     <>
-      <Header />
-
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">

@@ -1,8 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bug, AlertTriangle, Link, Plus, MessageSquare } from 'lucide-react';
 
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +18,7 @@ import { useConfig } from '@/hooks/use-config';
 import { apiRequest } from '@/lib/queryClient';
 import RecaptchaField from '@/components/auth/RecaptchaField';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { useSearch } from '@/contexts/SearchContext';
 
 import type { InsertIssue } from '@shared/schema';
 
@@ -28,6 +28,11 @@ export default function ReportIssue() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { config } = useConfig(); // expects { recaptchaSiteKey?: string }
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, [setQuery]);
 
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
@@ -165,8 +170,6 @@ export default function ReportIssue() {
 
   return (
     <>
-      <Header />
-
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">
@@ -180,7 +183,7 @@ export default function ReportIssue() {
           </p>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center mx-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Issue Type Selection */}
             <div className="space-y-3">

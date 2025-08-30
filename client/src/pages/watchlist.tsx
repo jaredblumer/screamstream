@@ -1,22 +1,27 @@
+import { useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Heart } from 'lucide-react';
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import MovieCard from '@/components/movie-card';
 import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
 import { useAuth } from '@/hooks/use-auth';
+import { useSearch } from '@/contexts/SearchContext';
 
 export default function Watchlist() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { watchlistContent, refreshWatchlist, isWatchlistLoading } = useWatchlistCount();
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, [setQuery]);
 
   if (isWatchlistLoading) {
     return (
       <>
-        <Header />
         <div className="horror-bg">
           <div className="max-w-7xl mx-auto px-6 py-12">
             <div className="text-center mb-12">
@@ -31,8 +36,6 @@ export default function Watchlist() {
 
   return (
     <>
-      <Header />
-
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">
