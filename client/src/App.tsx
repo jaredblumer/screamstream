@@ -8,6 +8,9 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { WatchlistCountProvider } from './contexts/WatchlistCountContext';
 import { SearchProvider } from '@/contexts/SearchContext';
 import { ProtectedRoute } from '@/lib/protected-route';
+
+import Header from '@/components/header';
+
 import Home from '@/pages/home';
 import Subgenres from '@/pages/subgenres';
 import NewToStreaming from '@/pages/new-to-streaming';
@@ -20,7 +23,7 @@ import AuthPage from '@/pages/auth-page';
 import NotFound from '@/pages/not-found';
 import ReportIssue from './pages/report-issue';
 
-function Router() {
+function Layout() {
   const [location] = useLocation();
 
   // Scroll to top when route changes
@@ -29,19 +32,25 @@ function Router() {
   }, [location]);
 
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/subgenres" component={Subgenres} />
-      <Route path="/new-to-streaming" component={NewToStreaming} />
-      <Route path="/browse" component={Browse} />
-      <Route path="/search" component={Search} />
-      <Route path="/title/:id" component={MovieDetail} />
-      <Route path="/watchlist" component={Watchlist} />
-      <Route path="/report-issue" component={ReportIssue} />
-      <ProtectedRoute path="/admin" component={Admin} requiredRole="admin" />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Header />
+
+      <main>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/auth" component={AuthPage} />
+          <Route path="/subgenres" component={Subgenres} />
+          <Route path="/new-to-streaming" component={NewToStreaming} />
+          <Route path="/browse" component={Browse} />
+          <Route path="/search" component={Search} />
+          <Route path="/title/:id" component={MovieDetail} />
+          <Route path="/watchlist" component={Watchlist} />
+          <Route path="/report-issue" component={ReportIssue} />
+          <ProtectedRoute path="/admin" component={Admin} requiredRole="admin" />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+    </>
   );
 }
 
@@ -54,7 +63,7 @@ function App() {
             <SearchProvider>
               <div className="min-h-screen horror-bg text-white">
                 <Toaster />
-                <Router />
+                <Layout />
               </div>
             </SearchProvider>
           </TooltipProvider>

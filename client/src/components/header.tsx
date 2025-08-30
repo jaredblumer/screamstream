@@ -24,7 +24,6 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
 
   useEffect(() => {
     if (autoFocusSearch && inputRef.current) {
-      // Delay focus to avoid layout shift
       const timeout = setTimeout(() => inputRef.current?.focus(), 10);
       return () => clearTimeout(timeout);
     }
@@ -46,15 +45,24 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
     },
   ];
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
+  const isOnSearchPage = location.startsWith('/search');
 
-    const isOnSearchPage = location.startsWith('/search');
-    if (!isOnSearchPage && value.trim()) {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+    if (!isOnSearchPage) {
       setLocation('/search');
+      // Optional: reinforce caret after navigation (usually unnecessary now)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => inputRef.current?.focus());
+      });
     }
   };
+
+  const handleSearchBlur = () => setIsSearchFocused(false);
 
   return (
     <header className="dark-gray-bg border-b border-gray-800 sticky top-0 z-50">
@@ -96,8 +104,8 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                 placeholder="Search horror titles..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
                 className="w-full horror-bg border-gray-700 text-white placeholder-gray-400 focus:border-red-600 focus:ring-red-600 pl-10 text-sm sm:text-base transition-all duration-300"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -111,9 +119,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => {
-                    setQuery('');
-                  }}
+                  onClick={() => setQuery('')}
                   className={`transition-colors flex text-center gap-2 ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
                 >
                   {item.name}
@@ -129,7 +135,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
               ))}
               {user ? (
                 <>
-                  {user.role === 'admin' && ( // ✅ Only show if admin
+                  {user.role === 'admin' && (
                     <Link href="/admin">
                       <Button size="sm" className="horror-button-secondary">
                         <Settings className="h-4 w-4" />
@@ -174,17 +180,14 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                         setIsMobileMenuOpen(false);
                         if (['Top Rated', 'New to Streaming'].includes(item.name)) setQuery('');
                       }}
-                      className="block" // keep link full-width for tapping
+                      className="block"
                     >
                       <div
                         className={`flex items-center ${item.active ? 'blood-red' : 'text-gray-300 hover:text-red-400'}`}
                       >
                         <span className="text-lg">{item.name}</span>
                         {item.badge && (
-                          <span
-                            className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1
-                     bg-red-600 text-white text-xs font-semibold leading-none"
-                          >
+                          <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 bg-red-600 text-white text-xs font-semibold leading-none">
                             {item.badge}
                           </span>
                         )}

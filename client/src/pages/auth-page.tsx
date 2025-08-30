@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Redirect, useLocation } from 'wouter';
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { useAuth } from '@/hooks/use-auth';
 import { useConfig } from '@/hooks/use-config';
+import { useSearch } from '@/contexts/SearchContext';
 
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
@@ -51,6 +51,12 @@ export default function AuthPage() {
     }
   }, [location]);
 
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, [setQuery]);
+
   if (user) return <Redirect to="/" />;
 
   if (configLoading) {
@@ -65,8 +71,6 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen horror-bg flex flex-col">
-      <Header />
-
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Hero */}
@@ -79,8 +83,8 @@ export default function AuthPage() {
                 </div>
               </h1>
               <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-                Discover the best horror movies and series across all streaming platforms. Get
-                personalized recommendations, manage your watchlist, and never miss the latest
+                Discover the best horror movies and series across popular streaming platforms.
+                Manage your watchlist, get personalized recommendations, and never miss the latest
                 spine-chilling releases.
               </p>
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">

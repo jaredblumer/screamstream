@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import Header from '@/components/header';
 import FilterControls from '@/components/filter-controls';
 import MovieGrid from '@/components/movie-grid';
 import Footer from '@/components/footer';
+import { useSearch } from '@/contexts/SearchContext';
 
 export default function Browse() {
   const [location] = useLocation();
@@ -14,6 +14,11 @@ export default function Browse() {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedSubgenre, setSelectedSubgenre] = useState('all');
   const [sortBy, setSortBy] = useState('average_rating');
+  const { setQuery } = useSearch();
+
+  useEffect(() => {
+    setQuery('');
+  }, [setQuery]);
 
   // Parse URL parameters and set initial subgenre
   useEffect(() => {
@@ -45,8 +50,6 @@ export default function Browse() {
 
   return (
     <>
-      <Header />
-
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">{getHeaderTitle(selectedSubgenre)}</div>

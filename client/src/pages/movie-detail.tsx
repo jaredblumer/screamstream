@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
-import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { useSearch } from '@/contexts/SearchContext';
 import type { ContentWithPlatforms } from '@shared/schema';
@@ -51,7 +50,6 @@ export default function MovieDetail() {
   if (!match || movieId === 0) {
     return (
       <>
-        <Header />
         <div className="min-h-screen horror-bg flex items-center justify-center">
           <Alert className="max-w-md dark-gray-bg border-red-600">
             <AlertCircle className="h-4 w-4" />
@@ -65,7 +63,6 @@ export default function MovieDetail() {
   if (isLoading) {
     return (
       <>
-        <Header />
         <div className="min-h-screen horror-bg">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Skeleton className="h-8 w-32 mb-8 horror-bg" />
@@ -87,7 +84,6 @@ export default function MovieDetail() {
   if (error || !movie) {
     return (
       <>
-        <Header />
         <div className="min-h-screen horror-bg flex items-center justify-center">
           <Alert className="max-w-md dark-gray-bg border-red-600">
             <AlertCircle className="h-4 w-4" />
@@ -111,8 +107,6 @@ export default function MovieDetail() {
 
   return (
     <>
-      <Header />
-
       {/* Sticky top bar (mobile only) */}
       <div className="md:hidden sticky top-0 z-30 bg-black/70 backdrop-blur border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-4 h-12 flex items-center">
