@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bug, AlertTriangle, Link, Plus, MessageSquare } from 'lucide-react';
+import { Bug, AlertTriangle, Link as LinkIcon, Plus, MessageSquare } from 'lucide-react';
 
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,8 @@ import { apiRequest } from '@/lib/queryClient';
 import RecaptchaField from '@/components/auth/RecaptchaField';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { useSearch } from '@/contexts/SearchContext';
+import { Helmet } from 'react-helmet-async';
+import { trackPageview, trackEvent } from '@/lib/analytics';
 
 import type { InsertIssue } from '@shared/schema';
 
@@ -34,6 +36,15 @@ export default function ReportIssue() {
     setQuery('');
   }, [setQuery]);
 
+  const pageTitle = 'Report an Issue – Scream Stream';
+  const pageDescription =
+    'Report technical problems, incorrect data, broken links, or suggest content for Scream Stream. Help us improve!';
+
+  useEffect(() => {
+    const path = `${window.location.pathname}${window.location.search}`;
+    trackPageview(path, pageTitle);
+  }, []);
+
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const [formData, setFormData] = useState({
@@ -48,10 +59,11 @@ export default function ReportIssue() {
 
   const submitIssue = useMutation({
     mutationFn: async (data: InsertIssueWithCaptcha) => {
-      // Your apiRequest signature is (method, url, body)
       return await apiRequest('POST', '/api/report-issue', data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      trackEvent('Feedback', 'Issue Submitted');
+
       toast({
         title: 'Issue submitted',
         description: "Thank you for your report. We'll review it and take appropriate action.",
@@ -102,7 +114,6 @@ export default function ReportIssue() {
       });
       return;
     }
-    // Send only what the server needs (token + issue data)
     const payload: InsertIssueWithCaptcha = {
       type: formData.type,
       category: formData.category || undefined,
@@ -131,7 +142,7 @@ export default function ReportIssue() {
     {
       value: 'broken_link',
       label: 'Broken Link',
-      icon: Link,
+      icon: LinkIcon,
       description: 'Dead links, missing images, or inaccessible content',
     },
     {
@@ -170,6 +181,13 @@ export default function ReportIssue() {
 
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+      </Helmet>
+
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">
@@ -191,19 +209,16 @@ export default function ReportIssue() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {issueTypes.map((type) => {
                   const Icon = type.icon;
+                  const isActive = formData.type === type.value;
                   return (
                     <button
                       key={type.value}
                       type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          type: type.value,
-                          category: '',
-                        }))
-                      }
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, type: type.value, category: '' }));
+                      }}
                       className={`p-4 rounded-lg border text-left transition-colors ${
-                        formData.type === type.value
+                        isActive
                           ? 'border-red-500 bg-red-900/20'
                           : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800/70'
                       }`}
@@ -227,7 +242,9 @@ export default function ReportIssue() {
                 <label className="text-sm font-medium text-white">Category</label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({ ...prev, category: value }));
+                  }}
                 >
                   <SelectTrigger className="horror-bg border-gray-700 text-white">
                     <SelectValue placeholder="Select a specific category" />

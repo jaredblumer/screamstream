@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import type { ContentWithPlatforms } from '@shared/schema';
 import { getDisplaySubgenreName } from '@/lib/subgenres';
+import { trackEvent } from '@/lib/analytics';
 
 type SubgenreLite = { id: number; name: string; slug: string };
 type MovieForCard = ContentWithPlatforms & {
@@ -35,14 +36,25 @@ export default function MovieCard({
       : movie.posterUrl;
 
   const displaySubgenreName = getDisplaySubgenreName(movie, selectedSubgenre);
+  const isSeries = movie.type === 'series';
 
   const handleWatchlistClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const success = await toggleWatchlist(movie.id);
-    if (success) onWatchlistToggle?.();
-  };
 
-  const isSeries = movie.type === 'series';
+    const wasInWatchlist = inWatchlist;
+    const success = await toggleWatchlist(movie.id);
+    if (!success) return;
+
+    const label = `${movie.id}:${movie.title}`;
+
+    if (wasInWatchlist) {
+      trackEvent('Watchlist', 'Removed', label);
+    } else {
+      trackEvent('Watchlist', 'Added', label);
+    }
+
+    onWatchlistToggle?.();
+  };
 
   return (
     <div
@@ -87,6 +99,7 @@ export default function MovieCard({
             size="sm"
             onClick={handleWatchlistClick}
             className={`${inWatchlist ? 'horror-button-primary' : 'horror-button-secondary'} backdrop-blur-sm`}
+            aria-label={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
           >
             <Heart className={`h-4 w-4 ${inWatchlist ? 'fill-current' : ''}`} />
           </Button>

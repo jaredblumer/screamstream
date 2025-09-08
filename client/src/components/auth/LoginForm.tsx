@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import IconInput from './IconInput';
 import PasswordInput from './PasswordInput';
 import RecaptchaField from './RecaptchaField';
-import { User } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginData } from './schemas';
@@ -13,16 +13,22 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 
-type Props = { siteKey?: string; onShowForgot: () => void };
+type LoginFormProps = {
+  siteKey: string;
+  onShowForgot: () => void;
+  onSuccess?: () => void;
+};
 
-export default function LoginForm({ siteKey, onShowForgot }: Props) {
+export default function LoginForm({ siteKey, onShowForgot, onSuccess }: LoginFormProps) {
   const { loginMutation } = useAuth();
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
+
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { username: '', password: '', recaptchaToken: '' },
+    defaultValues: { email: '', password: '', recaptchaToken: '' },
   });
+
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const redirectAfterAuth = () => {
@@ -34,6 +40,7 @@ export default function LoginForm({ siteKey, onShowForgot }: Props) {
   const onSubmit = (data: LoginData) => {
     loginMutation.mutate(data, {
       onSuccess: () => {
+        if (onSuccess) onSuccess();
         toast({ title: 'Welcome back!', description: 'You have successfully logged in.' });
         recaptchaRef.current?.reset();
         redirectAfterAuth();
@@ -48,17 +55,18 @@ export default function LoginForm({ siteKey, onShowForgot }: Props) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="username" className="text-gray-300">
-          Username
+        <Label htmlFor="email" className="text-gray-300">
+          Email
         </Label>
         <IconInput
-          id="username"
-          placeholder="Enter your username"
-          icon={User}
+          id="email"
+          type="email"
+          placeholder="username@example.com"
+          icon={Mail}
           register={form.register}
         />
-        {form.formState.errors.username && (
-          <p className="text-red-400 text-sm">{form.formState.errors.username.message}</p>
+        {form.formState.errors.email && (
+          <p className="text-red-400 text-sm">{form.formState.errors.email.message}</p>
         )}
       </div>
 

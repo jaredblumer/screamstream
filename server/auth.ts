@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import { storage } from './storage';
 import { RegisterBody } from './validation/auth';
 import { validateBody } from './utils/validate';
+import { ipLoginLimiter, accountLoginLimiter, registerLimiter } from '@server/security/limits';
 
 const scryptAsync = promisify(scrypt);
 
@@ -32,9 +33,7 @@ export async function verifyRecaptcha(token: string): Promise<boolean> {
   try {
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         secret: process.env.RECAPTCHA_SECRET_KEY,
         response: token,
@@ -67,20 +66,31 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
+    new LocalStrategy(
+      {
+        usernameField: 'email',
+        passwordField: 'password',
+        session: true,
+      },
+      async (email, password, done) => {
+        try {
+          const user = await storage.getUserByEmail(email);
+          if (!user) {
+            return done(null, false);
+          }
+          const ok = await comparePasswords(password, user.password);
+          if (!ok) {
+            return done(null, false);
+          }
+          return done(null, user);
+        } catch (error) {
+          return done(error);
         }
-        return done(null, user);
-      } catch (error) {
-        return done(error);
       }
-    })
+    )
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user: any, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -90,7 +100,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/register', validateBody(RegisterBody), async (req, res, next) => {
+  app.post('/api/register', registerLimiter, validateBody(RegisterBody), async (req, res, next) => {
     try {
       const { username, password, email, recaptchaToken } = req.body as {
         username: string;
@@ -111,7 +121,7 @@ export function setupAuth(app: Express) {
           .json({ message: 'reCAPTCHA verification failed. Please try again.' });
       }
 
-      // Uniqueness checks (your existing logic)
+      // Uniqueness checks
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) return res.status(400).json({ message: 'Username already exists' });
 
@@ -132,7 +142,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/login', async (req, res, next) => {
+  app.post('/api/login', ipLoginLimiter, accountLoginLimiter, async (req, res, next) => {
     try {
       const { recaptchaToken } = req.body;
 
@@ -148,13 +158,10 @@ export function setupAuth(app: Express) {
           .json({ message: 'reCAPTCHA verification failed. Please try again.' });
       }
 
-      // Proceed with passport authentication
-      passport.authenticate('local', (err: any, user: any, info: any) => {
-        if (err) {
-          return next(err);
-        }
+      passport.authenticate('local', (err: any, user: any) => {
+        if (err) return next(err);
         if (!user) {
-          return res.status(401).json({ message: 'Invalid username or password' });
+          return res.status(401).json({ message: 'Invalid email or password' });
         }
         req.login(user, (err) => {
           if (err) return next(err);

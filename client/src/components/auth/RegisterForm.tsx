@@ -16,9 +16,12 @@ import { z } from 'zod';
 import { securePassword, usernameSchema } from './schemas';
 
 type RegisterData = InsertUser & { recaptchaToken?: string };
-type Props = { siteKey?: string };
+type Props = {
+  siteKey?: string;
+  onSuccess?: () => void;
+};
 
-export default function RegisterForm({ siteKey }: Props) {
+export default function RegisterForm({ siteKey, onSuccess }: Props) {
   const { registerMutation } = useAuth();
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
@@ -33,6 +36,7 @@ export default function RegisterForm({ siteKey }: Props) {
     ),
     defaultValues: { username: '', password: '', email: '', recaptchaToken: '' },
   });
+
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const redirectAfterAuth = () => {
@@ -44,6 +48,8 @@ export default function RegisterForm({ siteKey }: Props) {
   const onSubmit = (data: RegisterData) => {
     registerMutation.mutate(data, {
       onSuccess: () => {
+        if (onSuccess) onSuccess();
+
         toast({
           title: 'Account created!',
           description: 'Welcome to Scream Stream. Start discovering horror content.',
@@ -82,7 +88,7 @@ export default function RegisterForm({ siteKey }: Props) {
         <IconInput
           id="email"
           type="email"
-          placeholder="john@example.com"
+          placeholder="username@example.com"
           icon={Mail}
           register={form.register}
         />

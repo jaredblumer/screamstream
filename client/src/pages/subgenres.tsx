@@ -9,9 +9,11 @@ import { ArrowRight, Film, Star, User, Calendar } from 'lucide-react';
 import Footer from '@/components/footer';
 import type { Subgenre } from '@shared/schema';
 import { useSearch } from '@/contexts/SearchContext';
+import { Helmet } from 'react-helmet-async';
+import { trackPageview } from '@/lib/analytics';
 
-// Shape returned by /api/content list (normalized + with names)
 type SubgenreLite = { id: number; name: string; slug: string };
+
 type MovieRow = {
   id: number;
   title: string;
@@ -34,12 +36,10 @@ interface SubgenreData {
 }
 
 export default function Subgenres() {
-  // Movies list (must include subgenre objects from the API)
   const { data: movies = [], isLoading: moviesLoading } = useQuery<MovieRow[]>({
     queryKey: ['/api/content'],
   });
 
-  // Subgenres catalog (public list)
   const { data: subgenres = [], isLoading: subgenresLoading } = useQuery<Subgenre[]>({
     queryKey: ['/api/subgenres'],
   });
@@ -50,17 +50,21 @@ export default function Subgenres() {
     setQuery('');
   }, [setQuery]);
 
+  useEffect(() => {
+    const path = `${window.location.pathname}${window.location.search}`;
+    trackPageview(path, 'Horror Subgenres – Scream Stream');
+  }, []);
+
   const isLoading = moviesLoading || subgenresLoading;
 
   const genreData: SubgenreData[] = React.useMemo(() => {
     if (!movies.length || !subgenres.length) return [];
 
-    // Helper: pick a score for sorting “top” titles
     const score = (m: MovieRow) =>
       m.averageRating ?? undefined ?? m.criticsRating ?? undefined ?? m.usersRating ?? 0;
 
     return subgenres
-      .filter((sg) => sg.isActive) // only active subgenres
+      .filter((sg) => sg.isActive)
       .map((sg) => {
         const matchingMovies = movies.filter((mv) =>
           (mv.subgenres ?? []).some((s) => s.slug === sg.slug)
@@ -84,6 +88,14 @@ export default function Subgenres() {
   if (isLoading) {
     return (
       <>
+        <Helmet>
+          <title>Loading Subgenres – Scream Stream</title>
+          <meta
+            name="description"
+            content="Discover horror subgenres and top-rated titles on Scream Stream."
+          />
+        </Helmet>
+
         <div className="horror-bg">
           <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-8">
             <div className="text-center mb-12">
@@ -98,6 +110,19 @@ export default function Subgenres() {
 
   return (
     <>
+      <Helmet>
+        <title>Horror Subgenres – Scream Stream</title>
+        <meta
+          name="description"
+          content="From supernatural scares to psychological thrillers, explore horror subgenres and find your next fright on Scream Stream."
+        />
+        <meta property="og:title" content="Horror Subgenres – Scream Stream" />
+        <meta
+          property="og:description"
+          content="Explore horror subgenres including supernatural, psychological, slasher, and more. Discover what makes each uniquely terrifying."
+        />
+      </Helmet>
+
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">
@@ -131,7 +156,6 @@ export default function Subgenres() {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {/* Top Movies */}
                 {genre.topMovies.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center">
@@ -175,7 +199,6 @@ export default function Subgenres() {
                   </div>
                 )}
 
-                {/* Explore Button */}
                 <div className="mt-6">
                   <Link href={`/browse?subgenre=${encodeURIComponent(genre.slug)}`}>
                     <Button className="w-full horror-button-primary transition-colors">

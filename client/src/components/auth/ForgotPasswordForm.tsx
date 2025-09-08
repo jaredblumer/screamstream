@@ -12,22 +12,34 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-type Props = { siteKey?: string; onBack: () => void };
+type Props = {
+  siteKey?: string;
+  onBack: () => void;
+  onRequestSent?: () => void;
+};
 
-export default function ForgotPasswordForm({ siteKey, onBack }: Props) {
+export default function ForgotPasswordForm({ siteKey, onBack, onRequestSent }: Props) {
   const { toast } = useToast();
+
   const form = useForm<ForgotPasswordData>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: '', recaptchaToken: '' },
   });
+
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const mutation = useMutation({
     mutationFn: async (data: ForgotPasswordData) => {
       const res = await apiRequest('POST', '/api/auth/forgot-password', data);
-      return res.json();
+      if (!res.ok) {
+        const { message } = await res.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(message || 'Request failed');
+      }
+      return res.json() as Promise<{ message: string }>;
     },
-    onSuccess: (data: { message: string }) => {
+    onSuccess: (data) => {
+      if (onRequestSent) onRequestSent();
+
       toast({ title: 'Reset email sent', description: data.message });
       recaptchaRef.current?.reset();
       form.reset({ email: '', recaptchaToken: '' });
@@ -40,8 +52,10 @@ export default function ForgotPasswordForm({ siteKey, onBack }: Props) {
     },
   });
 
+  const handleSubmit = (d: ForgotPasswordData) => mutation.mutate(d);
+
   return (
-    <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email" className="text-gray-300">
           Email

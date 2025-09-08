@@ -8,10 +8,12 @@ import MovieCard from '@/components/movie-card';
 import { useWatchlistCount } from '@/contexts/WatchlistCountContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useSearch } from '@/contexts/SearchContext';
+import { Helmet } from 'react-helmet-async';
+import { trackPageview } from '@/lib/analytics';
 
 export default function Watchlist() {
   const { user } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { watchlistContent, refreshWatchlist, isWatchlistLoading } = useWatchlistCount();
   const { setQuery } = useSearch();
 
@@ -19,9 +21,22 @@ export default function Watchlist() {
     setQuery('');
   }, [setQuery]);
 
+  useEffect(() => {
+    const path = `${window.location.pathname}${window.location.search}`;
+    trackPageview(path, 'My Watchlist – Scream Stream');
+  }, []);
+
   if (isWatchlistLoading) {
     return (
       <>
+        <Helmet>
+          <title>My Watchlist – Scream Stream</title>
+          <meta
+            name="description"
+            content="Your personal collection of upcoming scares on Scream Stream."
+          />
+        </Helmet>
+
         <div className="horror-bg">
           <div className="max-w-7xl mx-auto px-6 py-12">
             <div className="text-center mb-12">
@@ -36,6 +51,14 @@ export default function Watchlist() {
 
   return (
     <>
+      <Helmet>
+        <title>My Watchlist – Scream Stream</title>
+        <meta
+          name="description"
+          content="Save your favorite horror movies and series to your personal watchlist. Keep track of upcoming scares on Scream Stream."
+        />
+      </Helmet>
+
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">

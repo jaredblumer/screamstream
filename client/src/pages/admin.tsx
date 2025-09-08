@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { EyeOff, Database } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EyeOff, Database } from 'lucide-react';
-import { isUnauthorizedError } from '@/lib/authUtils';
-import type { Content, InsertContent, Subgenre } from '@shared/schema';
 import WatchmodeSync from '@/components/watchmode-sync';
 import { SubgenresManagement } from '@/components/subgenres-management';
 import { ContentFormDialog } from '@/components/admin/content-form-dialog';
 import ContentPlatformsDialog from '@/components/admin/content-platforms-dialog';
 import { ContentTable } from '@/components/admin/content-table';
+import { isUnauthorizedError } from '@/lib/authUtils';
+import type { Content, InsertContent, Subgenre } from '@shared/schema';
 
 export default function Admin() {
   const { user, isLoading: authLoading } = useAuth();
@@ -249,208 +250,214 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen horror-bg">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Admin Portal</h1>
-          <Button onClick={openCreate} className="horror-button-primary">
-            + Add Content
-          </Button>
+    <>
+      <Helmet>
+        <title>Admin Portal - Scream Stream</title>
+      </Helmet>
+
+      <div className="min-h-screen horror-bg">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-white">Admin Portal</h1>
+            <Button onClick={openCreate} className="horror-button-primary">
+              + Add Content
+            </Button>
+          </div>
+
+          <ContentFormDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            subgenres={subgenres}
+            isSubgenresLoading={subgenresLoading}
+            editingContent={editingContent}
+            onCreate={(payload) => createMutation.mutate(payload)}
+            onUpdate={(id, payload) => updateMutation.mutate({ id, data: payload })}
+            isSaving={createMutation.isPending || updateMutation.isPending}
+          />
+
+          <ContentPlatformsDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            contentId={dialogContentId}
+            contentTitle={dialogContentTitle}
+          />
+
+          <Tabs
+            defaultValue="all"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-6"
+          >
+            <TabsList className="horror-bg border-gray-700">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                All Content ({content.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="movies"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                Movies ({movies.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="series"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                Series ({series.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="inactive"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                Inactive ({inactiveContent.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="hidden"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                Hidden ({hiddenContent.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="subgenres"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                Subgenres
+              </TabsTrigger>
+              <TabsTrigger
+                value="watchmode"
+                className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
+              >
+                <Database className="w-4 h-4 mr-2" />
+                Sync
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all">
+              <ContentTable
+                content={content}
+                onEdit={openEdit}
+                onDelete={(id) =>
+                  window.confirm('Delete this content? This action cannot be undone.') &&
+                  deleteMutation.mutate(id)
+                }
+                onHide={(id) => hideContentMutation.mutate(id)}
+                onShow={(id) => showContentMutation.mutate(id)}
+                onToggleActive={setActive}
+                onEditPlatforms={onEditPlatforms}
+                isDeleting={deleteMutation.isPending}
+                isHiding={hideContentMutation.isPending}
+                isShowing={showContentMutation.isPending}
+                isTogglingActive={updateMutation.isPending}
+                showVisibilityControls
+              />
+            </TabsContent>
+
+            <TabsContent value="movies">
+              <ContentTable
+                content={movies}
+                onEdit={openEdit}
+                onDelete={(id) =>
+                  window.confirm('Delete this movie? This action cannot be undone.') &&
+                  deleteMutation.mutate(id)
+                }
+                onHide={(id) => hideContentMutation.mutate(id)}
+                onShow={(id) => showContentMutation.mutate(id)}
+                onToggleActive={setActive}
+                onEditPlatforms={onEditPlatforms}
+                isDeleting={deleteMutation.isPending}
+                isHiding={hideContentMutation.isPending}
+                isShowing={showContentMutation.isPending}
+                isTogglingActive={updateMutation.isPending}
+                showVisibilityControls
+              />
+            </TabsContent>
+
+            <TabsContent value="series">
+              <ContentTable
+                content={series}
+                onEdit={openEdit}
+                onDelete={(id) =>
+                  window.confirm('Delete this series? This action cannot be undone.') &&
+                  deleteMutation.mutate(id)
+                }
+                onHide={(id) => hideContentMutation.mutate(id)}
+                onShow={(id) => showContentMutation.mutate(id)}
+                onToggleActive={setActive}
+                onEditPlatforms={onEditPlatforms}
+                isDeleting={deleteMutation.isPending}
+                isHiding={hideContentMutation.isPending}
+                isShowing={showContentMutation.isPending}
+                isTogglingActive={updateMutation.isPending}
+                showVisibilityControls
+              />
+            </TabsContent>
+
+            <TabsContent value="inactive">
+              <Card className="horror-bg border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <EyeOff className="w-5 h-5 mr-2" />
+                    Inactive Content ({inactiveContent.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ContentTable
+                    content={inactiveContent}
+                    onEdit={openEdit}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onHide={(id) => hideContentMutation.mutate(id)}
+                    onShow={(id) => showContentMutation.mutate(id)}
+                    onToggleActive={setActive}
+                    onEditPlatforms={onEditPlatforms}
+                    isDeleting={deleteMutation.isPending}
+                    isHiding={hideContentMutation.isPending}
+                    isShowing={showContentMutation.isPending}
+                    isTogglingActive={updateMutation.isPending}
+                    showVisibilityControls
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="hidden">
+              <Card className="horror-bg border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <EyeOff className="w-5 h-5 mr-2" />
+                    Hidden Content ({hiddenContent.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ContentTable
+                    content={hiddenContent}
+                    onEdit={openEdit}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onHide={(id) => hideContentMutation.mutate(id)}
+                    onShow={(id) => showContentMutation.mutate(id)}
+                    onToggleActive={setActive}
+                    onEditPlatforms={onEditPlatforms}
+                    isDeleting={deleteMutation.isPending}
+                    isHiding={hideContentMutation.isPending}
+                    isShowing={showContentMutation.isPending}
+                    isTogglingActive={updateMutation.isPending}
+                    showVisibilityControls
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="watchmode">
+              <WatchmodeSync />
+            </TabsContent>
+
+            <TabsContent value="subgenres">
+              <SubgenresManagement />
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <ContentFormDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          subgenres={subgenres}
-          isSubgenresLoading={subgenresLoading}
-          editingContent={editingContent}
-          onCreate={(payload) => createMutation.mutate(payload)}
-          onUpdate={(id, payload) => updateMutation.mutate({ id, data: payload })}
-          isSaving={createMutation.isPending || updateMutation.isPending}
-        />
-
-        <ContentPlatformsDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          contentId={dialogContentId}
-          contentTitle={dialogContentTitle}
-        />
-
-        <Tabs
-          defaultValue="all"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <TabsList className="horror-bg border-gray-700">
-            <TabsTrigger
-              value="all"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              All Content ({content.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="movies"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              Movies ({movies.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="series"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              Series ({series.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="inactive"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              Inactive ({inactiveContent.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="hidden"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              Hidden ({hiddenContent.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="subgenres"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              Subgenres
-            </TabsTrigger>
-            <TabsTrigger
-              value="watchmode"
-              className="data-[state=active]:bg-red-800 data-[state=active]:text-white"
-            >
-              <Database className="w-4 h-4 mr-2" />
-              Sync
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all">
-            <ContentTable
-              content={content}
-              onEdit={openEdit}
-              onDelete={(id) =>
-                window.confirm('Delete this content? This action cannot be undone.') &&
-                deleteMutation.mutate(id)
-              }
-              onHide={(id) => hideContentMutation.mutate(id)}
-              onShow={(id) => showContentMutation.mutate(id)}
-              onToggleActive={setActive}
-              onEditPlatforms={onEditPlatforms}
-              isDeleting={deleteMutation.isPending}
-              isHiding={hideContentMutation.isPending}
-              isShowing={showContentMutation.isPending}
-              isTogglingActive={updateMutation.isPending}
-              showVisibilityControls
-            />
-          </TabsContent>
-
-          <TabsContent value="movies">
-            <ContentTable
-              content={movies}
-              onEdit={openEdit}
-              onDelete={(id) =>
-                window.confirm('Delete this movie? This action cannot be undone.') &&
-                deleteMutation.mutate(id)
-              }
-              onHide={(id) => hideContentMutation.mutate(id)}
-              onShow={(id) => showContentMutation.mutate(id)}
-              onToggleActive={setActive}
-              onEditPlatforms={onEditPlatforms}
-              isDeleting={deleteMutation.isPending}
-              isHiding={hideContentMutation.isPending}
-              isShowing={showContentMutation.isPending}
-              isTogglingActive={updateMutation.isPending}
-              showVisibilityControls
-            />
-          </TabsContent>
-
-          <TabsContent value="series">
-            <ContentTable
-              content={series}
-              onEdit={openEdit}
-              onDelete={(id) =>
-                window.confirm('Delete this series? This action cannot be undone.') &&
-                deleteMutation.mutate(id)
-              }
-              onHide={(id) => hideContentMutation.mutate(id)}
-              onShow={(id) => showContentMutation.mutate(id)}
-              onToggleActive={setActive}
-              onEditPlatforms={onEditPlatforms}
-              isDeleting={deleteMutation.isPending}
-              isHiding={hideContentMutation.isPending}
-              isShowing={showContentMutation.isPending}
-              isTogglingActive={updateMutation.isPending}
-              showVisibilityControls
-            />
-          </TabsContent>
-
-          <TabsContent value="inactive">
-            <Card className="horror-bg border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <EyeOff className="w-5 h-5 mr-2" />
-                  Inactive Content ({inactiveContent.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ContentTable
-                  content={inactiveContent}
-                  onEdit={openEdit}
-                  onDelete={(id) => deleteMutation.mutate(id)}
-                  onHide={(id) => hideContentMutation.mutate(id)}
-                  onShow={(id) => showContentMutation.mutate(id)}
-                  onToggleActive={setActive}
-                  onEditPlatforms={onEditPlatforms}
-                  isDeleting={deleteMutation.isPending}
-                  isHiding={hideContentMutation.isPending}
-                  isShowing={showContentMutation.isPending}
-                  isTogglingActive={updateMutation.isPending}
-                  showVisibilityControls
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="hidden">
-            <Card className="horror-bg border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center">
-                  <EyeOff className="w-5 h-5 mr-2" />
-                  Hidden Content ({hiddenContent.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ContentTable
-                  content={hiddenContent}
-                  onEdit={openEdit}
-                  onDelete={(id) => deleteMutation.mutate(id)}
-                  onHide={(id) => hideContentMutation.mutate(id)}
-                  onShow={(id) => showContentMutation.mutate(id)}
-                  onToggleActive={setActive}
-                  onEditPlatforms={onEditPlatforms}
-                  isDeleting={deleteMutation.isPending}
-                  isHiding={hideContentMutation.isPending}
-                  isShowing={showContentMutation.isPending}
-                  isTogglingActive={updateMutation.isPending}
-                  showVisibilityControls
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="watchmode">
-            <WatchmodeSync />
-          </TabsContent>
-
-          <TabsContent value="subgenres">
-            <SubgenresManagement />
-          </TabsContent>
-        </Tabs>
       </div>
-    </div>
+    </>
   );
 }
