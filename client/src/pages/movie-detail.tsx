@@ -12,6 +12,8 @@ import Footer from '@/components/footer';
 import { useSearch } from '@/contexts/SearchContext';
 import type { ContentWithPlatforms } from '@shared/schema';
 import { getPrimarySubgenre, getSubgenreNames } from '@/lib/subgenres';
+import { Helmet } from 'react-helmet-async';
+import { trackPageview, trackEvent } from '@/lib/analytics';
 
 type SubgenreLite = { id: number; name: string; slug: string };
 type DetailMovie = ContentWithPlatforms & {
@@ -24,6 +26,7 @@ export default function MovieDetail() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/title/:id');
   const movieId = params?.id ? parseInt(params.id) : 0;
+
   const [posterError, setPosterError] = useState(false);
   const { isInWatchlist, toggleWatchlist } = useWatchlist();
   const { toast } = useToast();
@@ -47,9 +50,20 @@ export default function MovieDetail() {
     enabled: movieId > 0,
   });
 
+  const pageTitle = movie ? `${movie.title} – Scream Stream` : 'Scream Stream';
+  useEffect(() => {
+    if (!movie) return;
+    const path = `${window.location.pathname}${window.location.search}`;
+    trackPageview(path, pageTitle);
+  }, [movie, pageTitle]);
+
   if (!match || movieId === 0) {
     return (
       <>
+        <Helmet>
+          <title>Invalid Title – Scream Stream</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <div className="min-h-screen horror-bg flex items-center justify-center">
           <Alert className="max-w-md dark-gray-bg border-red-600">
             <AlertCircle className="h-4 w-4" />
@@ -63,6 +77,10 @@ export default function MovieDetail() {
   if (isLoading) {
     return (
       <>
+        <Helmet>
+          <title>Loading… – Scream Stream</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <div className="min-h-screen horror-bg">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Skeleton className="h-8 w-32 mb-8 horror-bg" />
@@ -84,6 +102,10 @@ export default function MovieDetail() {
   if (error || !movie) {
     return (
       <>
+        <Helmet>
+          <title>Title Unavailable – Scream Stream</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <div className="min-h-screen horror-bg flex items-center justify-center">
           <Alert className="max-w-md dark-gray-bg border-red-600">
             <AlertCircle className="h-4 w-4" />
@@ -96,7 +118,7 @@ export default function MovieDetail() {
     );
   }
 
-  // Common subgenre chips (always names)
+  // Subgenres for chips
   const subgenreNames = getSubgenreNames(movie);
   const chipNames =
     subgenreNames.length > 0
@@ -105,8 +127,41 @@ export default function MovieDetail() {
         ? [getPrimarySubgenre(movie)!.name]
         : [];
 
+  const description = movie.description || `Where to watch ${movie.title}.`;
+
+  const handleWatchlist = async () => {
+    const wasInWatchlist = isInWatchlist(movieId);
+    const success = await toggleWatchlist(movieId);
+    if (!success) return;
+
+    const label = `${movie.id}:${movie.title}`;
+
+    if (wasInWatchlist) {
+      trackEvent('Watchlist', 'Removed', label);
+    } else {
+      trackEvent('Watchlist', 'Added', label);
+    }
+
+    toast({
+      title: wasInWatchlist ? 'Removed from Watchlist' : 'Added to Watchlist',
+      description: wasInWatchlist
+        ? `${movie.title} has been removed from your watchlist.`
+        : `${movie.title} has been added to your watchlist.`,
+    });
+  };
+
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={description} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={description} />
+        {movie.posterUrl && <meta property="og:image" content={movie.posterUrl} />}
+        <meta property="og:type" content="video.movie" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
+
       {/* Sticky top bar (mobile only) */}
       <div className="md:hidden sticky top-0 z-30 bg-black/70 backdrop-blur border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-4 h-12 flex items-center">
@@ -234,18 +289,7 @@ export default function MovieDetail() {
                 className={`flex-1 min-w-[48%] ${
                   isInWatchlist(movieId) ? 'horror-button-secondary' : 'horror-button-primary'
                 }`}
-                onClick={async () => {
-                  const wasInWatchlist = isInWatchlist(movieId);
-                  const ok = await toggleWatchlist(movieId);
-                  if (ok) {
-                    toast({
-                      title: wasInWatchlist ? 'Removed from Watchlist' : 'Added to Watchlist',
-                      description: wasInWatchlist
-                        ? `${movie.title} has been removed from your watchlist.`
-                        : `${movie.title} has been added to your watchlist.`,
-                    });
-                  }
-                }}
+                onClick={handleWatchlist}
               >
                 <Heart className={`h-4 w-4 mr-2 ${isInWatchlist(movieId) ? 'fill-current' : ''}`} />
                 {isInWatchlist(movieId) ? 'In Watchlist' : 'Add to Watchlist'}
@@ -386,18 +430,7 @@ export default function MovieDetail() {
                     className={`px-4 py-2 ${
                       isInWatchlist(movieId) ? 'horror-button-secondary' : 'horror-button-primary'
                     }`}
-                    onClick={async () => {
-                      const wasInWatchlist = isInWatchlist(movieId);
-                      const success = await toggleWatchlist(movieId);
-                      if (success) {
-                        toast({
-                          title: wasInWatchlist ? 'Removed from Watchlist' : 'Added to Watchlist',
-                          description: wasInWatchlist
-                            ? `${movie.title} has been removed from your watchlist.`
-                            : `${movie.title} has been added to your watchlist.`,
-                        });
-                      }
-                    }}
+                    onClick={handleWatchlist}
                   >
                     <Heart
                       className={`h-4 w-4 mr-2 ${isInWatchlist(movieId) ? 'fill-current' : ''}`}

@@ -1,16 +1,15 @@
 import { Switch, Route, useLocation } from 'wouter';
 import { useEffect } from 'react';
-import { queryClient } from './lib/queryClient';
+import { HelmetProvider } from 'react-helmet-async';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+import { ProtectedRoute } from '@/lib/protected-route';
+import { AuthProvider } from '@/hooks/use-auth';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider } from '@/hooks/use-auth';
-import { WatchlistCountProvider } from './contexts/WatchlistCountContext';
-import { SearchProvider } from '@/contexts/SearchContext';
-import { ProtectedRoute } from '@/lib/protected-route';
-
 import Header from '@/components/header';
-
+import { WatchlistCountProvider } from '@/contexts/WatchlistCountContext';
+import { SearchProvider } from '@/contexts/SearchContext';
 import Home from '@/pages/home';
 import Subgenres from '@/pages/subgenres';
 import NewToStreaming from '@/pages/new-to-streaming';
@@ -21,7 +20,7 @@ import MovieDetail from '@/pages/movie-detail';
 import Admin from '@/pages/admin';
 import AuthPage from '@/pages/auth-page';
 import NotFound from '@/pages/not-found';
-import ReportIssue from './pages/report-issue';
+import ReportIssue from '@/pages/report-issue';
 
 function Layout() {
   const [location] = useLocation();
@@ -61,10 +60,12 @@ function App() {
         <WatchlistCountProvider>
           <TooltipProvider>
             <SearchProvider>
-              <div className="min-h-screen horror-bg text-white">
-                <Toaster />
-                <Layout />
-              </div>
+              <HelmetProvider>
+                <div className="min-h-screen horror-bg text-white">
+                  <Toaster />
+                  <Layout />
+                </div>
+              </HelmetProvider>
             </SearchProvider>
           </TooltipProvider>
         </WatchlistCountProvider>

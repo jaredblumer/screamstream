@@ -8,6 +8,8 @@ import { Content } from '@shared/schema';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useSearch } from '@/contexts/SearchContext';
+import { Helmet } from 'react-helmet-async';
+import { trackPageview } from '@/lib/analytics';
 
 export default function NewToStreaming() {
   const [, setLocation] = useLocation();
@@ -16,6 +18,12 @@ export default function NewToStreaming() {
   useEffect(() => {
     setQuery('');
   }, [setQuery]);
+
+  // Fire GA pageview when this page is mounted
+  useEffect(() => {
+    const path = `${window.location.pathname}${window.location.search}`;
+    trackPageview(path, 'New to Streaming – Scream Stream');
+  }, []);
 
   // Fetch new to streaming content
   const {
@@ -28,11 +36,13 @@ export default function NewToStreaming() {
     refetchOnWindowFocus: false,
   });
 
-  console.log('Streaming Content:', streamingContent);
-
   if (isLoading) {
     return (
       <>
+        <Helmet>
+          <title>Loading… – Scream Stream</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <div className="min-h-screen horror-bg">
           <div className="max-w-7xl mx-auto px-6 py-12">
             <div className="text-center mb-12">
@@ -48,6 +58,10 @@ export default function NewToStreaming() {
   if (error) {
     return (
       <>
+        <Helmet>
+          <title>Error Loading – Scream Stream</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <div className="min-h-screen horror-bg">
           <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-12">
             <div className="text-center">
@@ -69,6 +83,19 @@ export default function NewToStreaming() {
 
   return (
     <>
+      <Helmet>
+        <title>New to Streaming – Scream Stream</title>
+        <meta
+          name="description"
+          content="Discover the latest horror movies and series that just landed on popular streaming platforms. Fresh scares, updated weekly."
+        />
+        <meta property="og:title" content="New to Streaming – Scream Stream" />
+        <meta
+          property="og:description"
+          content="Discover the latest horror movies and series that just landed on popular streaming platforms."
+        />
+      </Helmet>
+
       <div className="horror-bg">
         <div className="text-center mx-auto px-6 py-8 sm:py-12 animate-fade-in">
           <div className="mb-2">
@@ -105,17 +132,15 @@ export default function NewToStreaming() {
               </div>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 px-6">
-                {streamingContent.map((content) => (
-                  <MovieCard
-                    key={content.id}
-                    movie={content}
-                    onClick={() => setLocation(`/title/${content.id}`)}
-                  />
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 px-6">
+              {streamingContent.map((content) => (
+                <MovieCard
+                  key={content.id}
+                  movie={content}
+                  onClick={() => setLocation(`/title/${content.id}`)}
+                />
+              ))}
+            </div>
           )}
         </div>
 

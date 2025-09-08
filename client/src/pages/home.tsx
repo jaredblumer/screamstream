@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { Helmet } from 'react-helmet-async';
 import Footer from '@/components/footer';
 import HeroSection from '@/components/hero-section';
 import FilterControls from '@/components/filter-controls';
@@ -47,53 +48,63 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen horror-bg">
-      <div className="mx-auto">
-        <div className="transition-all duration-700 ease-in-out overflow-hidden max-h-none opacity-100 transform translate-y-0">
-          <div className="transition-opacity duration-300">
-            <div className="animate-fade-in bg-black/50">
-              <HeroSection
-                onViewTopRanked={handleViewTopRated}
-                onBrowseGenres={handleSubgenres}
-                onNewToStreaming={handleNewToStreaming}
-              />
-            </div>
+    <>
+      <Helmet>
+        <title>Scream Stream - Top Rated Streaming Horror</title>
+        <meta
+          name="description"
+          content="Discover the highest-rated horror movies and series streaming now."
+        />
+      </Helmet>
 
-            <div className="animate-slide-up stagger-1" data-filters>
-              <FilterControls
-                selectedPlatform={selectedPlatform}
-                selectedYear={selectedYear}
-                selectedCriticsRating={selectedCriticsRating}
-                selectedUsersRating={selectedUsersRating}
-                selectedType={selectedType}
-                selectedSubgenre={selectedSubgenre}
-                sortBy={sortBy}
-                onPlatformChange={setSelectedPlatform}
-                onYearChange={setSelectedYear}
-                onCriticsRatingChange={setSelectedCriticsRating}
-                onUsersRatingChange={setSelectedUsersRating}
-                onTypeChange={setSelectedType}
-                onSubgenreChange={setSelectedSubgenre}
-                onSortChange={setSortBy}
-              />
-            </div>
+      <div className="min-h-screen horror-bg">
+        <div className="mx-auto">
+          <div className="transition-all duration-700 ease-in-out overflow-hidden max-h-none opacity-100 transform translate-y-0">
+            <div className="transition-opacity duration-300">
+              <div className="animate-fade-in bg-black/50">
+                <HeroSection
+                  onViewTopRanked={handleViewTopRated}
+                  onBrowseGenres={handleSubgenres}
+                  onNewToStreaming={handleNewToStreaming}
+                />
+              </div>
 
-            <div className="animate-fade-slide stagger-2 pt-4 sm:pt-0">
-              <MovieGrid
-                selectedPlatform={selectedPlatform}
-                selectedYear={selectedYear}
-                selectedCriticsRating={selectedCriticsRating}
-                selectedUsersRating={selectedUsersRating}
-                selectedType={selectedType}
-                selectedSubgenre={selectedSubgenre}
-                sortBy={sortBy}
-              />
+              <div className="animate-slide-up stagger-1" data-filters>
+                <FilterControls
+                  selectedPlatform={selectedPlatform}
+                  selectedYear={selectedYear}
+                  selectedCriticsRating={selectedCriticsRating}
+                  selectedUsersRating={selectedUsersRating}
+                  selectedType={selectedType}
+                  selectedSubgenre={selectedSubgenre}
+                  sortBy={sortBy}
+                  onPlatformChange={setSelectedPlatform}
+                  onYearChange={setSelectedYear}
+                  onCriticsRatingChange={setSelectedCriticsRating}
+                  onUsersRatingChange={setSelectedUsersRating}
+                  onTypeChange={setSelectedType}
+                  onSubgenreChange={setSelectedSubgenre}
+                  onSortChange={setSortBy}
+                />
+              </div>
+
+              <div className="animate-fade-slide stagger-2 pt-4 sm:pt-0">
+                <MovieGrid
+                  selectedPlatform={selectedPlatform}
+                  selectedYear={selectedYear}
+                  selectedCriticsRating={selectedCriticsRating}
+                  selectedUsersRating={selectedUsersRating}
+                  selectedType={selectedType}
+                  selectedSubgenre={selectedSubgenre}
+                  sortBy={sortBy}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 }

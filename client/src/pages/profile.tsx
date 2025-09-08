@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import {
   User,
-  Settings,
   Heart,
   Eye,
   TrendingUp,
@@ -19,17 +18,17 @@ import {
   Star,
   Film,
   Bell,
-  Shield,
   Palette,
   Save,
   Camera,
 } from 'lucide-react';
 import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
-import { Movie } from '@shared/schema';
+import Header from '@/components/header';
+import { Helmet } from 'react-helmet-async';
+import { trackPageview } from '@/lib/analytics';
 
 export default function Profile() {
-  const [searchQuery, setSearchQuery] = useState('');
   const { watchlistCount, isAuthenticated } = useWatchlist();
   const { toast } = useToast();
 
@@ -61,6 +60,19 @@ export default function Profile() {
   const averageRating = 7.4; // Mock data
   const hoursWatched = 147; // Mock data
 
+  // Helmet + GA
+  const pageTitle = isAuthenticated
+    ? 'Your Profile – Scream Stream'
+    : 'Profile (Sign In Required) – Scream Stream';
+  const pageDescription = isAuthenticated
+    ? 'View your horror profile, watchlist stats, preferences, and more on Scream Stream.'
+    : 'Sign in to access your profile, watchlist statistics, and preferences on Scream Stream.';
+
+  useEffect(() => {
+    const path = `${window.location.pathname}${window.location.search}`;
+    trackPageview(path, pageTitle);
+  }, [pageTitle]);
+
   const handleProfileUpdate = () => {
     toast({
       title: 'Profile Updated',
@@ -89,6 +101,13 @@ export default function Profile() {
   if (!isAuthenticated) {
     return (
       <>
+        <Helmet>
+          <title>{pageTitle}</title>
+          <meta name="description" content={pageDescription} />
+          {/* Keep auth-gated prompt out of the index */}
+          <meta name="robots" content="noindex" />
+        </Helmet>
+
         <Header />
         <div className="min-h-screen horror-bg">
           <div className="max-w-4xl mx-auto text-center px-6 sm:px-6 lg:px-8 py-24">
@@ -112,6 +131,13 @@ export default function Profile() {
 
   return (
     <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+      </Helmet>
+
       <Header />
 
       <div className="min-h-screen horror-bg">
