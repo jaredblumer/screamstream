@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import { storage } from './storage';
 import { RegisterBody } from './validation/auth';
 import { validateBody } from './utils/validate';
+import { ipLoginLimiter, accountLoginLimiter, registerLimiter } from '@server/security/limits';
 
 const scryptAsync = promisify(scrypt);
 
@@ -99,7 +100,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/register', validateBody(RegisterBody), async (req, res, next) => {
+  app.post('/api/register', registerLimiter, validateBody(RegisterBody), async (req, res, next) => {
     try {
       const { username, password, email, recaptchaToken } = req.body as {
         username: string;
@@ -141,7 +142,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post('/api/login', async (req, res, next) => {
+  app.post('/api/login', ipLoginLimiter, accountLoginLimiter, async (req, res, next) => {
     try {
       const { recaptchaToken } = req.body;
 
