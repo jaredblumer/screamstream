@@ -43,7 +43,7 @@ export default function Search() {
       const clean = q.trim();
       if (clean.length === 0) return;
 
-      trackEvent('Search', 'Performed', clean);
+      trackEvent('Search', 'search_performed', clean);
     });
   }, [searchQuery, runDebounced]);
 
