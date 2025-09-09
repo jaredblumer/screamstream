@@ -137,7 +137,7 @@ export default function AuthPage() {
                     <ForgotPasswordForm
                       siteKey={config.recaptchaSiteKey}
                       onBack={() => setShowForgotPassword(false)}
-                      onRequestSent={() => trackEvent('Auth', 'password_reset_requested', 'Email')}
+                      onRequestSent={() => trackEvent('Auth', 'password_reset_requested')}
                     />
                   ) : (
                     <>
@@ -164,14 +164,14 @@ export default function AuthPage() {
                           <LoginForm
                             siteKey={config.recaptchaSiteKey}
                             onShowForgot={() => setShowForgotPassword(true)}
-                            onSuccess={() => trackEvent('User', 'logged_in', 'Email')}
+                            onSuccess={() => trackEvent('User', 'logged_in')}
                           />
                         </TabsContent>
 
                         <TabsContent value="register" className="space-y-4 mt-6">
                           <RegisterForm
                             siteKey={config.recaptchaSiteKey}
-                            onSuccess={() => trackEvent('User', 'account_created', 'Email')}
+                            onSuccess={() => trackEvent('User', 'account_created')}
                           />
                         </TabsContent>
                       </Tabs>
