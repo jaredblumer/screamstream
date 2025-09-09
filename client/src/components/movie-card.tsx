@@ -48,9 +48,9 @@ export default function MovieCard({
     const label = `${movie.id}:${movie.title}`;
 
     if (wasInWatchlist) {
-      trackEvent('Watchlist', 'Removed', label);
+      trackEvent('Watchlist', 'watchlist_removed', label);
     } else {
-      trackEvent('Watchlist', 'Added', label);
+      trackEvent('Watchlist', 'watchlist_added', label);
     }
 
     onWatchlistToggle?.();

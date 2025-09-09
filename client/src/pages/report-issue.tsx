@@ -62,7 +62,7 @@ export default function ReportIssue() {
       return await apiRequest('POST', '/api/report-issue', data);
     },
     onSuccess: async () => {
-      trackEvent('Feedback', 'Issue Submitted');
+      trackEvent('Feedback', 'issue_submitted', formData.type);
 
       toast({
         title: 'Issue submitted',
