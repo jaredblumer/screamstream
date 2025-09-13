@@ -111,8 +111,11 @@ export default function MovieCard({
         <p className="text-gray-400 text-sm mb-2">
           {movie.year} • {displaySubgenreName || '—'}
           {isSeries && movie.seasons && movie.episodes && (
-            <span className="ml-2 text-red-400">
-              • {movie.seasons} Season{movie.seasons > 1 ? 's' : ''} • {movie.episodes} Episodes
+            <span className="text-red-400">
+              {' • '}
+              {movie.seasons} Season{movie.seasons > 1 ? 's' : ''}
+              {' • '}
+              {movie.episodes} Episodes
             </span>
           )}
         </p>
