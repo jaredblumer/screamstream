@@ -25,6 +25,26 @@ interface FilterControlsProps {
   onSortChange: (value: string) => void;
 }
 
+type SortField = 'average_rating' | 'critics_rating' | 'users_rating' | 'release_date';
+type SortDir = 'asc' | 'desc';
+
+function splitSort(value: string | undefined): [SortField, SortDir] {
+  if (!value) return ['average_rating', 'desc'];
+  if (value === 'year_newest') return ['release_date', 'desc'];
+  if (value === 'year_oldest') return ['release_date', 'asc'];
+  const [fieldRaw, dirRaw] = value.split(':');
+  const field: SortField = [
+    'average_rating',
+    'critics_rating',
+    'users_rating',
+    'release_date',
+  ].includes(fieldRaw as SortField)
+    ? (fieldRaw as SortField)
+    : 'average_rating';
+  const dir: SortDir = ['asc', 'desc'].includes(dirRaw as SortDir) ? (dirRaw as SortDir) : 'desc';
+  return [field, dir];
+}
+
 export default function FilterControls({
   selectedPlatform,
   selectedYear,
@@ -83,114 +103,129 @@ export default function FilterControls({
   }
 
   const handleSubgenreChange = onSubgenreChange ?? (() => {});
+  const [sortField, sortDir] = splitSort(sortBy);
+  const setSortField = (field: SortField) => onSortChange(`${field}:${sortDir}`);
+  const setSortDir = (dir: SortDir) => onSortChange(`${sortField}:${dir}`);
 
   return (
     <section className="dark-gray-bg py-3 sm:py-6 border-b border-gray-800 relative z-0 mt-2 sm:mt-0">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="space-y-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-3 mb-3">
-              <span className="text-lg font-semibold text-white min-w-[100px]">Filter by:</span>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-1 lg:flex-wrap gap-3">
-                <Select value={selectedPlatform} onValueChange={onPlatformChange}>
-                  <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="All Platforms" className="text-white" />
-                  </SelectTrigger>
-                  <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">All Platforms</SelectItem>
-                    {platforms.map((p) => (
-                      <SelectItem key={p.id} value={p.platformKey}>
-                        {p.platformName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      <div className="max-w-7xl mx-auto px-6 space-y-4">
+        <div className="mb-1 lg:flex lg:items-center lg:gap-3">
+          <span className="block mb-2 lg:mb-0 lg:w-28 lg:shrink-0 text-lg font-semibold text-white">
+            Filter by:
+          </span>
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:flex-1">
+            <Select value={selectedPlatform} onValueChange={onPlatformChange}>
+              <SelectTrigger className="w-full horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="All Platforms" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="all">All Platforms</SelectItem>
+                {platforms.map((p) => (
+                  <SelectItem key={p.id} value={p.platformKey}>
+                    {p.platformName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                <Select value={selectedSubgenre} onValueChange={handleSubgenreChange}>
-                  <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="All Subgenres" className="text-white" />
-                  </SelectTrigger>
-                  <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">All Subgenres</SelectItem>
-                    {subgenres.map((subgenre) => (
-                      <SelectItem key={subgenre.slug} value={subgenre.slug}>
-                        {subgenre.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <Select value={selectedSubgenre} onValueChange={handleSubgenreChange}>
+              <SelectTrigger className="w-full horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="All Subgenres" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="all">All Subgenres</SelectItem>
+                {subgenres.map((subgenre) => (
+                  <SelectItem key={subgenre.slug} value={subgenre.slug}>
+                    {subgenre.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                <Select value={selectedYear} onValueChange={onYearChange}>
-                  <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="All Decades" className="text-white" />
-                  </SelectTrigger>
-                  <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">All Decades</SelectItem>
-                    {decades.map(({ decade }) => {
-                      const label = decadeLabel(decade);
-                      return (
-                        <SelectItem key={decade} value={label}>
-                          {label}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+            <Select value={selectedYear} onValueChange={onYearChange}>
+              <SelectTrigger className="w-full horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="All Decades" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="all">All Decades</SelectItem>
+                {decades.map(({ decade }) => {
+                  const label = decadeLabel(decade);
+                  return (
+                    <SelectItem key={decade} value={label}>
+                      {label}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
 
-                <Select value={selectedCriticsRating} onValueChange={onCriticsRatingChange}>
-                  <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="Critics Rating" className="text-white" />
-                  </SelectTrigger>
-                  <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">Critics Rating</SelectItem>
-                    <SelectItem value="9">9.0+ Critics</SelectItem>
-                    <SelectItem value="8">8.0+ Critics</SelectItem>
-                    <SelectItem value="7">7.0+ Critics</SelectItem>
-                    <SelectItem value="6">6.0+ Critics</SelectItem>
-                  </SelectContent>
-                </Select>
+            <Select value={selectedCriticsRating} onValueChange={onCriticsRatingChange}>
+              <SelectTrigger className="w-full horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="Critics Rating" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="all">Critics Rating</SelectItem>
+                <SelectItem value="9">9.0+ Critics</SelectItem>
+                <SelectItem value="8">8.0+ Critics</SelectItem>
+                <SelectItem value="7">7.0+ Critics</SelectItem>
+                <SelectItem value="6">6.0+ Critics</SelectItem>
+              </SelectContent>
+            </Select>
 
-                <Select value={selectedUsersRating} onValueChange={onUsersRatingChange}>
-                  <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="Audience Rating" className="text-white" />
-                  </SelectTrigger>
-                  <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">Audience Rating</SelectItem>
-                    <SelectItem value="9">9.0+ Audience</SelectItem>
-                    <SelectItem value="8">8.0+ Audience</SelectItem>
-                    <SelectItem value="7">7.0+ Audience</SelectItem>
-                    <SelectItem value="6">6.0+ Audience</SelectItem>
-                  </SelectContent>
-                </Select>
+            <Select value={selectedUsersRating} onValueChange={onUsersRatingChange}>
+              <SelectTrigger className="w-full horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="Audience Rating" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="all">Audience Rating</SelectItem>
+                <SelectItem value="9">9.0+ Audience</SelectItem>
+                <SelectItem value="8">8.0+ Audience</SelectItem>
+                <SelectItem value="7">7.0+ Audience</SelectItem>
+                <SelectItem value="6">6.0+ Audience</SelectItem>
+              </SelectContent>
+            </Select>
 
-                <Select value={selectedType} onValueChange={onTypeChange}>
-                  <SelectTrigger className="w-full lg:flex-1 horror-bg border-gray-700 text-white horror-select-trigger">
-                    <SelectValue placeholder="All Content" className="text-white" />
-                  </SelectTrigger>
-                  <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                    <SelectItem value="all">All Content</SelectItem>
-                    <SelectItem value="movie">Movies</SelectItem>
-                    <SelectItem value="series">Series</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Select value={selectedType} onValueChange={onTypeChange}>
+              <SelectTrigger className="w-full horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="All Content" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="all">All Content</SelectItem>
+                <SelectItem value="movie">Movies</SelectItem>
+                <SelectItem value="series">Series</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-semibold text-white">Sort by:</span>
-              <Select value={sortBy} onValueChange={onSortChange}>
-                <SelectTrigger className="w-[140px] horror-bg border-gray-700 text-white horror-select-trigger">
-                  <SelectValue placeholder="Sort by" className="text-white" />
-                </SelectTrigger>
-                <SelectContent className="horror-bg border-gray-700 horror-select-content">
-                  <SelectItem value="average_rating">Average Rating</SelectItem>
-                  <SelectItem value="critics_rating">Critics Rating</SelectItem>
-                  <SelectItem value="users_rating">Audience Rating</SelectItem>
-                  <SelectItem value="year_newest">Newest First</SelectItem>
-                  <SelectItem value="year_oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="mb-1 lg:flex lg:items-center lg:gap-3">
+          <span className="block mb-2 lg:mb-0 lg:w-28 lg:shrink-0 text-lg font-semibold text-white">
+            Sort by:
+          </span>
+
+          <div className="grid grid-cols-2 gap-3 lg:inline-grid lg:grid-flow-col lg:auto-cols-max">
+            <Select value={sortField} onValueChange={(v) => setSortField(v as any)}>
+              <SelectTrigger className="w-full lg:w-auto lg:min-w-[175px] horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="Sort field" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="average_rating">Average Rating</SelectItem>
+                <SelectItem value="critics_rating">Critics Rating</SelectItem>
+                <SelectItem value="users_rating">Audience Rating</SelectItem>
+                <SelectItem value="release_date">Release Date</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortDir} onValueChange={(v) => setSortDir(v as any)}>
+              <SelectTrigger className="w-full lg:w-auto lg:min-w-[175px] horror-bg border-gray-700 text-white horror-select-trigger">
+                <SelectValue placeholder="Direction" className="text-white" />
+              </SelectTrigger>
+              <SelectContent className="horror-bg border-gray-700 horror-select-content">
+                <SelectItem value="desc">Descending</SelectItem>
+                <SelectItem value="asc">Ascending</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

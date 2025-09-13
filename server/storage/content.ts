@@ -7,6 +7,10 @@ import { decadeToRange } from '@server/utils/decades';
 
 type SubgenreLite = { id: number; name: string; slug: string };
 
+type SortField = 'average_rating' | 'critics_rating' | 'users_rating' | 'release_date';
+type SortDir = 'asc' | 'desc';
+type SortBy = `${SortField}:${SortDir}`;
+
 export async function getContentItemWithSubgenres(id: number) {
   const [row] = await db.select().from(content).where(eq(content.id, id));
   if (!row) return undefined;
@@ -56,7 +60,7 @@ export async function getContent(
     search?: string;
     type?: 'movie' | 'series' | 'all';
     subgenre?: string;
-    sortBy?: 'average_rating' | 'critics_rating' | 'users_rating' | 'year_newest' | 'year_oldest';
+    sortBy?: SortBy; // ONLY "<field>:<dir>"
     includeHidden?: boolean;
     includeInactive?: boolean;
   },
@@ -71,7 +75,6 @@ export async function getContent(
   let query = db.select().from(content).$dynamic();
   const conditions: any[] = [];
 
-  // Hide by default
   if (!filters?.includeHidden) {
     conditions.push(or(eq(content.hidden, false), sql`${content.hidden} IS NULL`));
   }
@@ -80,10 +83,8 @@ export async function getContent(
     conditions.push(eq(content.active, true));
   }
 
-  // ---- PLATFORM FILTERS (normalized schema) ----
   const mode = filters?.platformsMode ?? 'any';
 
-  // helper: EXISTS for a single platform match by key/name
   const existsForKeyOrName = (value: string) =>
     sql`EXISTS (
       SELECT 1
@@ -93,7 +94,6 @@ export async function getContent(
         AND (p.platform_key = ${value} OR p.platform_name = ${value})
     )`;
 
-  // helper: EXISTS for a single platform match by id
   const existsForId = (id: number) =>
     sql`EXISTS (
       SELECT 1
@@ -111,20 +111,18 @@ export async function getContent(
     conditions.push(mode === 'all' ? and(...keyConds) : or(...keyConds));
   }
 
-  // Year or decade
   if (filters?.year) {
     if (typeof filters.year === 'string') {
       const r = decadeToRange(filters.year); // "1960s" -> { min: 1960, maxExclusive: 1970 }
       if (r) {
         conditions.push(gte(content.year, r.min));
-        conditions.push(lt(content.year, r.maxExclusive)); // excludes 1970
+        conditions.push(lt(content.year, r.maxExclusive));
       }
     } else {
       conditions.push(eq(content.year, filters.year));
     }
   }
 
-  // Ratings
   if (filters?.minRating !== undefined) {
     conditions.push(sql`${content.averageRating} >= ${filters.minRating}`);
   }
@@ -135,19 +133,16 @@ export async function getContent(
     conditions.push(sql`${content.usersRating} >= ${filters.minUsersRating}`);
   }
 
-  // Type
   if (filters?.type && filters.type !== 'all') {
     conditions.push(eq(content.type, filters.type));
   }
 
-  // Search
   if (filters?.search) {
     const q = `%${filters.search}%`;
     conditions.push(
       or(
         ilike(content.title, q),
         ilike(content.description, q),
-        // any associated subgenre name matches
         sql`EXISTS (
           SELECT 1
           FROM ${contentSubgenres} cs
@@ -155,7 +150,6 @@ export async function getContent(
           WHERE cs.content_id = ${content.id}
             AND (s.name ILIKE ${q} OR s.slug ILIKE ${q})
         )`,
-        // primary subgenre name matches (extra safety)
         sql`EXISTS (
           SELECT 1
           FROM ${subgenres} s
@@ -166,7 +160,6 @@ export async function getContent(
     );
   }
 
-  // Subgenre filter
   if (filters?.subgenre && filters.subgenre !== 'all') {
     const val = filters.subgenre;
     conditions.push(sql`
@@ -189,35 +182,41 @@ export async function getContent(
     query = query.where(and(...conditions));
   }
 
-  // Sorting
-  switch (filters?.sortBy) {
-    case 'average_rating':
-      query = query.orderBy(desc(content.averageRating));
-      break;
-    case 'critics_rating':
-      query = query.orderBy(desc(content.criticsRating));
-      break;
-    case 'users_rating':
-      query = query.orderBy(desc(content.usersRating));
-      break;
-    case 'year_newest':
-      query = query.orderBy(desc(content.year));
-      break;
-    case 'year_oldest':
-      query = query.orderBy(asc(content.year));
-      break;
-    default:
-      query = query.orderBy(desc(content.averageRating));
-      break;
+  // ---- Sorting: ONLY "<field>:<dir>" ----
+  const parseSort = (raw?: SortBy): { field: SortField; dir: SortDir } => {
+    const fallback = { field: 'average_rating' as const, dir: 'desc' as const };
+    if (!raw) return fallback;
+    const [f, d] = (raw as string).split(':');
+    const fieldOk = (
+      ['average_rating', 'critics_rating', 'users_rating', 'release_date'] as const
+    ).includes(f as SortField);
+    const dirOk = (['asc', 'desc'] as const).includes(d as SortDir);
+    if (!fieldOk || !dirOk) return fallback;
+    return { field: f as SortField, dir: d as SortDir };
+  };
+
+  const { field, dir } = parseSort(filters?.sortBy);
+
+  if (field === 'release_date') {
+    const nullsLast = sql`${content.year} IS NULL`;
+    const byYear = dir === 'asc' ? asc(content.year) : desc(content.year);
+    query = query.orderBy(nullsLast, byYear, asc(content.title));
+  } else if (field === 'critics_rating') {
+    const primary = dir === 'asc' ? asc(content.criticsRating) : desc(content.criticsRating);
+    query = query.orderBy(primary, asc(content.title));
+  } else if (field === 'users_rating') {
+    const primary = dir === 'asc' ? asc(content.usersRating) : desc(content.usersRating);
+    query = query.orderBy(primary, asc(content.title));
+  } else {
+    const primary = dir === 'asc' ? asc(content.averageRating) : desc(content.averageRating);
+    query = query.orderBy(primary, asc(content.title));
   }
 
   const rows = await query;
 
-  // Platforms
   const contentIds = rows.map((r) => r.id);
   const platformMap = contentIds.length ? await getPlatformsForContentIds(contentIds) : new Map();
 
-  // Optional: subgenres
   let subsMap = new Map<number, SubgenreLite[]>();
   if (opts.includeSubgenres && contentIds.length) {
     const subs = await db
@@ -238,7 +237,6 @@ export async function getContent(
     }
   }
 
-  // Optional: primary subgenre
   let primaryMap = new Map<number, SubgenreLite | null>();
   if (opts.includePrimary && rows.length) {
     const primaryIds = Array.from(
@@ -309,7 +307,6 @@ export async function showContent(id: number): Promise<boolean> {
   return !!updated;
 }
 
-// Returns HIDDEN content + subgenres + primary + platforms
 export async function getHiddenContent(): Promise<
   (Content & {
     platformsBadges: PlatformBadge[];
@@ -321,11 +318,8 @@ export async function getHiddenContent(): Promise<
   if (!rows.length) return [];
 
   const contentIds = rows.map((r) => r.id);
-
-  // platforms
   const platformMap = await getPlatformsForContentIds(contentIds);
 
-  // attached subgenres
   const subs = await db
     .select({
       contentId: contentSubgenres.contentId,
@@ -344,7 +338,6 @@ export async function getHiddenContent(): Promise<
     subsMap.set(r.contentId, arr);
   }
 
-  // primary subgenres
   const primaryIds = Array.from(
     new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
   );
@@ -365,7 +358,6 @@ export async function getHiddenContent(): Promise<
   }));
 }
 
-// Returns INACTIVE (but not hidden) content + subgenres + primary + platforms
 export async function getInactiveContent(): Promise<
   (Content & {
     platformsBadges: PlatformBadge[];
@@ -381,11 +373,8 @@ export async function getInactiveContent(): Promise<
   if (!rows.length) return [];
 
   const contentIds = rows.map((r) => r.id);
-
-  // platforms
   const platformMap = await getPlatformsForContentIds(contentIds);
 
-  // attached subgenres
   const subs = await db
     .select({
       contentId: contentSubgenres.contentId,
@@ -404,7 +393,6 @@ export async function getInactiveContent(): Promise<
     subsMap.set(r.contentId, arr);
   }
 
-  // primary subgenres
   const primaryIds = Array.from(
     new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
   );

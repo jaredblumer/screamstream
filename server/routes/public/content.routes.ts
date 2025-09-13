@@ -5,33 +5,23 @@ import { contentSyncService } from '@server/services/content-sync';
 
 export function registerContentRoutes(app: Express) {
   app.get('/api/content', async (req, res) => {
-    console.log('GET /api/content', req.query);
     try {
       const q = req.query as Record<string, string | string[] | undefined>;
-
-      // helper: normalize "all" / empty → undefined
       const norm = (v?: string) => (v && v !== 'all' ? v : undefined);
       const normNum = (v?: string) => (v && v !== 'all' ? Number(v) : undefined);
-
-      // allow platform to be a single string (platformKey) or comma‑separated string (rare)
       const platform = Array.isArray(q.platform)
         ? q.platform[0]
         : (q.platform as string | undefined);
 
       const filters: Parameters<typeof storage.getContent>[0] = {
-        // platformKey (e.g. "netflix"); storage will match key or name via EXISTS
         platform: norm(platform),
-
-        // decade ("2010s") or a specific year ("2024"); storage handles both
         year: (() => {
           const y = Array.isArray(q.year) ? q.year[0] : (q.year as string | undefined);
           if (!y || y === 'all') return undefined;
-          if (y.endsWith('s')) return y; // "2010s"
+          if (y.endsWith('s')) return y;
           const n = Number(y);
           return Number.isFinite(n) ? n : undefined;
         })(),
-
-        // ratings: numeric
         minRating: normNum(
           Array.isArray(q.minRating) ? q.minRating[0] : (q.minRating as string | undefined)
         ),
@@ -45,37 +35,34 @@ export function registerContentRoutes(app: Express) {
             ? q.minUsersRating[0]
             : (q.minUsersRating as string | undefined)
         ),
-
-        // optional text search
         search: norm(Array.isArray(q.search) ? q.search[0] : (q.search as string | undefined)),
-
-        // 'movie' | 'series'
         type: (() => {
           const t = Array.isArray(q.type) ? q.type[0] : (q.type as string | undefined);
           return t && t !== 'all' && (t === 'movie' || t === 'series') ? t : undefined;
         })(),
-
-        // subgenre slug
         subgenre: norm(
           Array.isArray(q.subgenre) ? q.subgenre[0] : (q.subgenre as string | undefined)
         ),
 
-        // sortBy whitelist + default
+        // ONLY "<field>:<dir>" allowed
         sortBy: (() => {
-          const s = Array.isArray(q.sortBy) ? q.sortBy[0] : (q.sortBy as string | undefined);
-          const allowed = new Set([
+          const raw = Array.isArray(q.sortBy) ? q.sortBy[0] : (q.sortBy as string | undefined);
+          if (!raw) return 'average_rating:desc';
+          const [field, dir] = raw.split(':');
+          const fields = new Set([
             'average_rating',
             'critics_rating',
             'users_rating',
-            'year_newest',
-            'year_oldest',
+            'release_date',
           ]);
-          return s && allowed.has(s) ? (s as any) : 'average_rating';
+          const dirs = new Set(['asc', 'desc']);
+          return fields.has(field) && dirs.has(dir)
+            ? (`${field}:${dir}` as any)
+            : 'average_rating:desc';
         })(),
 
         includeHidden:
           (Array.isArray(q.includeHidden) ? q.includeHidden[0] : q.includeHidden) === 'true',
-
         includeInactive:
           (Array.isArray(q.includeInactive) ? q.includeInactive[0] : q.includeInactive) === 'true',
       };
@@ -86,7 +73,6 @@ export function registerContentRoutes(app: Express) {
       });
       res.json(rows);
     } catch (error) {
-      console.error('GET /api/content failed:', error);
       res.status(500).json({
         message: 'Failed to fetch content',
         error: error instanceof Error ? error.message : 'Unknown error',
