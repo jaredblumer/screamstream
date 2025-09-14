@@ -10,8 +10,8 @@ import { useWatchlist } from '@/hooks/use-watchlist';
 import { useToast } from '@/hooks/use-toast';
 import Footer from '@/components/footer';
 import { useSearch } from '@/contexts/SearchContext';
+import SubgenreChips from '@/components/subgenre-chips';
 import type { ContentWithPlatforms } from '@shared/schema';
-import { getPrimarySubgenre, getSubgenreNames } from '@/lib/subgenres';
 import { Helmet } from 'react-helmet-async';
 import { trackPageview, trackEvent } from '@/lib/analytics';
 
@@ -117,15 +117,6 @@ export default function MovieDetail() {
       </>
     );
   }
-
-  // Subgenres for chips
-  const subgenreNames = getSubgenreNames(movie);
-  const chipNames =
-    subgenreNames.length > 0
-      ? subgenreNames
-      : getPrimarySubgenre(movie)
-        ? [getPrimarySubgenre(movie)!.name]
-        : [];
 
   const description = movie.description || `Where to watch ${movie.title}.`;
 
@@ -235,16 +226,9 @@ export default function MovieDetail() {
                     )}
                   </div>
 
-                  {/* Subgenres (names) */}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {chipNames.map((name, i) => (
-                      <span
-                        key={`${name}-${i}`}
-                        className="blood-red-bg text-white px-3 py-1 rounded-full text-xs font-medium"
-                      >
-                        {name}
-                      </span>
-                    ))}
+                  {/* Subgenres */}
+                  <div className="mt-3">
+                    <SubgenreChips item={movie} />
                   </div>
                 </div>
               </div>
@@ -383,18 +367,9 @@ export default function MovieDetail() {
                   )}
                 </div>
 
-                {/* Subgenres (names only) */}
+                {/* Subgenres */}
                 <div className="mb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {chipNames.map((name, i) => (
-                      <span
-                        key={`${name}-${i}`}
-                        className="inline-block blood-red-bg text-white px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {name}
-                      </span>
-                    ))}
-                  </div>
+                  <SubgenreChips item={movie} />
                 </div>
 
                 {/* Streaming Platforms */}
