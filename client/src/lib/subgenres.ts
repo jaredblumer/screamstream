@@ -45,3 +45,8 @@ export function isPrimarySubgenre(s: SubgenreLite, item: HasSubgenres): boolean 
   const first = item.subgenres?.[0];
   return !!first && first.id === s.id;
 }
+
+export function getSortedSubgenres(item: HasSubgenres): SubgenreLite[] {
+  const subs = item.subgenres ?? [];
+  return [...subs].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+}
