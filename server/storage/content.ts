@@ -198,18 +198,20 @@ export async function getContent(
   const { field, dir } = parseSort(filters?.sortBy);
 
   if (field === 'release_date') {
-    const nullsLast = sql`${content.year} IS NULL`;
+    const yearNullsLast = sql`${content.year} IS NULL`;
     const byYear = dir === 'asc' ? asc(content.year) : desc(content.year);
-    query = query.orderBy(nullsLast, byYear, asc(content.title));
+    query = query.orderBy(yearNullsLast, byYear, asc(content.title));
   } else if (field === 'critics_rating') {
-    const primary = dir === 'asc' ? asc(content.criticsRating) : desc(content.criticsRating);
-    query = query.orderBy(primary, asc(content.title));
+    const criticsNullsLast = sql`${content.criticsRating} IS NULL`;
+    const byCritics = dir === 'asc' ? asc(content.criticsRating) : desc(content.criticsRating);
+    query = query.orderBy(criticsNullsLast, byCritics, asc(content.title));
   } else if (field === 'users_rating') {
-    const primary = dir === 'asc' ? asc(content.usersRating) : desc(content.usersRating);
-    query = query.orderBy(primary, asc(content.title));
+    const usersNullsLast = sql`${content.usersRating} IS NULL`;
+    const byUsers = dir === 'asc' ? asc(content.usersRating) : desc(content.usersRating);
+    query = query.orderBy(usersNullsLast, byUsers, asc(content.title));
   } else {
-    const primary = dir === 'asc' ? asc(content.averageRating) : desc(content.averageRating);
-    query = query.orderBy(primary, asc(content.title));
+    const byAvg = dir === 'asc' ? asc(content.averageRating) : desc(content.averageRating);
+    query = query.orderBy(byAvg, asc(content.title));
   }
 
   const rows = await query;
