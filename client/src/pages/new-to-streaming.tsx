@@ -1,15 +1,18 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import Footer from '@/components/footer';
 import MovieCard from '@/components/movie-card';
-import { Content } from '@shared/schema';
+import type { ContentWithPlatforms } from '@shared/schema';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useSearch } from '@/contexts/SearchContext';
 import { Helmet } from 'react-helmet-async';
 import { trackPageview } from '@/lib/analytics';
+
+type SubgenreLite = { id: number; name: string; slug: string };
+type MovieForCard = ContentWithPlatforms & { primarySubgenre: SubgenreLite | null };
 
 export default function NewToStreaming() {
   const [, setLocation] = useLocation();
@@ -30,7 +33,7 @@ export default function NewToStreaming() {
     data: streamingContent = [],
     isLoading,
     error,
-  } = useQuery<Content[]>({
+  } = useQuery<MovieForCard[]>({
     queryKey: ['/api/new-to-streaming'],
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     refetchOnWindowFocus: false,
@@ -109,10 +112,6 @@ export default function NewToStreaming() {
           </p>
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-400 mt-2">
             <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              Last 30 days
-            </div>
-            <div className="flex items-center">
               <Clock className="h-4 w-4 mr-2" />
               Updated weekly
             </div>
@@ -133,11 +132,11 @@ export default function NewToStreaming() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 px-6">
-              {streamingContent.map((content) => (
+              {streamingContent.map((movie) => (
                 <MovieCard
-                  key={content.id}
-                  movie={content}
-                  onClick={() => setLocation(`/title/${content.id}`)}
+                  key={movie.id}
+                  movie={movie}
+                  onClick={() => setLocation(`/title/${movie.id}`)}
                 />
               ))}
             </div>

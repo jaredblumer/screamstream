@@ -414,3 +414,47 @@ export async function getInactiveContent(): Promise<
     primarySubgenre: item.primarySubgenreId ? (byId.get(item.primarySubgenreId) ?? null) : null,
   }));
 }
+
+export async function getNewestStreaming(limit = 5): Promise<
+  (Content & {
+    platformsBadges: PlatformBadge[];
+    primarySubgenre: SubgenreLite | null;
+  })[]
+> {
+  const rows = await db
+    .select()
+    .from(content)
+    .where(
+      and(
+        eq(content.active, true),
+        or(eq(content.hidden, false), sql`${content.hidden} IS NULL`),
+        sql`NULLIF(${content.sourceReleaseDate}, '') IS NOT NULL`
+      )
+    )
+    .orderBy(sql`NULLIF(${content.sourceReleaseDate}, '')::date DESC NULLS LAST`, desc(content.id))
+    .limit(limit);
+
+  if (!rows.length) return [];
+
+  const contentIds = rows.map((r) => r.id);
+  const platformMap = await getPlatformsForContentIds(contentIds);
+
+  const primaryIds = Array.from(
+    new Set(rows.map((r) => r.primarySubgenreId).filter((x): x is number => x != null))
+  );
+
+  const byId = new Map<number, SubgenreLite>();
+  if (primaryIds.length) {
+    const primaries = await db
+      .select({ id: subgenres.id, name: subgenres.name, slug: subgenres.slug })
+      .from(subgenres)
+      .where(inArray(subgenres.id, primaryIds));
+    for (const p of primaries) byId.set(p.id, p);
+  }
+
+  return rows.map((item) => ({
+    ...item,
+    platformsBadges: platformMap.get(item.id) || [],
+    primarySubgenre: item.primarySubgenreId ? (byId.get(item.primarySubgenreId) ?? null) : null,
+  }));
+}
