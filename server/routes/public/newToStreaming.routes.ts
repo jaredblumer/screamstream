@@ -4,7 +4,7 @@ import { getNewestStreaming } from '@server/storage/content';
 export function registerNewToStreamingRoutes(app: Express) {
   app.get('/api/new-to-streaming', async (req, res) => {
     try {
-      const items = await getNewestStreaming(5);
+      const items = await getNewestStreaming(15);
       res.json(items);
     } catch (error) {
       console.error('Error fetching new streaming releases:', error);
