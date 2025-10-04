@@ -1,4 +1,4 @@
-# Scream Stream - Top Rated Streaming Horror
+# FrightByte - Top Rated Streaming Horror
 
 Discover the highest-rated horror movies and series currently streaming. Rated by critics and audiences across all major platforms.
 
@@ -15,7 +15,7 @@ brew install postgresql@15
 brew services start postgresql@15
 
 # Create database
-createdb scream_stream_dev
+createdb frightbyte_dev
 ```
 
 ### 2. Setup Project
@@ -23,7 +23,7 @@ createdb scream_stream_dev
 ```bash
 # Clone and install
 git clone <repository-url>
-cd screamstream
+cd frightbyte
 npm install
 
 # Configure environment

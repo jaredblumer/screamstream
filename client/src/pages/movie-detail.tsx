@@ -50,7 +50,7 @@ export default function MovieDetail() {
     enabled: movieId > 0,
   });
 
-  const pageTitle = movie ? `${movie.title} – Scream Stream` : 'Scream Stream';
+  const pageTitle = movie ? `${movie.title} – FrightByte` : 'FrightByte';
   useEffect(() => {
     if (!movie) return;
     const path = `${window.location.pathname}${window.location.search}`;
@@ -61,7 +61,7 @@ export default function MovieDetail() {
     return (
       <>
         <Helmet>
-          <title>Invalid Title – Scream Stream</title>
+          <title>Invalid Title – FrightByte</title>
           <meta name="robots" content="noindex" />
         </Helmet>
         <div className="min-h-screen horror-bg flex items-center justify-center">
@@ -78,7 +78,7 @@ export default function MovieDetail() {
     return (
       <>
         <Helmet>
-          <title>Loading… – Scream Stream</title>
+          <title>Loading… – FrightByte</title>
           <meta name="robots" content="noindex" />
         </Helmet>
         <div className="min-h-screen horror-bg">
@@ -103,7 +103,7 @@ export default function MovieDetail() {
     return (
       <>
         <Helmet>
-          <title>Title Unavailable – Scream Stream</title>
+          <title>Title Unavailable – FrightByte</title>
           <meta name="robots" content="noindex" />
         </Helmet>
         <div className="min-h-screen horror-bg flex items-center justify-center">

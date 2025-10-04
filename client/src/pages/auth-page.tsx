@@ -73,7 +73,7 @@ export default function AuthPage() {
   return (
     <>
       <Helmet>
-        <title>{heading} – Scream Stream</title>
+        <title>{heading} – FrightByte</title>
         <meta name="description" content={subheading} />
       </Helmet>
 
@@ -86,7 +86,7 @@ export default function AuthPage() {
                 <h1 className="text-6xl font-bold text-white mb-6 leading-tight">
                   <div>Welcome to</div>
                   <div>
-                    <span className="blood-red">Scream Stream</span>
+                    <span className="blood-red">FrightByte</span>
                   </div>
                 </h1>
                 <p className="text-xl text-gray-300 mb-8 leading-relaxed">

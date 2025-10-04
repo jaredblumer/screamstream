@@ -36,9 +36,9 @@ export default function ReportIssue() {
     setQuery('');
   }, [setQuery]);
 
-  const pageTitle = 'Report an Issue – Scream Stream';
+  const pageTitle = 'Report an Issue – FrightByte';
   const pageDescription =
-    'Report technical problems, incorrect data, broken links, or suggest content for Scream Stream. Help us improve!';
+    'Report technical problems, incorrect data, broken links, or suggest content for FrightByte. Help us improve!';
 
   useEffect(() => {
     const path = `${window.location.pathname}${window.location.search}`;
@@ -196,7 +196,7 @@ export default function ReportIssue() {
             </h1>
           </div>
           <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto">
-            Help us improve Scream Stream by reporting technical issues, data errors, or suggesting
+            Help us improve FrightByte by reporting technical issues, data errors, or suggesting
             improvements.
           </p>
         </div>

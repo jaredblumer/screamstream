@@ -52,7 +52,7 @@ export default function Subgenres() {
 
   useEffect(() => {
     const path = `${window.location.pathname}${window.location.search}`;
-    trackPageview(path, 'Horror Subgenres – Scream Stream');
+    trackPageview(path, 'Horror Subgenres – FrightByte');
   }, []);
 
   const isLoading = moviesLoading || subgenresLoading;
@@ -89,10 +89,10 @@ export default function Subgenres() {
     return (
       <>
         <Helmet>
-          <title>Loading Subgenres – Scream Stream</title>
+          <title>Loading Subgenres – FrightByte</title>
           <meta
             name="description"
-            content="Discover horror subgenres and top-rated titles on Scream Stream."
+            content="Discover horror subgenres and top-rated titles on FrightByte."
           />
         </Helmet>
 
@@ -111,12 +111,12 @@ export default function Subgenres() {
   return (
     <>
       <Helmet>
-        <title>Horror Subgenres – Scream Stream</title>
+        <title>Horror Subgenres – FrightByte</title>
         <meta
           name="description"
-          content="From supernatural scares to psychological thrillers, explore horror subgenres and find your next fright on Scream Stream."
+          content="From supernatural scares to psychological thrillers, explore horror subgenres and find your next fright on FrightByte."
         />
-        <meta property="og:title" content="Horror Subgenres – Scream Stream" />
+        <meta property="og:title" content="Horror Subgenres – FrightByte" />
         <meta
           property="og:description"
           content="Explore horror subgenres including supernatural, psychological, slasher, and more. Discover what makes each uniquely terrifying."

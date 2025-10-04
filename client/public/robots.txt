@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://screamstream.net/sitemap.xml
+Sitemap: https://frightbyte.net/sitemap.xml

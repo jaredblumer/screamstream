@@ -25,7 +25,7 @@ export default function NewToStreaming() {
   // Fire GA pageview when this page is mounted
   useEffect(() => {
     const path = `${window.location.pathname}${window.location.search}`;
-    trackPageview(path, 'New to Streaming – Scream Stream');
+    trackPageview(path, 'New to Streaming – FrightByte');
   }, []);
 
   // Fetch new to streaming content
@@ -43,7 +43,7 @@ export default function NewToStreaming() {
     return (
       <>
         <Helmet>
-          <title>Loading… – Scream Stream</title>
+          <title>Loading… – FrightByte</title>
           <meta name="robots" content="noindex" />
         </Helmet>
         <div className="min-h-screen horror-bg">
@@ -62,7 +62,7 @@ export default function NewToStreaming() {
     return (
       <>
         <Helmet>
-          <title>Error Loading – Scream Stream</title>
+          <title>Error Loading – FrightByte</title>
           <meta name="robots" content="noindex" />
         </Helmet>
         <div className="min-h-screen horror-bg">
@@ -87,12 +87,12 @@ export default function NewToStreaming() {
   return (
     <>
       <Helmet>
-        <title>New to Streaming – Scream Stream</title>
+        <title>New to Streaming – FrightByte</title>
         <meta
           name="description"
           content="Discover the latest horror movies and series that just landed on popular streaming platforms. Fresh scares, updated weekly."
         />
-        <meta property="og:title" content="New to Streaming – Scream Stream" />
+        <meta property="og:title" content="New to Streaming – FrightByte" />
         <meta
           property="og:description"
           content="Discover the latest horror movies and series that just landed on popular streaming platforms."

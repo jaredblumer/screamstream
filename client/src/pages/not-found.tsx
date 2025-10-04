@@ -7,13 +7,13 @@ import { trackPageview } from '@/lib/analytics';
 export default function NotFound() {
   useEffect(() => {
     const path = `${window.location.pathname}${window.location.search}`;
-    trackPageview(path, '404 Not Found – Scream Stream');
+    trackPageview(path, '404 Not Found – FrightByte');
   }, []);
 
   return (
     <>
       <Helmet>
-        <title>404 Not Found – Scream Stream</title>
+        <title>404 Not Found – FrightByte</title>
         <meta name="description" content="The page you are looking for could not be found." />
         <meta name="robots" content="noindex" />
       </Helmet>

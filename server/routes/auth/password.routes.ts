@@ -43,7 +43,7 @@ export function registerPasswordRoutes(app: Express) {
 
       const emailSent = await sendEmail({
         to: email,
-        subject: 'Password Reset - Scream Stream',
+        subject: 'Password Reset - FrightByte',
         text: emailContent.text,
       });
 

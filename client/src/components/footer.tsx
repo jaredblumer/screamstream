@@ -9,7 +9,7 @@ export default function Footer() {
             <div className="flex items-center mb-4">
               <h3 className="text-2xl font-bold blood-red flex items-center">
                 <Skull className="mr-2 h-6 w-6" />
-                Scream Stream
+                FrightByte
               </h3>
             </div>
             <p className="text-gray-400 mb-4">
@@ -64,7 +64,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400 mb-2">
-            © 2025 Scream Stream. All rights reserved. | Discover the best horror titles streaming
+            © 2025 FrightByte. All rights reserved. | Discover the best horror titles streaming
             online.
           </p>
           <p className="text-gray-500 text-sm">

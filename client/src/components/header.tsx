@@ -87,7 +87,7 @@ export default function Header({ autoFocusSearch }: HeaderProps) {
                       : 'w-auto opacity-100'
                   }`}
                 >
-                  <span className="whitespace-nowrap">Scream Stream</span>
+                  <span className="whitespace-nowrap">FrightByte</span>
                 </span>
               </h1>
             </div>

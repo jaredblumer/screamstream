@@ -23,17 +23,17 @@ export default function Watchlist() {
 
   useEffect(() => {
     const path = `${window.location.pathname}${window.location.search}`;
-    trackPageview(path, 'My Watchlist – Scream Stream');
+    trackPageview(path, 'My Watchlist – FrightByte');
   }, []);
 
   if (isWatchlistLoading) {
     return (
       <>
         <Helmet>
-          <title>My Watchlist – Scream Stream</title>
+          <title>My Watchlist – FrightByte</title>
           <meta
             name="description"
-            content="Your personal collection of upcoming scares on Scream Stream."
+            content="Your personal collection of upcoming scares on FrightByte."
           />
         </Helmet>
 
@@ -52,10 +52,10 @@ export default function Watchlist() {
   return (
     <>
       <Helmet>
-        <title>My Watchlist – Scream Stream</title>
+        <title>My Watchlist – FrightByte</title>
         <meta
           name="description"
-          content="Save your favorite horror movies and series to your personal watchlist. Keep track of upcoming scares on Scream Stream."
+          content="Save your favorite horror movies and series to your personal watchlist. Keep track of upcoming scares on FrightByte."
         />
       </Helmet>
 

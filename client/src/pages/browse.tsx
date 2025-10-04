@@ -36,8 +36,8 @@ export default function Browse() {
 
   const pageTitle = useMemo(() => {
     return selectedSubgenre !== 'all'
-      ? `Browse ${humanize(selectedSubgenre)} Titles – Scream Stream`
-      : `Browse Streaming Horror – Scream Stream`;
+      ? `Browse ${humanize(selectedSubgenre)} Titles – FrightByte`
+      : `Browse Streaming Horror – FrightByte`;
   }, [selectedSubgenre]);
 
   useEffect(() => {

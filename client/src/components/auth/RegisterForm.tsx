@@ -52,7 +52,7 @@ export default function RegisterForm({ siteKey, onSuccess }: Props) {
 
         toast({
           title: 'Account created!',
-          description: 'Welcome to Scream Stream. Start discovering horror content.',
+          description: 'Welcome to FrightByte. Start discovering horror content.',
         });
         recaptchaRef.current?.reset();
         redirectAfterAuth();
