@@ -35,7 +35,7 @@ export default function Profile() {
   // Profile state
   const [profile, setProfile] = useState({
     name: 'Horror Fan',
-    email: 'fan@screamstream.com',
+    email: 'fan@frightbyte.com',
     bio: 'Love discovering top-ranked streaming horror - from classic Universal monsters to modern psychological thrillers.',
     avatar: '',
     joinDate: 'October 2023',
@@ -62,11 +62,11 @@ export default function Profile() {
 
   // Helmet + GA
   const pageTitle = isAuthenticated
-    ? 'Your Profile – Scream Stream'
-    : 'Profile (Sign In Required) – Scream Stream';
+    ? 'Your Profile – FrightByte'
+    : 'Profile (Sign In Required) – FrightByte';
   const pageDescription = isAuthenticated
-    ? 'View your horror profile, watchlist stats, preferences, and more on Scream Stream.'
-    : 'Sign in to access your profile, watchlist statistics, and preferences on Scream Stream.';
+    ? 'View your horror profile, watchlist stats, preferences, and more on FrightByte.'
+    : 'Sign in to access your profile, watchlist statistics, and preferences on FrightByte.';
 
   useEffect(() => {
     const path = `${window.location.pathname}${window.location.search}`;

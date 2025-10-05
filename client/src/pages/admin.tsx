@@ -252,7 +252,7 @@ export default function Admin() {
   return (
     <>
       <Helmet>
-        <title>Admin Portal - Scream Stream</title>
+        <title>Admin Portal - FrightByte</title>
       </Helmet>
 
       <div className="min-h-screen horror-bg">

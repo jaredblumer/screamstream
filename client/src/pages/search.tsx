@@ -24,17 +24,17 @@ export default function Search() {
 
   const title =
     searchQuery.trim().length === 0
-      ? 'Search Horror Movies & Series – Scream Stream'
-      : `Search Results for "${searchQuery}" – Scream Stream`;
+      ? 'Search Horror Movies & Series – FrightByte'
+      : `Search Results for "${searchQuery}" – FrightByte`;
 
   const description =
     searchQuery.trim().length === 0
-      ? 'Search for streaming horror titles across all platforms. Discover your next scare on Scream Stream.'
-      : `Explore horror movies and series results for "${searchQuery}" on Scream Stream.`;
+      ? 'Search for streaming horror titles across all platforms. Discover your next scare on FrightByte.'
+      : `Explore horror movies and series results for "${searchQuery}" on FrightByte.`;
 
   useEffect(() => {
     const path = `${window.location.pathname}`; // omit query to avoid cardinality
-    trackPageview(path, 'Search – Scream Stream');
+    trackPageview(path, 'Search – FrightByte');
   }, []);
 
   const runDebounced = useDebouncedValue(searchQuery, 700);
@@ -50,7 +50,7 @@ export default function Search() {
   return (
     <>
       <Helmet>
-        <title>Search – Scream Stream</title>
+        <title>Search – FrightByte</title>
         <meta name="description" content={description} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />

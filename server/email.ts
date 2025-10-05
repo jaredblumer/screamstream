@@ -17,8 +17,8 @@ interface EmailParams {
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     const sender = {
-      email: 'help@screamstream.net',
-      name: 'Scream Stream',
+      email: 'help@frightbyte.net',
+      name: 'FrightByte',
     };
 
     await client.send({
@@ -38,7 +38,7 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
 
 export function generatePasswordResetEmail(resetUrl: string): { text: string } {
   const text = `
-You've requested to reset your password for Scream Stream.
+You've requested to reset your password for FrightByte.
 
 Click the link below to reset your password:
 ${resetUrl}
@@ -48,7 +48,7 @@ If you didn't request this password reset, please ignore this email.
 This link will expire in 1 hour for security purposes.
 
 Best regards,
-The Scream Stream Team
+The FrightByte Team
   `;
 
   return { text };

@@ -50,7 +50,7 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Scream Stream - Top Rated Streaming Horror</title>
+        <title>FrightByte - Top Rated Streaming Horror</title>
         <meta
           name="description"
           content="Discover the highest-rated horror movies and series streaming now."
